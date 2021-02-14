@@ -17,9 +17,14 @@ public:
         if (!_wnd)
             throw std::runtime_error("Couldn't init screen");
 
-        ::keypad (stdscr, TRUE);
-        ::raw();
-        ::noecho();
+        ::start_color();
+        ::curs_set(1);
+
+        if (!::has_colors())
+            throw std::runtime_error("No colors");
+
+        //::raw();
+        //::noecho();
     }
 
     ~Renderer()
@@ -64,7 +69,8 @@ public:
 private:
     MsgPackRpc *_rpc;
     WINDOW *_wnd;
-    std::unordered_map<int, int> _attributes;
+    std::unordered_map<unsigned, unsigned> _colors;
+    std::unordered_map<unsigned, unsigned> _attributes;
 
     void _OnNotification(std::string method, const msgpack::object &obj)
     {
@@ -138,7 +144,7 @@ private:
             int col = inst.ptr[2].as<int>();
             const auto &cells = inst.ptr[3].via.array;
 
-            int hl_id;
+            unsigned hl_id;
             for (size_t c = 0; c < cells.size; ++c)
             {
                 const auto &cell = cells.ptr[c].via.array;
@@ -147,7 +153,7 @@ private:
                 // if repeat is greater than 1, we are guaranteed to send an hl_id
                 // https://github.com/neovim/neovim/blob/master/src/nvim/api/ui.c#L483
                 if (cell.size > 1)
-                    hl_id = cell.ptr[1].as<int>();
+                    hl_id = cell.ptr[1].as<unsigned>();
                 if (cell.size > 2)
                     repeat = cell.ptr[2].as<int>();
                 ::wmove(_wnd, row, col);
@@ -218,31 +224,47 @@ private:
         }
     }
 
+    unsigned _GetColor(unsigned rgb)
+    {
+        auto it = _colors.find(rgb);
+        if (it != _colors.end())
+            return it->second;
+        unsigned r = (rgb >> 16) * 1000 / 256;
+        unsigned g = ((rgb >> 8) & 0xff) * 1000 / 256;
+        unsigned b = (rgb & 0xff) * 1000 / 256;
+        unsigned color = _colors.size() + 2;
+        init_extended_color(color, r, g, b);
+        return _colors[rgb] = color;
+    }
+
     void _HlAttrDefine(const msgpack::object_array &event)
     {
         for (size_t j = 1; j < event.size; ++j)
         {
             const auto &inst = event.ptr[j].via.array;
-            int hl_id = inst.ptr[0].as<int>();
-            // rgb_attr = inst[1]
-            const auto &cterm_attr = inst.ptr[2].via.map;
-            int fg{-1};
-            int bg{-1};
-            for (size_t i = 0; i < cterm_attr.size; ++i)
+            ofs << "hl " << event.ptr[j] << std::endl;
+            unsigned hl_id = inst.ptr[0].as<unsigned>();
+            const auto &rgb_attr = inst.ptr[1].via.map;
+
+            unsigned fg{1};
+            unsigned bg{0};
+            //const auto &cterm_attr = inst.ptr[2].via.map;
+            for (size_t i = 0; i < rgb_attr.size; ++i)
             {
-                std::string key{cterm_attr.ptr[i].key.as<std::string>()};
+                std::string key{rgb_attr.ptr[i].key.as<std::string>()};
                 if (key == "foreground")
-                    fg = cterm_attr.ptr[i].val.as<int>();
+                    fg = _GetColor(rgb_attr.ptr[i].val.as<unsigned>());
                 else if (key == "background")
-                    bg = cterm_attr.ptr[i].val.as<int>();
+                    bg = _GetColor(rgb_attr.ptr[i].val.as<unsigned>());
             }
             // info = inst[3]
-            ::init_pair(hl_id, fg, bg);
-            int attr = COLOR_PAIR(hl_id);
+            if (ERR == ::init_extended_pair(hl_id, fg, bg))
+                ofs << "Failed to init extended color pair " << hl_id << " " << fg << " " << bg << std::endl;
+            unsigned attr = COLOR_PAIR(hl_id);
             // nvim api docs state that boolean keys here are only sent if true
-            for (size_t i = 0; i < cterm_attr.size; ++i)
+            for (size_t i = 0; i < rgb_attr.size; ++i)
             {
-                std::string key{cterm_attr.ptr[i].key.as<std::string>()};
+                std::string key{rgb_attr.ptr[i].key.as<std::string>()};
                 if (key == "reverse")
                     attr |= A_REVERSE;
                 else if (key == "bold")

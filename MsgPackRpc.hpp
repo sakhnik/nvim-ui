@@ -6,7 +6,6 @@
 #include <boost/asio/write.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
-
 namespace bio = boost::asio;
 
 class MsgPackRpc

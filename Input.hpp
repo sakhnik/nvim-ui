@@ -47,8 +47,10 @@ private:
         std::string input;
         if (key.type == TERMKEY_TYPE_UNICODE && key.code.codepoint == '<')
             input = "<lt>";
+        else if (key.type == TERMKEY_TYPE_KEYSYM && key.code.codepoint == TERMKEY_SYM_BACKSPACE)
+            input = "<bs>";
         else if (key.type == TERMKEY_TYPE_KEYSYM && key.code.codepoint == TERMKEY_SYM_ESCAPE)
-            input = "<Esc>";
+            input = "<esc>";
         else
         {
             char buffer[50];
