@@ -1,5 +1,6 @@
 #pragma once
 
+#include "MsgPackRpc.hpp"
 #include <sstream>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/posix/stream_descriptor.hpp>
@@ -11,8 +12,9 @@ namespace bio = boost::asio;
 class Input
 {
 public:
-    Input(bio::io_context &io_context)
-        : _descriptor{io_context}
+    Input(bio::io_context &io_context, MsgPackRpc *rpc)
+        : _rpc{rpc}
+        , _descriptor{io_context}
         , _timer{io_context}
     {
         _tk = ::termkey_new(0, 0);
@@ -33,6 +35,7 @@ public:
     }
 
 private:
+    MsgPackRpc *_rpc;
     bio::posix::stream_descriptor _descriptor;
     bio::deadline_timer _timer;
     TermKey *_tk;
@@ -40,9 +43,34 @@ private:
 
     void _OnKey(TermKeyKey &key)
     {
-        char buffer[50];
-        ::termkey_strfkey(_tk, buffer, sizeof(buffer), &key, TERMKEY_FORMAT_VIM);
-        printf("%s\n", buffer);
+        // see https://github.com/neovim/neovim/blob/master/src/nvim/tui/input.c for these remappings
+        std::string input;
+        if (key.type == TERMKEY_TYPE_UNICODE && key.code.codepoint == '<')
+            input = "<lt>";
+        else if (key.type == TERMKEY_TYPE_KEYSYM && key.code.codepoint == TERMKEY_SYM_ESCAPE)
+            input = "<Esc>";
+        else
+        {
+            char buffer[50];
+            ::termkey_strfkey(_tk, buffer, sizeof(buffer), &key, TERMKEY_FORMAT_VIM);
+            input = buffer;
+        }
+
+        _rpc->Request(
+            [&](MsgPackRpc::PackerT &pk) {
+                pk.pack(std::string{"nvim_input"});
+                pk.pack_array(1);
+                pk.pack(input);
+            },
+            [](const msgpack::object &err, const auto &resp) {
+                if (!err.is_nil())
+                {
+                    std::ostringstream oss;
+                    oss << "Input error: " << err;
+                    throw std::runtime_error(oss.str());
+                }
+            }
+        );
     }
 
     void _ReadInput()

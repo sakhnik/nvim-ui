@@ -24,11 +24,11 @@ int main(int argc, char* argv[])
         bio::ip::tcp::socket socket{io_context};
         socket.connect({bio::ip::address::from_string("127.0.0.1"), 4444});
 
-        //std::unique_ptr<MsgPackRpc> rpc{new MsgPackRpc{io_context, socket}};
-        //Renderer renderer(rpc.get());
-        //renderer.AttachUI();
+        MsgPackRpc rpc{io_context, socket};
+        Renderer renderer(&rpc);
+        renderer.AttachUI();
 
-        Input input{io_context};
+        Input input{io_context, &rpc};
         input.Start();
 
         io_context.run();
