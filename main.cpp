@@ -41,12 +41,14 @@ public:
 
     void Request(PackRequestT pack_request, OnResponseT on_response)
     {
+        auto [it, _] = _requests.emplace(_seq++, std::move(on_response));
+
         // serializes multiple objects using msgpack::packer.
         msgpack::sbuffer buffer;
         msgpack::packer<msgpack::sbuffer> pk(&buffer);
         pk.pack_array(4);
         pk.pack(0);
-        pk.pack(uint32_t{0});
+        pk.pack(it->first);
         pack_request(pk);
         async_write(_socket, bio::buffer(buffer.data(), buffer.size()), [](const auto &err, size_t n) {
             CheckError(err, n);
@@ -56,8 +58,9 @@ public:
 private:
     bio::ip::tcp::socket &_socket;
     OnNotificationT _on_notification;
-
     msgpack::unpacker _unp;
+    uint32_t _seq = 0;
+    std::map<uint32_t, OnResponseT> _requests;
 
     void _dispatch()
     {
@@ -66,13 +69,24 @@ private:
             CheckError(err, n);
             if (!n) throw std::runtime_error("EOF");
 
-            std::cout << "read " << n << std::endl;
             _unp.buffer_consumed(n);
             msgpack::unpacked result;
             while (_unp.next(result))
             {
                 msgpack::object obj{result.get()};
-                std::cout << "type " << obj.type << std::endl;
+                const auto &arr = obj.via.array;
+                if (arr.ptr[0] == 1)
+                {
+                    // Response
+                    auto it = _requests.find(arr.ptr[1].as<uint32_t>());
+                    it->second(arr.ptr[2], arr.ptr[3]);
+                    _requests.erase(it);
+                }
+                else if (arr.ptr[0] == 2)
+                {
+                    // Notification
+                    _on_notification(arr.ptr[1].as<std::string>(), arr.ptr[2]);
+                }
             }
             _dispatch();
         });
@@ -90,7 +104,13 @@ void attach_ui(MsgPackRpc *rpc)
             pk.pack(25);
             pk.pack_map(0);
         },
-        [](const auto &err, const auto &resp) {
+        [](const msgpack::object &err, const auto &resp) {
+            if (!err.is_nil())
+            {
+                std::ostringstream oss;
+                oss << "Failed to attach UI " << err << std::endl;
+                throw std::runtime_error(oss.str());
+            }
         }
     );
 }
