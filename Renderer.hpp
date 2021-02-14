@@ -83,6 +83,20 @@ private:
             {
                 ::wrefresh(_wnd);
             }
+            else if (subtype == "grid_cursor_goto")
+            {
+                for (size_t j = 1; j < event.size; ++j)
+                {
+                    const auto &inst = event.ptr[j].via.array;
+                    int grid = inst.ptr[0].as<int>();
+                    if (grid != 1)
+                        throw std::runtime_error("Multigrid not supported");
+                    int row = inst.ptr[1].as<int>();
+                    int col = inst.ptr[2].as<int>();
+
+                    ::wmove(_wnd, row, col);
+                }
+            }
             else if (subtype == "grid_line")
             {
                 int y{}, x{};
@@ -91,7 +105,6 @@ private:
                 for (size_t j = 1; j < event.size; ++j)
                 {
                     const auto &inst = event.ptr[j].via.array;
-                    ofs << " inst " << inst.size << std::endl;
                     int grid = inst.ptr[0].as<int>();
                     if (grid != 1)
                         throw std::runtime_error("Multigrid not supported");
@@ -112,7 +125,9 @@ private:
                         if (cell.size > 2)
                             repeat = cell.ptr[2].as<int>();
                         ::wmove(_wnd, row, col);
-                        col += repeat * text.size();
+                        size_t char_count = std::count_if(text.begin(), text.end(),
+                                                          [](char c) { return (static_cast<unsigned char>(c) & 0xC0) != 0x80; });
+                        col += repeat * char_count;
                         while (repeat--)
                         {
 //                attr = self.attributes.get(hl_id, curses.color_pair(hl_id))

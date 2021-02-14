@@ -12,6 +12,7 @@ namespace bio = boost::asio;
 
 int main(int argc, char* argv[])
 {
+    setlocale(LC_CTYPE, "");
     try
     {
         bio::io_context io_context(1);
