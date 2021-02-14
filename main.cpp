@@ -1,4 +1,5 @@
 #include "MsgPackRpc.hpp"
+#include "Renderer.hpp"
 
 #include <iostream>
 #include <boost/asio/io_context.hpp>
@@ -8,27 +9,6 @@
 
 namespace bio = boost::asio;
 
-
-void attach_ui(MsgPackRpc *rpc)
-{
-    rpc->Request(
-        [](auto &pk) {
-            pk.pack(std::string{"nvim_ui_attach"});
-            pk.pack_array(3);
-            pk.pack(80);
-            pk.pack(25);
-            pk.pack_map(0);
-        },
-        [](const msgpack::object &err, const auto &resp) {
-            if (!err.is_nil())
-            {
-                std::ostringstream oss;
-                oss << "Failed to attach UI " << err << std::endl;
-                throw std::runtime_error(oss.str());
-            }
-        }
-    );
-}
 
 int main(int argc, char* argv[])
 {
@@ -43,13 +23,8 @@ int main(int argc, char* argv[])
         socket.connect({bio::ip::address::from_string("127.0.0.1"), 4444});
 
         std::unique_ptr<MsgPackRpc> rpc{new MsgPackRpc{io_context, socket}};
-        rpc->OnNotifications(
-            [] (std::string method, const msgpack::object &) {
-                std::cout << "Notification " << method << std::endl;
-            }
-        );
-
-        attach_ui(rpc.get());
+        Renderer renderer(rpc.get());
+        renderer.AttachUI();
 
         io_context.run();
     }
