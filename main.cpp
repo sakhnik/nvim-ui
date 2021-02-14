@@ -1,7 +1,4 @@
 #include <iostream>
-#include <boost/asio/co_spawn.hpp>
-#include <boost/asio/awaitable.hpp>
-#include <boost/asio/detached.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/signal_set.hpp>
@@ -10,46 +7,92 @@
 
 namespace bio = boost::asio;
 
-bio::awaitable<void> handle_notifications(bio::ip::tcp::socket &socket)
+void CheckError(const boost::system::error_code &err, size_t n)
 {
-    msgpack::unpacker unp;
-
-    try
+    if (err)
     {
-        char data[1024];
-        for (;;)
-        {
-            std::size_t n = co_await socket.async_read_some(bio::buffer(data), bio::use_awaitable);
-            std::cout << "read " << n << std::endl;
+        std::ostringstream oss;
+        oss << err << std::endl;
+        throw std::runtime_error(oss.str());
+    }
+    if (!n)
+        throw std::runtime_error("EOF");
+}
 
+class MsgPackRpc
+{
+public:
+    using OnNotificationT = std::function<void(std::string, msgpack::object)>;
+
+    MsgPackRpc(bio::io_context &io_context, bio::ip::tcp::socket &socket)
+        : _socket{socket}
+    {
+        _dispatch();
+    }
+
+    void OnNotifications(OnNotificationT on_notification)
+    {
+        _on_notification = on_notification;
+    }
+
+    using PackerT = msgpack::packer<msgpack::sbuffer>;
+    using PackRequestT = std::function<void(PackerT &)>;
+    using OnResponseT = std::function<void(const msgpack::object &err, const msgpack::object &resp)>;
+
+    void Request(PackRequestT pack_request, OnResponseT on_response)
+    {
+        // serializes multiple objects using msgpack::packer.
+        msgpack::sbuffer buffer;
+        msgpack::packer<msgpack::sbuffer> pk(&buffer);
+        pk.pack_array(4);
+        pk.pack(0);
+        pk.pack(uint32_t{0});
+        pack_request(pk);
+        async_write(_socket, bio::buffer(buffer.data(), buffer.size()), [](const auto &err, size_t n) {
+            CheckError(err, n);
+        });
+    }
+
+private:
+    bio::ip::tcp::socket &_socket;
+    OnNotificationT _on_notification;
+
+    msgpack::unpacker _unp;
+
+    void _dispatch()
+    {
+        _unp.reserve_buffer(1024);
+        _socket.async_read_some(bio::buffer(_unp.buffer(), 1024), [&](const auto &err, size_t n) {
+            CheckError(err, n);
+            if (!n) throw std::runtime_error("EOF");
+
+            std::cout << "read " << n << std::endl;
+            _unp.buffer_consumed(n);
             msgpack::unpacked result;
-            while (unp.next(result))
+            while (_unp.next(result))
             {
                 msgpack::object obj{result.get()};
                 std::cout << "type " << obj.type << std::endl;
             }
-            //co_await async_write(socket, bio::buffer(data, n), bio::use_awaitable);
-        }
+            _dispatch();
+        });
     }
-    catch (const std::exception &e)
-    {
-        std::cout << e.what() << std::endl;
-    }
-}
+};
 
 
-bio::awaitable<void> attach_ui(bio::ip::tcp::socket &socket)
+void attach_ui(MsgPackRpc *rpc)
 {
-    // serializes multiple objects using msgpack::packer.
-    msgpack::sbuffer buffer;
-    msgpack::packer<msgpack::sbuffer> pk(&buffer);
-    pk.pack(0);
-    pk.pack(uint32_t{0});
-    pk.pack(std::string{"nvim_ui_attach"});
-    pk.pack(80);
-    pk.pack(25);
-    pk.pack_map(0);
-    co_await async_write(socket, bio::buffer(buffer.data(), buffer.size()), bio::use_awaitable);
+    rpc->Request(
+        [](auto &pk) {
+            pk.pack(std::string{"nvim_ui_attach"});
+            pk.pack_array(3);
+            pk.pack(80);
+            pk.pack(25);
+            pk.pack_map(0);
+        },
+        [](const auto &err, const auto &resp) {
+        }
+    );
 }
 
 int main(int argc, char* argv[])
@@ -64,9 +107,14 @@ int main(int argc, char* argv[])
         bio::ip::tcp::socket socket{io_context};
         socket.connect({bio::ip::address::from_string("127.0.0.1"), 4444});
 
-        bio::co_spawn(io_context, handle_notifications(socket), bio::detached);
-        bio::co_spawn(io_context, attach_ui(socket), bio::detached);
+        std::unique_ptr<MsgPackRpc> rpc{new MsgPackRpc{io_context, socket}};
+        rpc->OnNotifications(
+            [] (std::string method, const msgpack::object &) {
+                std::cout << "Notification " << method << std::endl;
+            }
+        );
 
+        attach_ui(rpc.get());
 
         io_context.run();
     }
