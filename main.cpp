@@ -1,5 +1,6 @@
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
+#include "Input.hpp"
 
 #include <iostream>
 #include <boost/asio/io_context.hpp>
@@ -23,9 +24,12 @@ int main(int argc, char* argv[])
         bio::ip::tcp::socket socket{io_context};
         socket.connect({bio::ip::address::from_string("127.0.0.1"), 4444});
 
-        std::unique_ptr<MsgPackRpc> rpc{new MsgPackRpc{io_context, socket}};
-        Renderer renderer(rpc.get());
-        renderer.AttachUI();
+        //std::unique_ptr<MsgPackRpc> rpc{new MsgPackRpc{io_context, socket}};
+        //Renderer renderer(rpc.get());
+        //renderer.AttachUI();
+
+        Input input{io_context};
+        input.Start();
 
         io_context.run();
     }
