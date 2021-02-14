@@ -3,7 +3,8 @@
 #include "MsgPackRpc.hpp"
 #include <stdexcept>
 #include <fstream>
-#include <curses.h>
+#include <iostream>
+//#include <curses.h>
 
 std::ofstream ofs("/tmp/n.log");
 
@@ -13,15 +14,16 @@ public:
     Renderer(MsgPackRpc *rpc)
         : _rpc{rpc}
     {
-        _wnd = ::initscr();
-        if (!_wnd)
-            throw std::runtime_error("Couldn't init screen");
+        std::cout << "[2J";
+        //_wnd = ::initscr();
+        //if (!_wnd)
+        //    throw std::runtime_error("Couldn't init screen");
 
-        ::start_color();
-        ::curs_set(1);
+        //::start_color();
+        //::curs_set(1);
 
-        if (!::has_colors())
-            throw std::runtime_error("No colors");
+        //if (!::has_colors())
+        //    throw std::runtime_error("No colors");
 
         //::raw();
         //::noecho();
@@ -29,7 +31,7 @@ public:
 
     ~Renderer()
     {
-        ::endwin();
+        //::endwin();
     }
 
     void AttachUI()
@@ -40,15 +42,15 @@ public:
             }
         );
 
-        int width{}, height{};
-        getmaxyx(_wnd, height, width);
+        struct winsize size;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 
         _rpc->Request(
             [=](auto &pk) {
                 pk.pack(std::string{"nvim_ui_attach"});
                 pk.pack_array(3);
-                pk.pack(width);
-                pk.pack(height);
+                pk.pack(size.ws_col);
+                pk.pack(size.ws_row);
                 pk.pack_map(2);
                 pk.pack("rgb");
                 pk.pack(true);
@@ -68,9 +70,9 @@ public:
 
 private:
     MsgPackRpc *_rpc;
-    WINDOW *_wnd;
+    //WINDOW *_wnd;
     std::unordered_map<unsigned, unsigned> _colors;
-    std::unordered_map<unsigned, unsigned> _attributes;
+    std::unordered_map<unsigned, std::string> _attributes;
 
     void _OnNotification(std::string method, const msgpack::object &obj)
     {
@@ -87,7 +89,8 @@ private:
             std::string subtype = event.ptr[0].as<std::string>();
             if (subtype == "flush")
             {
-                ::wrefresh(_wnd);
+                //::wrefresh(_wnd);
+                std::cout << std::flush;
             }
             else if (subtype == "grid_cursor_goto")
             {
@@ -95,17 +98,16 @@ private:
             }
             else if (subtype == "grid_line")
             {
-                int y{}, x{};
-                getyx(_wnd, y, x);
+                std::cout << "[s";
                 _GridLine(event);
-                ::wmove(_wnd, y, x);
+                std::cout << "[u";
+                std::cout << "[0m";
             }
             else if (subtype == "grid_scroll")
             {
-                int y{}, x{};
-                getyx(_wnd, y, x);
+                std::cout << "[s";
                 _GridScroll(event);
-                ::wmove(_wnd, y, x);
+                std::cout << "[u";
             }
             else if (subtype == "hl_attr_define")
             {
@@ -128,7 +130,7 @@ private:
             int row = inst.ptr[1].as<int>();
             int col = inst.ptr[2].as<int>();
 
-            ::wmove(_wnd, row, col);
+            std::cout << "[" << (row+1) << ";" << (col+1) << "H";
         }
     }
 
@@ -156,20 +158,15 @@ private:
                     hl_id = cell.ptr[1].as<unsigned>();
                 if (cell.size > 2)
                     repeat = cell.ptr[2].as<int>();
-                ::wmove(_wnd, row, col);
-                auto attr = COLOR_PAIR(hl_id);
-                auto it = _attributes.find(hl_id);
-                if (it != _attributes.end())
-                    attr = it->second;
-                ::wattron(_wnd, attr);
+                std::cout << "[" << (row+1) << ";" << (col+1) << "H";
+                std::cout << _attributes[hl_id];
                 size_t char_count = std::count_if(text.begin(), text.end(),
                                                   [](char c) { return (static_cast<unsigned char>(c) & 0xC0) != 0x80; });
                 col += repeat * char_count;
                 while (repeat--)
                 {
-                    ::waddstr(_wnd, text.c_str());
+                    std::cout << text;
                 }
-                ::wattroff(_wnd, attr);
             }
         }
     }
@@ -213,32 +210,21 @@ private:
 
             // this is very inefficient, but there doesn't appear to be a curses function for extracting whole lines incl.
             // attributes. another alternative would be to keep our own copy of the screen buffer
-            for (int r = start; r != stop; r += step)
-            {
-                for (int c = left; c < right; ++c)
-                {
-                    chtype ch = mvwinch(_wnd, r + rows, c);
-                    mvwaddch(_wnd, r, c, ch);
-                }
-            }
+            //for (int r = start; r != stop; r += step)
+            //{
+            //    for (int c = left; c < right; ++c)
+            //    {
+            //        chtype ch = mvwinch(_wnd, r + rows, c);
+            //        mvwaddch(_wnd, r, c, ch);
+            //    }
+            //}
         }
-    }
-
-    unsigned _GetColor(unsigned rgb)
-    {
-        auto it = _colors.find(rgb);
-        if (it != _colors.end())
-            return it->second;
-        unsigned r = (rgb >> 16) * 1000 / 256;
-        unsigned g = ((rgb >> 8) & 0xff) * 1000 / 256;
-        unsigned b = (rgb & 0xff) * 1000 / 256;
-        unsigned color = _colors.size() + 2;
-        init_extended_color(color, r, g, b);
-        return _colors[rgb] = color;
     }
 
     void _HlAttrDefine(const msgpack::object_array &event)
     {
+        unsigned fg{0};
+        unsigned bg{0};
         for (size_t j = 1; j < event.size; ++j)
         {
             const auto &inst = event.ptr[j].via.array;
@@ -246,31 +232,52 @@ private:
             unsigned hl_id = inst.ptr[0].as<unsigned>();
             const auto &rgb_attr = inst.ptr[1].via.map;
 
-            unsigned fg{1};
-            unsigned bg{0};
             //const auto &cterm_attr = inst.ptr[2].via.map;
             for (size_t i = 0; i < rgb_attr.size; ++i)
             {
                 std::string key{rgb_attr.ptr[i].key.as<std::string>()};
                 if (key == "foreground")
-                    fg = _GetColor(rgb_attr.ptr[i].val.as<unsigned>());
+                {
+                    fg = rgb_attr.ptr[i].val.as<unsigned>();
+                }
                 else if (key == "background")
-                    bg = _GetColor(rgb_attr.ptr[i].val.as<unsigned>());
+                {
+                    bg = rgb_attr.ptr[i].val.as<unsigned>();
+                }
             }
+            bool reverse{false};
+            bool bold{false};
             // info = inst[3]
-            if (ERR == ::init_extended_pair(hl_id, fg, bg))
-                ofs << "Failed to init extended color pair " << hl_id << " " << fg << " " << bg << std::endl;
-            unsigned attr = COLOR_PAIR(hl_id);
             // nvim api docs state that boolean keys here are only sent if true
             for (size_t i = 0; i < rgb_attr.size; ++i)
             {
                 std::string key{rgb_attr.ptr[i].key.as<std::string>()};
                 if (key == "reverse")
-                    attr |= A_REVERSE;
+                {
+                    reverse = true;
+                }
                 else if (key == "bold")
-                    attr |= A_BOLD;
+                {
+                    bold = true;
+                }
             }
-            _attributes[hl_id] = attr;
+            std::ostringstream oss;
+            auto add_rgb = [&](unsigned rgb) {
+                oss << ";" << (rgb >> 16)
+                    << ";" << ((rgb >> 8) & 0xff)
+                    << ";" << (rgb & 0xff);
+            };
+
+            oss << "[38;2";
+            add_rgb(fg);
+            oss << ";48;2";
+            add_rgb(bg);
+            if (bold)
+                oss << ";1";
+            if (reverse)
+                oss << ";7";
+            oss << "m";
+            _attributes[hl_id] = oss.str();
         }
     }
 };
