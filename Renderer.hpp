@@ -64,6 +64,7 @@ public:
 private:
     MsgPackRpc *_rpc;
     WINDOW *_wnd;
+    std::unordered_map<int, int> _attributes;
 
     void _OnNotification(std::string method, const msgpack::object &obj)
     {
@@ -99,6 +100,10 @@ private:
                 getyx(_wnd, y, x);
                 _GridScroll(event);
                 ::wmove(_wnd, y, x);
+            }
+            else if (subtype == "hl_attr_define")
+            {
+                _HlAttrDefine(event);
             }
             else
                 ofs << subtype << " " << event.size << std::endl;
@@ -146,14 +151,19 @@ private:
                 if (cell.size > 2)
                     repeat = cell.ptr[2].as<int>();
                 ::wmove(_wnd, row, col);
+                auto attr = COLOR_PAIR(hl_id);
+                auto it = _attributes.find(hl_id);
+                if (it != _attributes.end())
+                    attr = it->second;
+                ::wattron(_wnd, attr);
                 size_t char_count = std::count_if(text.begin(), text.end(),
                                                   [](char c) { return (static_cast<unsigned char>(c) & 0xC0) != 0x80; });
                 col += repeat * char_count;
                 while (repeat--)
                 {
-//                attr = self.attributes.get(hl_id, curses.color_pair(hl_id))
                     ::waddstr(_wnd, text.c_str());
                 }
+                ::wattroff(_wnd, attr);
             }
         }
     }
@@ -208,4 +218,37 @@ private:
         }
     }
 
+    void _HlAttrDefine(const msgpack::object_array &event)
+    {
+        for (size_t j = 1; j < event.size; ++j)
+        {
+            const auto &inst = event.ptr[j].via.array;
+            int hl_id = inst.ptr[0].as<int>();
+            // rgb_attr = inst[1]
+            const auto &cterm_attr = inst.ptr[2].via.map;
+            int fg{-1};
+            int bg{-1};
+            for (size_t i = 0; i < cterm_attr.size; ++i)
+            {
+                std::string key{cterm_attr.ptr[i].key.as<std::string>()};
+                if (key == "foreground")
+                    fg = cterm_attr.ptr[i].val.as<int>();
+                else if (key == "background")
+                    bg = cterm_attr.ptr[i].val.as<int>();
+            }
+            // info = inst[3]
+            ::init_pair(hl_id, fg, bg);
+            int attr = COLOR_PAIR(hl_id);
+            // nvim api docs state that boolean keys here are only sent if true
+            for (size_t i = 0; i < cterm_attr.size; ++i)
+            {
+                std::string key{cterm_attr.ptr[i].key.as<std::string>()};
+                if (key == "reverse")
+                    attr |= A_REVERSE;
+                else if (key == "bold")
+                    attr |= A_BOLD;
+            }
+            _attributes[hl_id] = attr;
+        }
+    }
 };
