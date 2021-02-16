@@ -1,0 +1,4 @@
+#!/bin/bash
+
+nvim --headless --listen 127.0.0.1:4444 "$@" &
+./BUILD/nvim-cur
