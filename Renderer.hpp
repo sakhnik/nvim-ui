@@ -32,15 +32,15 @@ public:
             }
         );
 
-        struct winsize size;
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &_size);
+        _grid.resize(_size.ws_col * _size.ws_col);
 
         _rpc->Request(
-            [=](auto &pk) {
+            [this](auto &pk) {
                 pk.pack(std::string{"nvim_ui_attach"});
                 pk.pack_array(3);
-                pk.pack(size.ws_col);
-                pk.pack(size.ws_row);
+                pk.pack(_size.ws_col);
+                pk.pack(_size.ws_row);
                 pk.pack_map(2);
                 pk.pack("rgb");
                 pk.pack(true);
@@ -63,6 +63,16 @@ private:
     unsigned _fg{0xffffff};
     unsigned _bg{0};
     std::unordered_map<unsigned, std::function<std::string(void)>> _attributes;
+
+    struct winsize _size;
+    struct _Cell
+    {
+        std::string text;
+        unsigned hl_id;
+    };
+    using _GridT = std::vector<_Cell>;
+    _GridT _grid;
+
 
     void _OnNotification(std::string method, const msgpack::object &obj)
     {
@@ -152,11 +162,30 @@ private:
                     repeat = cell.ptr[2].as<int>();
                 std::cout << "[" << (row+1) << ";" << (col+1) << "H";
                 std::cout << _attributes[hl_id]();
-                size_t char_count = std::count_if(text.begin(), text.end(),
-                                                  [](char c) { return (static_cast<unsigned char>(c) & 0xC0) != 0x80; });
-                col += repeat * char_count;
-                while (repeat--)
+
+                int start_col = col;
+                _Cell buf_cell{.hl_id = hl_id};
+                for (size_t i = 0; i < text.size(); ++i)
                 {
+                    char ch = text[i];
+                    if (!buf_cell.text.empty() && (static_cast<uint8_t>(ch) & 0xC0) != 0x80)
+                    {
+                        _grid[row * _size.ws_col + col] = buf_cell;
+                        buf_cell.text.clear();
+                        ++col;
+                    }
+                    buf_cell.text.push_back(ch);
+                }
+                _grid[row * _size.ws_col + col] = buf_cell;
+                buf_cell.text.clear();
+                ++col;
+                std::cout << text;
+
+                int stride = col - start_col;
+                while (--repeat)
+                {
+                    for (int i = 0; i < stride; ++i, ++col)
+                        _grid[row * _size.ws_col + col] = _grid[row * _size.ws_col + col - stride];
                     std::cout << text;
                 }
             }
@@ -165,52 +194,60 @@ private:
 
     void _GridScroll(const msgpack::object_array &event)
     {
-        //for (size_t j = 1; j < event.size; ++j)
-        //{
-        //    const auto &inst = event.ptr[j].via.array;
-        //    int grid = inst.ptr[0].as<int>();
-        //    if (grid != 1)
-        //        throw std::runtime_error("Multigrid not supported");
-        //    int top = inst.ptr[1].as<int>();
-        //    int bot = inst.ptr[2].as<int>();
-        //    int left = inst.ptr[3].as<int>();
-        //    int right = inst.ptr[4].as<int>();
-        //    int rows = inst.ptr[5].as<int>();
-        //    int cols = inst.ptr[6].as<int>();
-        //    if (cols)
-        //        throw std::runtime_error("Column scrolling not expected");
+        for (size_t j = 1; j < event.size; ++j)
+        {
+            const auto &inst = event.ptr[j].via.array;
+            int grid = inst.ptr[0].as<int>();
+            if (grid != 1)
+                throw std::runtime_error("Multigrid not supported");
+            int top = inst.ptr[1].as<int>();
+            int bot = inst.ptr[2].as<int>();
+            int left = inst.ptr[3].as<int>();
+            int right = inst.ptr[4].as<int>();
+            int rows = inst.ptr[5].as<int>();
+            int cols = inst.ptr[6].as<int>();
+            if (cols)
+                throw std::runtime_error("Column scrolling not expected");
 
-        //    int start = 0;
-        //    int stop = 0;
-        //    int step = 0;
+            int start = 0;
+            int stop = 0;
+            int step = 0;
 
-        //    --bot;
-        //    if (rows > 0)
-        //    {
-        //        start = top;
-        //        stop = bot - rows + 1;
-        //        step = 1;
-        //    }
-        //    else if (rows < 0)
-        //    {
-        //        start = bot;
-        //        stop = top - rows - 1;
-        //        step = -1;
-        //    }
-        //    else
-        //        throw std::runtime_error("Rows should not equal 0");
+            --bot;
+            if (rows > 0)
+            {
+                start = top;
+                stop = bot - rows + 1;
+                step = 1;
+            }
+            else if (rows < 0)
+            {
+                start = bot;
+                stop = top - rows - 1;
+                step = -1;
+            }
+            else
+                throw std::runtime_error("Rows should not equal 0");
 
-        //    // this is very inefficient, but there doesn't appear to be a curses function for extracting whole lines incl.
-        //    // attributes. another alternative would be to keep our own copy of the screen buffer
-        //    //for (int r = start; r != stop; r += step)
-        //    //{
-        //    //    for (int c = left; c < right; ++c)
-        //    //    {
-        //    //        chtype ch = mvwinch(_wnd, r + rows, c);
-        //    //        mvwaddch(_wnd, r, c, ch);
-        //    //    }
-        //    //}
-        //}
+            // this is very inefficient, but there doesn't appear to be a curses function for extracting whole lines incl.
+            // attributes. another alternative would be to keep our own copy of the screen buffer
+            for (int r = start; r != stop; r += step)
+            {
+                std::cout << "[" << (r+1) << ";" << (left+1) << "H";
+                size_t idx = r * _size.ws_col + left;
+                unsigned hl_id = _grid[idx].hl_id;
+                std::cout << _attributes[hl_id]();
+                for (int c = left; c < right; ++c, ++idx)
+                {
+                    if (hl_id != _grid[idx].hl_id)
+                    {
+                        hl_id = _grid[idx].hl_id;
+                        std::cout << _attributes[hl_id]();
+                    }
+                    std::cout << _grid[idx].text;
+                }
+            }
+        }
     }
 
     void _HlDefaultColorsSet(const msgpack::object_array &event)

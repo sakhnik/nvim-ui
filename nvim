@@ -1,4 +1,7 @@
 #!/bin/bash
 
 nvim --headless --listen 127.0.0.1:4444 "$@" &
+for i in $(seq 0 10); do
+    timeout 0.1 bash -c 'cat </dev/null >/dev/tcp/localhost/4444' 2>/dev/null && break || true
+done
 ./BUILD/nvim-cur
