@@ -4,20 +4,17 @@
 #include <string>
 #include <msgpack.hpp>
 #include <boost/asio/write.hpp>
-#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/read.hpp>
 
 namespace bio = boost::asio;
 
-class MsgPackRpc
+struct MsgPackRpc
 {
-public:
-    using OnNotificationT = std::function<void(std::string, msgpack::object)>;
-
-    MsgPackRpc(bio::io_context &io_context, bio::ip::tcp::socket &socket)
-        : _socket{socket}
+    virtual ~MsgPackRpc()
     {
-        _dispatch();
     }
+
+    using OnNotificationT = std::function<void(std::string, msgpack::object)>;
 
     void OnNotifications(OnNotificationT on_notification)
     {
@@ -28,7 +25,24 @@ public:
     using PackRequestT = std::function<void(PackerT &)>;
     using OnResponseT = std::function<void(const msgpack::object &err, const msgpack::object &resp)>;
 
-    void Request(PackRequestT pack_request, OnResponseT on_response)
+    virtual void Request(PackRequestT pack_request, OnResponseT on_response) = 0;
+
+protected:
+    OnNotificationT _on_notification;
+};
+
+template <typename AsyncReadStreamT, typename AsyncWriteStreamT>
+class MsgPackRpcImpl : public MsgPackRpc
+{
+public:
+    MsgPackRpcImpl(bio::io_context &io_context, AsyncReadStreamT &read_stream, AsyncWriteStreamT &write_stream)
+        : _read_stream{read_stream}
+        , _write_stream{write_stream}
+    {
+        _dispatch();
+    }
+
+    void Request(PackRequestT pack_request, OnResponseT on_response) override
     {
         auto [it, _] = _requests.emplace(_seq++, std::move(on_response));
 
@@ -39,14 +53,14 @@ public:
         pk.pack(0);
         pk.pack(it->first);
         pack_request(pk);
-        async_write(_socket, bio::buffer(buffer.data(), buffer.size()), [](const auto &err, size_t n) {
+        bio::async_write(_write_stream, bio::buffer(buffer.data(), buffer.size()), [](const auto &err, size_t n) {
             _CheckError(err, n);
         });
     }
 
 private:
-    bio::ip::tcp::socket &_socket;
-    OnNotificationT _on_notification;
+    AsyncReadStreamT &_read_stream;
+    AsyncWriteStreamT &_write_stream;
     msgpack::unpacker _unp;
     uint32_t _seq = 0;
     std::map<uint32_t, OnResponseT> _requests;
@@ -54,7 +68,7 @@ private:
     void _dispatch()
     {
         _unp.reserve_buffer(1024);
-        _socket.async_read_some(bio::buffer(_unp.buffer(), 1024), [&](const auto &err, size_t n) {
+        bio::async_read(_read_stream, bio::buffer(_unp.buffer(), 1024), [&](const auto &err, size_t n) {
             _CheckError(err, n);
             if (!n) throw std::runtime_error("EOF");
 
@@ -93,4 +107,3 @@ private:
             throw std::runtime_error("EOF");
     }
 };
-

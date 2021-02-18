@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
         bio::ip::tcp::socket socket{io_context};
         socket.connect({bio::ip::address::from_string("127.0.0.1"), 4444});
 
-        MsgPackRpc rpc{io_context, socket};
+        MsgPackRpcImpl<bio::ip::tcp::socket, bio::ip::tcp::socket> rpc{io_context, socket, socket};
         Renderer renderer(&rpc);
         renderer.AttachUI();
 
