@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <fstream>
 #include <iostream>
-//#include <curses.h>
 
 std::ofstream ofs("/tmp/n.log");
 
@@ -14,24 +13,12 @@ public:
     Renderer(MsgPackRpc *rpc)
         : _rpc{rpc}
     {
+        // Clear screen
         std::cout << "[2J";
-        //_wnd = ::initscr();
-        //if (!_wnd)
-        //    throw std::runtime_error("Couldn't init screen");
-
-        //::start_color();
-        //::curs_set(1);
-
-        //if (!::has_colors())
-        //    throw std::runtime_error("No colors");
-
-        //::raw();
-        //::noecho();
     }
 
     ~Renderer()
     {
-        //::endwin();
     }
 
     void AttachUI()
@@ -70,9 +57,10 @@ public:
 
 private:
     MsgPackRpc *_rpc;
-    //WINDOW *_wnd;
     std::unordered_map<unsigned, unsigned> _colors;
     std::unordered_map<unsigned, std::string> _attributes;
+    unsigned _fg{0xffffff};
+    unsigned _bg{0};
 
     void _OnNotification(std::string method, const msgpack::object &obj)
     {
@@ -89,7 +77,6 @@ private:
             std::string subtype = event.ptr[0].as<std::string>();
             if (subtype == "flush")
             {
-                //::wrefresh(_wnd);
                 std::cout << std::flush;
             }
             else if (subtype == "grid_cursor_goto")
@@ -112,6 +99,10 @@ private:
             else if (subtype == "hl_attr_define")
             {
                 _HlAttrDefine(event);
+            }
+            else if (subtype == "default_colors_set")
+            {
+                _HlDefaultColorsSet(event);
             }
             else
                 ofs << subtype << " " << event.size << std::endl;
@@ -221,10 +212,15 @@ private:
         }
     }
 
+    void _HlDefaultColorsSet(const msgpack::object_array &event)
+    {
+        const auto &inst = event.ptr[1].via.array;
+        _fg = inst.ptr[0].as<unsigned>();
+        _bg = inst.ptr[1].as<unsigned>();
+    }
+
     void _HlAttrDefine(const msgpack::object_array &event)
     {
-        unsigned fg{0};
-        unsigned bg{0};
         for (size_t j = 1; j < event.size; ++j)
         {
             const auto &inst = event.ptr[j].via.array;
@@ -232,6 +228,8 @@ private:
             unsigned hl_id = inst.ptr[0].as<unsigned>();
             const auto &rgb_attr = inst.ptr[1].via.map;
 
+            unsigned fg{_fg};
+            unsigned bg{_bg};
             //const auto &cterm_attr = inst.ptr[2].via.map;
             for (size_t i = 0; i < rgb_attr.size; ++i)
             {
