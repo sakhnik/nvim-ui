@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <fstream>
 #include <iostream>
+#include <optional>
+#include <functional>
 
 std::ofstream ofs("/tmp/n.log");
 
@@ -15,6 +17,7 @@ public:
     {
         // Clear screen
         std::cout << "[2J";
+        _AddHlAttr(0, {}, {}, false, false);
     }
 
     ~Renderer()
@@ -57,10 +60,9 @@ public:
 
 private:
     MsgPackRpc *_rpc;
-    std::unordered_map<unsigned, unsigned> _colors;
-    std::unordered_map<unsigned, std::string> _attributes;
     unsigned _fg{0xffffff};
     unsigned _bg{0};
+    std::unordered_map<unsigned, std::function<std::string(void)>> _attributes;
 
     void _OnNotification(std::string method, const msgpack::object &obj)
     {
@@ -85,16 +87,15 @@ private:
             }
             else if (subtype == "grid_line")
             {
-                std::cout << "[s";
+                std::cout << "[s";  // save
                 _GridLine(event);
-                std::cout << "[u";
-                std::cout << "[0m";
+                std::cout << "[u";  // restore
             }
             else if (subtype == "grid_scroll")
             {
-                std::cout << "[s";
+                std::cout << "[s";  // save
                 _GridScroll(event);
-                std::cout << "[u";
+                std::cout << "[u";  // restore
             }
             else if (subtype == "hl_attr_define")
             {
@@ -150,7 +151,7 @@ private:
                 if (cell.size > 2)
                     repeat = cell.ptr[2].as<int>();
                 std::cout << "[" << (row+1) << ";" << (col+1) << "H";
-                std::cout << _attributes[hl_id];
+                std::cout << _attributes[hl_id]();
                 size_t char_count = std::count_if(text.begin(), text.end(),
                                                   [](char c) { return (static_cast<unsigned char>(c) & 0xC0) != 0x80; });
                 col += repeat * char_count;
@@ -164,52 +165,52 @@ private:
 
     void _GridScroll(const msgpack::object_array &event)
     {
-        for (size_t j = 1; j < event.size; ++j)
-        {
-            const auto &inst = event.ptr[j].via.array;
-            int grid = inst.ptr[0].as<int>();
-            if (grid != 1)
-                throw std::runtime_error("Multigrid not supported");
-            int top = inst.ptr[1].as<int>();
-            int bot = inst.ptr[2].as<int>();
-            int left = inst.ptr[3].as<int>();
-            int right = inst.ptr[4].as<int>();
-            int rows = inst.ptr[5].as<int>();
-            int cols = inst.ptr[6].as<int>();
-            if (cols)
-                throw std::runtime_error("Column scrolling not expected");
+        //for (size_t j = 1; j < event.size; ++j)
+        //{
+        //    const auto &inst = event.ptr[j].via.array;
+        //    int grid = inst.ptr[0].as<int>();
+        //    if (grid != 1)
+        //        throw std::runtime_error("Multigrid not supported");
+        //    int top = inst.ptr[1].as<int>();
+        //    int bot = inst.ptr[2].as<int>();
+        //    int left = inst.ptr[3].as<int>();
+        //    int right = inst.ptr[4].as<int>();
+        //    int rows = inst.ptr[5].as<int>();
+        //    int cols = inst.ptr[6].as<int>();
+        //    if (cols)
+        //        throw std::runtime_error("Column scrolling not expected");
 
-            int start = 0;
-            int stop = 0;
-            int step = 0;
+        //    int start = 0;
+        //    int stop = 0;
+        //    int step = 0;
 
-            --bot;
-            if (rows > 0)
-            {
-                start = top;
-                stop = bot - rows + 1;
-                step = 1;
-            }
-            else if (rows < 0)
-            {
-                start = bot;
-                stop = top - rows - 1;
-                step = -1;
-            }
-            else
-                throw std::runtime_error("Rows should not equal 0");
+        //    --bot;
+        //    if (rows > 0)
+        //    {
+        //        start = top;
+        //        stop = bot - rows + 1;
+        //        step = 1;
+        //    }
+        //    else if (rows < 0)
+        //    {
+        //        start = bot;
+        //        stop = top - rows - 1;
+        //        step = -1;
+        //    }
+        //    else
+        //        throw std::runtime_error("Rows should not equal 0");
 
-            // this is very inefficient, but there doesn't appear to be a curses function for extracting whole lines incl.
-            // attributes. another alternative would be to keep our own copy of the screen buffer
-            //for (int r = start; r != stop; r += step)
-            //{
-            //    for (int c = left; c < right; ++c)
-            //    {
-            //        chtype ch = mvwinch(_wnd, r + rows, c);
-            //        mvwaddch(_wnd, r, c, ch);
-            //    }
-            //}
-        }
+        //    // this is very inefficient, but there doesn't appear to be a curses function for extracting whole lines incl.
+        //    // attributes. another alternative would be to keep our own copy of the screen buffer
+        //    //for (int r = start; r != stop; r += step)
+        //    //{
+        //    //    for (int c = left; c < right; ++c)
+        //    //    {
+        //    //        chtype ch = mvwinch(_wnd, r + rows, c);
+        //    //        mvwaddch(_wnd, r, c, ch);
+        //    //    }
+        //    //}
+        //}
     }
 
     void _HlDefaultColorsSet(const msgpack::object_array &event)
@@ -228,8 +229,7 @@ private:
             unsigned hl_id = inst.ptr[0].as<unsigned>();
             const auto &rgb_attr = inst.ptr[1].via.map;
 
-            unsigned fg{_fg};
-            unsigned bg{_bg};
+            std::optional<unsigned> fg, bg;
             //const auto &cterm_attr = inst.ptr[2].via.map;
             for (size_t i = 0; i < rgb_attr.size; ++i)
             {
@@ -259,23 +259,36 @@ private:
                     bold = true;
                 }
             }
+            _AddHlAttr(hl_id, fg, bg, bold, reverse);
+        }
+    }
+
+    void _AddHlAttr(unsigned hl_id, std::optional<unsigned> fg, std::optional<unsigned> bg, bool bold, bool reverse)
+    {
+        auto attr_to_string = [this, fg, bg, bold, reverse] {
             std::ostringstream oss;
             auto add_rgb = [&](unsigned rgb) {
                 oss << ";" << (rgb >> 16)
                     << ";" << ((rgb >> 8) & 0xff)
                     << ";" << (rgb & 0xff);
             };
-
             oss << "[38;2";
-            add_rgb(fg);
+            if (fg)
+                add_rgb(*fg);
+            else
+                add_rgb(_fg);
             oss << ";48;2";
-            add_rgb(bg);
+            if (bg)
+                add_rgb(*bg);
+            else
+                add_rgb(_bg);
             if (bold)
                 oss << ";1";
             if (reverse)
                 oss << ";7";
             oss << "m";
-            _attributes[hl_id] = oss.str();
-        }
+            return oss.str();
+        };
+        _attributes[hl_id] = attr_to_string;
     }
 };
