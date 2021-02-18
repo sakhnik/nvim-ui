@@ -1,6 +1,3 @@
-#include <fstream>
-std::ofstream ofs("/tmp/n.log");
-
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
 #include "Input.hpp"
@@ -11,6 +8,9 @@ std::ofstream ofs("/tmp/n.log");
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <msgpack.hpp>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
+
 
 namespace bio = boost::asio;
 namespace bp = boost::process;
@@ -20,6 +20,9 @@ int main(int argc, char* argv[])
     setlocale(LC_CTYPE, "");
     try
     {
+        auto logger = spdlog::basic_logger_st("logger", "/tmp/n.log");
+        logger->info("Hello");
+
         bio::io_context io_context(1);
 
         bio::signal_set signals(io_context, SIGINT, SIGTERM);

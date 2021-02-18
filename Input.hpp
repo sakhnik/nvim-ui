@@ -6,6 +6,7 @@
 #include <boost/asio/posix/stream_descriptor.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <termkey.h>
+#include <spdlog/spdlog.h>
 
 namespace bio = boost::asio;
 
@@ -57,6 +58,7 @@ private:
             ::termkey_strfkey(_tk, buffer, sizeof(buffer), &key, TERMKEY_FORMAT_VIM);
             input = buffer;
         }
+        spdlog::get("logger")->info("Input {}", input);
 
         _rpc->Request(
             [&](MsgPackRpc::PackerT &pk) {
@@ -83,16 +85,13 @@ private:
         {
             _timer.expires_from_now(boost::posix_time::millisec(_nextwait));
             _timer.async_wait([this](const auto &err) {
-                Timer t("timeout");
                 TermKeyKey key;
                 if (::termkey_getkey_force(_tk, &key) == TERMKEY_RES_KEY)
                     _OnKey(key);
             });
         }
 
-        Timer t("async read some");
         _descriptor.async_read_some(bio::null_buffers{}, [this](const auto &err, size_t) {
-            Timer t("key read");
             if (err)
             {
                 std::ostringstream oss;

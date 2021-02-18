@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Timer.hpp"
 #include <functional>
 #include <string>
 #include <msgpack.hpp>
@@ -45,7 +44,6 @@ public:
 
     void Request(PackRequestT pack_request, OnResponseT on_response) override
     {
-        Timer t("req");
         auto [it, _] = _requests.emplace(_seq++, std::move(on_response));
 
         // serializes multiple objects using msgpack::packer.
@@ -55,7 +53,6 @@ public:
         pk.pack(0);
         pk.pack(it->first);
         pack_request(pk);
-        Timer t2("async_write");
         bio::async_write(_write_stream, bio::buffer(buffer.data(), buffer.size()), [](const auto &err, size_t n) {
             _CheckError(err, n);
         });
@@ -71,9 +68,7 @@ private:
     void _dispatch()
     {
         _unp.reserve_buffer(1024);
-        Timer t("async_read");
-        bio::async_read(_read_stream, bio::buffer(_unp.buffer(), 1024), [&](const auto &err, size_t n) {
-            Timer t("read");
+        _read_stream.async_read_some(bio::buffer(_unp.buffer(), 1024), [&](const auto &err, size_t n) {
             _CheckError(err, n);
             if (!n) throw std::runtime_error("EOF");
 

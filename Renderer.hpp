@@ -5,6 +5,7 @@
 #include <iostream>
 #include <optional>
 #include <functional>
+#include <spdlog/spdlog.h>
 
 
 class Renderer
@@ -76,7 +77,7 @@ private:
     {
         if (method != "redraw")
         {
-            ofs << "Notification " << method << " " << obj << std::endl;
+            spdlog::get("logger")->warn("Unexpected notification {}", method);
             return;
         }
 
@@ -114,9 +115,10 @@ private:
                 _HlDefaultColorsSet(event);
             }
             else
-                ofs << subtype << " " << event.size << std::endl;
+            {
+                spdlog::get("logger")->info("Ignoring redraw {}", subtype);
+            }
         }
-
     }
 
     void _GridCursorGoto(const msgpack::object_array &event)
@@ -260,7 +262,6 @@ private:
         for (size_t j = 1; j < event.size; ++j)
         {
             const auto &inst = event.ptr[j].via.array;
-            ofs << "hl " << event.ptr[j] << std::endl;
             unsigned hl_id = inst.ptr[0].as<unsigned>();
             const auto &rgb_attr = inst.ptr[1].via.map;
 
