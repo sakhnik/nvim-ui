@@ -1,14 +1,19 @@
+#include <fstream>
+std::ofstream ofs("/tmp/n.log");
+
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
 #include "Input.hpp"
 
 #include <iostream>
+#include <boost/process.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <msgpack.hpp>
 
 namespace bio = boost::asio;
+namespace bp = boost::process;
 
 int main(int argc, char* argv[])
 {
@@ -20,10 +25,11 @@ int main(int argc, char* argv[])
         bio::signal_set signals(io_context, SIGINT, SIGTERM);
         signals.async_wait([&](auto, auto){ io_context.stop(); });
 
-        bio::ip::tcp::socket socket{io_context};
-        socket.connect({bio::ip::address::from_string("127.0.0.1"), 4444});
+        bp::async_pipe apfrom(io_context);
+        bp::async_pipe apto(io_context);
+        bp::child c(bp::search_path("nvim"), "--embed", bp::std_out > apfrom, bp::std_in < apto, io_context);
 
-        MsgPackRpcImpl<bio::ip::tcp::socket, bio::ip::tcp::socket> rpc{io_context, socket, socket};
+        auto rpc = MakeMsgPackRpcImpl(io_context, apfrom, apto);
         Renderer renderer(&rpc);
         renderer.AttachUI();
 
@@ -31,6 +37,8 @@ int main(int argc, char* argv[])
         input.Start();
 
         io_context.run();
+        c.wait();
+        return c.exit_code();
     }
     catch (std::exception& e)
     {

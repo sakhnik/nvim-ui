@@ -2,12 +2,10 @@
 
 #include "MsgPackRpc.hpp"
 #include <stdexcept>
-#include <fstream>
 #include <iostream>
 #include <optional>
 #include <functional>
 
-std::ofstream ofs("/tmp/n.log");
 
 class Renderer
 {
