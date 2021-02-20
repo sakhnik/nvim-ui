@@ -5,7 +5,9 @@
 #include <iostream>
 #include <optional>
 #include <functional>
-#include <spdlog/spdlog.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+//#include <spdlog/spdlog.h>
 
 
 class Renderer
@@ -77,7 +79,7 @@ private:
     {
         if (method != "redraw")
         {
-            spdlog::get("logger")->warn("Unexpected notification {}", method);
+            //spdlog::get("logger")->warn("Unexpected notification {}", method);
             return;
         }
 
@@ -116,7 +118,7 @@ private:
             }
             else
             {
-                spdlog::get("logger")->info("Ignoring redraw {}", subtype);
+                //spdlog::get("logger")->info("Ignoring redraw {}", subtype);
             }
         }
     }

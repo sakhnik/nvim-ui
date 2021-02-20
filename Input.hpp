@@ -6,7 +6,7 @@
 #include <boost/asio/posix/stream_descriptor.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <termkey.h>
-#include <spdlog/spdlog.h>
+//#include <spdlog/spdlog.h>
 
 namespace bio = boost::asio;
 
@@ -58,7 +58,7 @@ private:
             ::termkey_strfkey(_tk, buffer, sizeof(buffer), &key, TERMKEY_FORMAT_VIM);
             input = buffer;
         }
-        spdlog::get("logger")->info("Input {}", input);
+        //spdlog::get("logger")->info("Input {}", input);
 
         _rpc->Request(
             [&](MsgPackRpc::PackerT &pk) {

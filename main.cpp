@@ -3,45 +3,82 @@
 #include "Input.hpp"
 
 #include <iostream>
-#include <boost/process.hpp>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/signal_set.hpp>
 #include <msgpack.hpp>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/basic_file_sink.h>
+#include <uv.h>
+//#include <spdlog/spdlog.h>
+//#include <spdlog/sinks/basic_file_sink.h>
 
-
-namespace bio = boost::asio;
-namespace bp = boost::process;
+template <typename P, typename D>
+std::unique_ptr<P, D> make_unique(P *p, D d)
+{
+    return std::unique_ptr<P, D>(p, d);
+}
 
 int main(int argc, char* argv[])
 {
     setlocale(LC_CTYPE, "");
     try
     {
-        auto logger = spdlog::basic_logger_st("logger", "/tmp/n.log");
-        logger->info("Hello");
+        //auto logger = spdlog::basic_logger_st("logger", "/tmp/n.log");
+        //logger->info("Hello");
 
-        bio::io_context io_context(1);
+        auto loop = uv_default_loop();
 
-        bio::signal_set signals(io_context, SIGINT, SIGTERM);
-        signals.async_wait([&](auto, auto){ io_context.stop(); });
+        //auto signal = loop->resource<uvw::SignalHandle>();
+        //signal->once<uvw::SignalEvent>([&loop](const uvw::SignalEvent &ev, const auto &handle) {
+        //    if (ev.signum == SIGINT || ev.signum == SIGTERM)
+        //    {
+        //        loop->close();
+        //    }
+        //});
 
-        bp::async_pipe apfrom(io_context);
-        bp::async_pipe apto(io_context);
-        bp::child c(bp::search_path("nvim"), "--embed", bp::std_out > apfrom, bp::std_in < apto, io_context);
+        std::string nvim("nvim");
+        std::string embed("--embed");
 
-        auto rpc = MakeMsgPackRpcImpl(io_context, apfrom, apto);
+        char *args[] = {
+            nvim.data(),
+            embed.data(),
+            nullptr,
+        };
+
+        auto on_exit = [](uv_process_t *, int64_t exit_status, int signal) {
+            exit(exit_status);
+        };
+
+        uv_process_options_t options{};
+        options.exit_cb = on_exit;
+        options.file = nvim.data();
+        options.args = args;
+
+        uv_pipe_t stdin_pipe, stdout_pipe;
+        uv_pipe_init(loop, &stdin_pipe, 0);
+        uv_pipe_init(loop, &stdout_pipe, 0);
+
+        uv_stdio_container_t child_stdio[3];
+        child_stdio[0].flags = static_cast<uv_stdio_flags>(UV_CREATE_PIPE | UV_READABLE_PIPE);
+        child_stdio[0].data.stream = reinterpret_cast<uv_stream_t*>(&stdin_pipe);
+        child_stdio[1].flags = static_cast<uv_stdio_flags>(UV_CREATE_PIPE | UV_WRITABLE_PIPE);
+        child_stdio[1].data.stream = reinterpret_cast<uv_stream_t*>(&stdout_pipe);
+        child_stdio[2].flags = UV_INHERIT_FD;
+        child_stdio[2].data.fd = 2;
+        options.stdio_count = 3;
+        options.stdio = child_stdio;
+
+        uv_process_t child_req;
+        if (int r = ::uv_spawn(loop, &child_req, &options))
+        {
+            std::cerr << uv_strerror(r) << std::endl;
+            return 1;
+        }
+
+        MsgPackRpcImpl rpc(&stdin_pipe, &stdout_pipe);
         Renderer renderer(&rpc);
         renderer.AttachUI();
 
-        Input input{io_context, &rpc};
-        input.Start();
+        //Input input{io_context, &rpc};
+        //input.Start();
 
-        io_context.run();
-        c.wait();
-        return c.exit_code();
+        ::uv_run(loop, UV_RUN_DEFAULT);
     }
     catch (std::exception& e)
     {
