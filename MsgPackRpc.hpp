@@ -4,7 +4,7 @@
 #include <string>
 #include <msgpack.hpp>
 #include <uv.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 
 struct MsgPackRpc
@@ -49,8 +49,11 @@ public:
 
         auto read_apipe = [](uv_stream_t* stream, ssize_t nread, const uv_buf_t *buf) {
             //printf("read %li bytes in a %lu byte buffer\n", nread, buf.len);
-            MsgPackRpcImpl *self = reinterpret_cast<MsgPackRpcImpl*>(stream->data);
-            self->_handle_data(buf->base, buf->len);
+            if (nread > 0)
+            {
+                MsgPackRpcImpl *self = reinterpret_cast<MsgPackRpcImpl*>(stream->data);
+                self->_handle_data(buf->base, nread);
+            }
         };
 
         ::uv_read_start((uv_stream_t*)_stdout_pipe, alloc_buffer, read_apipe);

@@ -5,8 +5,8 @@
 #include <iostream>
 #include <msgpack.hpp>
 #include <uv.h>
-//#include <spdlog/spdlog.h>
-//#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
 
 template <typename P, typename D>
 std::unique_ptr<P, D> make_unique(P *p, D d)
@@ -19,8 +19,8 @@ int main(int argc, char* argv[])
     setlocale(LC_CTYPE, "");
     try
     {
-        //auto logger = spdlog::basic_logger_st("logger", "/tmp/n.log");
-        //logger->info("Hello");
+        auto logger = spdlog::basic_logger_st("logger", "/tmp/n.log");
+        logger->info("Hello");
 
         auto loop = uv_default_loop();
 
@@ -75,8 +75,8 @@ int main(int argc, char* argv[])
         Renderer renderer(&rpc);
         renderer.AttachUI();
 
-        //Input input{io_context, &rpc};
-        //input.Start();
+        Input input{loop, &rpc};
+        input.Start();
 
         ::uv_run(loop, UV_RUN_DEFAULT);
     }

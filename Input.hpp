@@ -2,27 +2,28 @@
 
 #include "MsgPackRpc.hpp"
 #include <sstream>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/posix/stream_descriptor.hpp>
-#include <boost/asio/deadline_timer.hpp>
 #include <termkey.h>
+#include <uv.h>
+#include <unistd.h>
 //#include <spdlog/spdlog.h>
-
-namespace bio = boost::asio;
 
 class Input
 {
 public:
-    Input(bio::io_context &io_context, MsgPackRpc *rpc)
+    Input(uv_loop_t *loop, MsgPackRpc *rpc)
         : _rpc{rpc}
-        , _descriptor{io_context}
-        , _timer{io_context}
+        //, _descriptor{io_context}
+        //, _timer{io_context}
     {
         _tk = ::termkey_new(0, 0);
         if (!_tk)
             throw std::runtime_error("Cannot allocate termkey instance");
 
-        _descriptor.assign(STDIN_FILENO);
+        ::uv_poll_init(loop, &_poll, STDIN_FILENO);
+        _poll.data = this;
+
+        ::uv_timer_init(loop, &_timer);
+        _timer.data = this;
     }
 
     ~Input()
@@ -32,15 +33,38 @@ public:
 
     void Start()
     {
-        _ReadInput();
+        auto on_readable = [](uv_poll_t *handle, int status, int events) {
+            if (status == UV_EAGAIN)
+                return;
+            Input *self = reinterpret_cast<Input*>(handle->data);
+            self->_OnReadable();
+        };
+
+        ::uv_poll_start(&_poll, UV_READABLE, on_readable);
+
+        _StartTimer(-1);
     }
 
 private:
     MsgPackRpc *_rpc;
-    bio::posix::stream_descriptor _descriptor;
-    bio::deadline_timer _timer;
+    uv_poll_t _poll;
+    uv_timer_t _timer;
     TermKey *_tk;
-    int _nextwait = -1;
+
+    void _StartTimer(int nextwait)
+    {
+        auto on_timeout = [](uv_timer_t *handle) {
+            Input *self = reinterpret_cast<Input*>(handle->data);
+            TermKeyKey key;
+            if (::termkey_getkey_force(self->_tk, &key) == TERMKEY_RES_KEY)
+                self->_OnKey(key);
+        };
+
+        if (nextwait != -1)
+            ::uv_timer_start(&_timer, on_timeout, nextwait, 0);
+        else
+            ::uv_timer_stop(&_timer);
+    }
 
     void _OnKey(TermKeyKey &key)
     {
@@ -77,38 +101,16 @@ private:
         );
     }
 
-    void _ReadInput()
+    void _OnReadable()
     {
-        if (_nextwait == -1)
-            _timer.cancel();
-        else
-        {
-            _timer.expires_from_now(boost::posix_time::millisec(_nextwait));
-            _timer.async_wait([this](const auto &err) {
-                TermKeyKey key;
-                if (::termkey_getkey_force(_tk, &key) == TERMKEY_RES_KEY)
-                    _OnKey(key);
-            });
-        }
+        ::termkey_advisereadable(_tk);
 
-        _descriptor.async_read_some(bio::null_buffers{}, [this](const auto &err, size_t) {
-            if (err)
-            {
-                std::ostringstream oss;
-                oss << "Error: " << err;
-                throw std::runtime_error(oss.str());
-            }
+        TermKeyResult ret;
+        TermKeyKey key;
 
-            ::termkey_advisereadable(_tk);
+        while ((ret = termkey_getkey(_tk, &key)) == TERMKEY_RES_KEY)
+            _OnKey(key);
 
-            TermKeyResult ret;
-            TermKeyKey key;
-
-            while ((ret = termkey_getkey(_tk, &key)) == TERMKEY_RES_KEY)
-                _OnKey(key);
-
-            _nextwait = (ret == TERMKEY_RES_AGAIN) ? termkey_get_waittime(_tk) : -1;
-            _ReadInput();
-        });
+        _StartTimer((ret == TERMKEY_RES_AGAIN) ? termkey_get_waittime(_tk) : -1);
     }
 };
