@@ -4,7 +4,6 @@
 #include <string>
 #include <msgpack.hpp>
 #include <uv.h>
-#include <spdlog/spdlog.h>
 
 
 struct MsgPackRpc

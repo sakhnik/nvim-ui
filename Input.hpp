@@ -5,7 +5,6 @@
 #include <termkey.h>
 #include <uv.h>
 #include <unistd.h>
-//#include <spdlog/spdlog.h>
 
 class Input
 {
@@ -82,7 +81,7 @@ private:
             ::termkey_strfkey(_tk, buffer, sizeof(buffer), &key, TERMKEY_FORMAT_VIM);
             input = buffer;
         }
-        //spdlog::get("logger")->info("Input {}", input);
+        std::cerr << "Input " << input << std::endl;
 
         _rpc->Request(
             [&](MsgPackRpc::PackerT &pk) {
