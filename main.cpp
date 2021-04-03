@@ -70,8 +70,8 @@ int main(int argc, char* argv[])
         Renderer renderer(&rpc);
         renderer.AttachUI();
 
-        Input input{loop, &rpc};
-        input.Start();
+        //Input input{io_context, &rpc};
+        //input.Start();
 
         ::uv_run(loop, UV_RUN_DEFAULT);
     }
