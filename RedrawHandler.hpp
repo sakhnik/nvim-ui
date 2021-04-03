@@ -9,17 +9,13 @@
 #include <unistd.h>
 
 
-class Renderer
+class RedrawHandler
 {
 public:
-    Renderer(MsgPackRpc *rpc)
+    RedrawHandler(MsgPackRpc *rpc)
         : _rpc{rpc}
     {
         //_AddHlAttr(0, {}, {}, false, false);
-    }
-
-    ~Renderer()
-    {
     }
 
     void AttachUI()
@@ -30,15 +26,12 @@ public:
             }
         );
 
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &_size);
-        _grid.resize(_size.ws_col * _size.ws_col);
-
         _rpc->Request(
-            [this](auto &pk) {
+            [](auto &pk) {
                 pk.pack(std::string{"nvim_ui_attach"});
                 pk.pack_array(3);
-                pk.pack(_size.ws_col);
-                pk.pack(_size.ws_row);
+                pk.pack(80);
+                pk.pack(25);
                 pk.pack_map(2);
                 pk.pack("rgb");
                 pk.pack(true);

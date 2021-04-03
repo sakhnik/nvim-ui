@@ -1,6 +1,5 @@
 #include "MsgPackRpc.hpp"
-#include "Renderer.hpp"
-#include "Input.hpp"
+#include "RedrawHandler.hpp"
 
 #include <iostream>
 #include <msgpack.hpp>
@@ -67,8 +66,8 @@ int main(int argc, char* argv[])
         }
 
         MsgPackRpcImpl rpc(&stdin_pipe, &stdout_pipe);
-        Renderer renderer(&rpc);
-        renderer.AttachUI();
+        RedrawHandler redraw_handler(&rpc);
+        redraw_handler.AttachUI();
 
         //Input input{io_context, &rpc};
         //input.Start();
