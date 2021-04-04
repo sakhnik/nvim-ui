@@ -1,14 +1,10 @@
 #include "MsgPackRpc.hpp"
+#include "Renderer.hpp"
 #include "RedrawHandler.hpp"
 
 #include <iostream>
 #include <uv.h>
 
-template <typename P, typename D>
-std::unique_ptr<P, D> make_unique(P *p, D d)
-{
-    return std::unique_ptr<P, D>(p, d);
-}
 
 int main(int argc, char* argv[])
 {
@@ -65,7 +61,8 @@ int main(int argc, char* argv[])
         }
 
         MsgPackRpc rpc(&stdin_pipe, &stdout_pipe);
-        RedrawHandler redraw_handler(&rpc);
+        Renderer renderer;
+        RedrawHandler redraw_handler(&rpc, &renderer);
         redraw_handler.AttachUI();
 
         //Input input{io_context, &rpc};

@@ -1,21 +1,26 @@
 #pragma once
 
-#include "MsgPackRpc.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <optional>
 #include <functional>
+#include <msgpack/object_fwd.hpp>
+
+
+class MsgPackRpc;
+class Renderer;
 
 
 class RedrawHandler
 {
 public:
-    RedrawHandler(MsgPackRpc *rpc);
+    RedrawHandler(MsgPackRpc *, Renderer *);
 
     void AttachUI();
 
 private:
     MsgPackRpc *_rpc;
+    Renderer *_renderer;
     unsigned _fg{0xffffff};
     unsigned _bg{0};
     std::unordered_map<unsigned, std::function<std::string(void)>> _attributes;

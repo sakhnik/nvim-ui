@@ -1,7 +1,11 @@
 #include "RedrawHandler.hpp"
+#include "MsgPackRpc.hpp"
+#include "Renderer.hpp"
 
-RedrawHandler::RedrawHandler(MsgPackRpc *rpc)
+
+RedrawHandler::RedrawHandler(MsgPackRpc *rpc, Renderer *renderer)
     : _rpc{rpc}
+    , _renderer{renderer}
 {
     //_AddHlAttr(0, {}, {}, false, false);
 }
@@ -50,10 +54,10 @@ void RedrawHandler::_OnNotification(std::string method, const msgpack::object &o
     {
         const auto &event = arr.ptr[i].via.array;
         std::string subtype = event.ptr[0].as<std::string>();
-        //if (subtype == "flush")
-        //{
-        //    //std::cout << std::flush;
-        //}
+        if (subtype == "flush")
+        {
+            _renderer->Flush();
+        }
         //else if (subtype == "grid_cursor_goto")
         //{
         //    _GridCursorGoto(event);
@@ -74,7 +78,7 @@ void RedrawHandler::_OnNotification(std::string method, const msgpack::object &o
         //{
         //    _HlDefaultColorsSet(event);
         //}
-        //else
+        else
         {
             std::cerr << "Ignoring redraw " << subtype << std::endl;
         }
