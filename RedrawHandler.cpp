@@ -131,7 +131,7 @@ void RedrawHandler::_GridLine(const msgpack::object_array &event)
             unsigned new_hl_id = cell.ptr[1].as<unsigned>();
             if (new_hl_id != hl_id && !text.empty())
             {
-                _renderer->GridLine(row, col, text, hl_id);
+                col += _renderer->GridLine(row, col, text, hl_id);
                 text.clear();
                 hl_id = new_hl_id;
             }
@@ -142,13 +142,11 @@ void RedrawHandler::_GridLine(const msgpack::object_array &event)
         if (cell.size > 2)
             repeat = cell.ptr[2].as<int>();
 
-        size_t count = Utf8Len(chars.data()) * repeat;
-        col += count;
         while (repeat--)
             text += chars;
     }
 
-    _renderer->GridLine(row, col, text, hl_id);
+    col += _renderer->GridLine(row, col, text, hl_id);
 }
 
 //void RedrawHandler::_GridScroll(const msgpack::object_array &event)

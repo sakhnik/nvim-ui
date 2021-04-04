@@ -23,7 +23,9 @@ public:
     ~Renderer();
 
     void Flush();
-    void GridLine(int row, int col, const std::string &text, unsigned hl_id);
+
+    // Return the number of columns
+    int GridLine(int row, int col, const std::string &text, unsigned hl_id);
 
 private:
     PtrT<SDL_Window> _window = NullPtr(SDL_DestroyWindow);
@@ -35,9 +37,12 @@ private:
     {
         unsigned hl_id = 0;
         std::string text;
+        std::vector<int> offsets;
         PtrT<SDL_Texture> texture = NullPtr(SDL_DestroyTexture);
     };
 
     using _LineT = std::map<int, _Chunk>;
     std::vector<_LineT> _lines;
+
+    std::vector<int> _CalcOffsets(const std::string &text);
 };
