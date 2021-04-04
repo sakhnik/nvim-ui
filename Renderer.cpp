@@ -29,10 +29,19 @@ void Renderer::Flush()
     SDL_RenderClear(_renderer.get());
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
-        for (const auto &col_chunk : _lines[row])
+        for (auto &col_chunk : _lines[row])
         {
             int col = col_chunk.first;
-            const auto &chunk = col_chunk.second;
+            auto &chunk = col_chunk.second;
+
+            if (!chunk.texture)
+            {
+                SDL_Color fg = { 255, 255, 255 };
+                SDL_Color bg = { 0, 0, 0 };
+                auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_font.get(),
+                            chunk.text.c_str(), fg, bg), SDL_FreeSurface);
+                chunk.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
+            }
 
             int texW = 0;
             int texH = 0;
@@ -48,25 +57,59 @@ void Renderer::Flush()
 int Renderer::GridLine(int row, int col, const std::string &text, unsigned hl_id)
 {
     std::cerr << "GridLine " << row << ", " << col << " " << hl_id << " «" << text << "»" << std::endl;
-    SDL_Color fg = { 255, 255, 255 };
-    SDL_Color bg = { 0, 0, 0 };
 
-    _Chunk chunk;
-    chunk.text = text;
-    chunk.offsets = _CalcOffsets(text);
-    int cols = chunk.offsets.size();
-
-    auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_font.get(),
-        text.c_str(), fg, bg), SDL_FreeSurface);
-    chunk.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
-    int texW = 0;
-    SDL_QueryTexture(chunk.texture.get(), nullptr, nullptr, &texW, nullptr);
+    auto offsets = _CalcOffsets(text);
+    int cols = offsets.size();
 
     _LineT &line = _lines[row];
     auto it = line.lower_bound(col);
     if (it == line.end())
     {
         // Append, try to merge with the last chunk
+        if (line.empty())
+        {
+            _Chunk chunk;
+            chunk.hl_id = hl_id;
+            chunk.text = text;
+            chunk.offsets = std::move(offsets);
+            line[col] = std::move(chunk);
+        }
+        else
+        {
+            int prev_start = line.rbegin()->first;
+            _Chunk &prev = line.rbegin()->second;
+            if (prev_start + prev.offsets.size() > (size_t)col)
+            {
+                prev.texture.reset();
+                prev.text.resize(prev.offsets[col - prev_start]);
+                prev.offsets.resize(col - prev_start);
+                if (prev.hl_id == hl_id)
+                {
+                    // Can just extend
+                    prev.text += text;
+                    prev.offsets = _CalcOffsets(prev.text);
+                }
+                else
+                {
+                    // Different highlight, add as a separate chunk
+                    _Chunk chunk;
+                    chunk.hl_id = hl_id;
+                    chunk.text = text;
+                    chunk.offsets = std::move(offsets);
+                    line[col] = std::move(chunk);
+                }
+            }
+            else
+            {
+                // Not touching each other, just append
+                _Chunk chunk;
+                chunk.hl_id = hl_id;
+                chunk.text = text;
+                chunk.offsets = std::move(offsets);
+                line[col] = std::move(chunk);
+            }
+
+        }
     }
     else if (it->first == col)
     {
@@ -76,7 +119,6 @@ int Renderer::GridLine(int row, int col, const std::string &text, unsigned hl_id
     {
         // Check the previous chunk
     }
-    line[col] = std::move(chunk);
     return cols;
 }
 
