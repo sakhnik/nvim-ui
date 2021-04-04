@@ -13,6 +13,7 @@ public:
     ~Renderer();
 
     void Flush();
+    void GridLine(int row, int col, const std::string &text, unsigned hl_id);
 
 private:
     PtrT<SDL_Window> _window;

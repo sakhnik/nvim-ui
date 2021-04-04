@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 #include <SDL2/SDL_ttf.h>
+#include <iostream>
 
 
 Renderer::Renderer()
@@ -24,4 +25,9 @@ Renderer::~Renderer()
 void Renderer::Flush()
 {
     SDL_RenderPresent(_renderer.get());
+}
+
+void Renderer::GridLine(int row, int col, const std::string &text, unsigned hl_id)
+{
+    std::cerr << "GridLine " << row << ", " << col << " " << hl_id << " «" << text << "»" << std::endl;
 }

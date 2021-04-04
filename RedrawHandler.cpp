@@ -1,6 +1,7 @@
 #include "RedrawHandler.hpp"
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
+#include "Utils.hpp"
 
 
 RedrawHandler::RedrawHandler(MsgPackRpc *rpc, Renderer *renderer)
@@ -49,6 +50,14 @@ void RedrawHandler::_OnNotification(std::string method, const msgpack::object &o
         return;
     }
 
+    auto for_each_event = [](const msgpack::object_array &event, const auto &handler) {
+        for (size_t j = 1; j < event.size; ++j)
+        {
+            const auto &inst = event.ptr[j].via.array;
+            handler(inst);
+        }
+    };
+
     const auto &arr = obj.via.array;
     for (size_t i = 0; i < arr.size; ++i)
     {
@@ -57,15 +66,16 @@ void RedrawHandler::_OnNotification(std::string method, const msgpack::object &o
         if (subtype == "flush")
         {
             _renderer->Flush();
+            continue;
         }
         //else if (subtype == "grid_cursor_goto")
         //{
         //    _GridCursorGoto(event);
         //}
-        //else if (subtype == "grid_line")
-        //{
-        //    _GridLine(event);
-        //}
+        else if (subtype == "grid_line")
+        {
+            for_each_event(event, [this](const auto &e) { _GridLine(e); });
+        }
         //else if (subtype == "grid_scroll")
         //{
         //    _GridScroll(event);
@@ -100,61 +110,39 @@ void RedrawHandler::_OnNotification(std::string method, const msgpack::object &o
 //    }
 //}
 
-//void RedrawHandler::_GridLine(const msgpack::object_array &event)
-//{
-//    for (size_t j = 1; j < event.size; ++j)
-//    {
-//        const auto &inst = event.ptr[j].via.array;
-//        int grid = inst.ptr[0].as<int>();
-//        if (grid != 1)
-//            throw std::runtime_error("Multigrid not supported");
-//        int row = inst.ptr[1].as<int>();
-//        int col = inst.ptr[2].as<int>();
-//        const auto &cells = inst.ptr[3].via.array;
+void RedrawHandler::_GridLine(const msgpack::object_array &event)
+{
+    int grid = event.ptr[0].as<int>();
+    if (grid != 1)
+        throw std::runtime_error("Multigrid not supported");
+    int row = event.ptr[1].as<int>();
+    int col = event.ptr[2].as<int>();
+    const auto &cells = event.ptr[3].via.array;
 
-//        unsigned hl_id;
-//        for (size_t c = 0; c < cells.size; ++c)
-//        {
-//            const auto &cell = cells.ptr[c].via.array;
-//            int repeat = 1;
-//            std::string text = cell.ptr[0].as<std::string>();
-//            // if repeat is greater than 1, we are guaranteed to send an hl_id
-//            // https://github.com/neovim/neovim/blob/master/src/nvim/api/ui.c#L483
-//            if (cell.size > 1)
-//                hl_id = cell.ptr[1].as<unsigned>();
-//            if (cell.size > 2)
-//                repeat = cell.ptr[2].as<int>();
-//            //std::cout << "[" << (row+1) << ";" << (col+1) << "H";
-//            //std::cout << _attributes[hl_id]();
+    unsigned hl_id = 0;
+    for (size_t c = 0; c < cells.size; ++c)
+    {
+        const auto &cell = cells.ptr[c].via.array;
+        std::string text = cell.ptr[0].as<std::string>();
+        if (cell.size > 1)
+            hl_id = cell.ptr[1].as<unsigned>();
+        int repeat = 1;
+        // if repeat is greater than 1, we are guaranteed to send an hl_id
+        // https://github.com/neovim/neovim/blob/master/src/nvim/api/ui.c#L483
+        if (cell.size > 2)
+            repeat = cell.ptr[2].as<int>();
 
-//            int start_col = col;
-//            _Cell buf_cell{.hl_id = hl_id};
-//            for (size_t i = 0; i < text.size(); ++i)
-//            {
-//                char ch = text[i];
-//                if (!buf_cell.text.empty() && (static_cast<uint8_t>(ch) & 0xC0) != 0x80)
-//                {
-//                    _grid[row * _size.ws_col + col] = buf_cell;
-//                    buf_cell.text.clear();
-//                    ++col;
-//                }
-//                buf_cell.text.push_back(ch);
-//            }
-//            _grid[row * _size.ws_col + col] = buf_cell;
-//            buf_cell.text.clear();
-//            ++col;
-//            //std::cout << text;
+        size_t count = Utf8Len(text.data()) * repeat;
+        size_t len = text.size();
+        while (--repeat)
+        {
+            text += std::string_view(text.data(), len);
+        }
 
-//            int stride = col - start_col;
-//            while (--repeat)
-//            {
-//                for (int i = 0; i < stride; ++i, ++col)
-//                    _grid[row * _size.ws_col + col] = _grid[row * _size.ws_col + col - stride];
-//                //std::cout << text;
-//            }
-//        }
-//    }
-//}
+        _renderer->GridLine(row, col, text, hl_id);
+        col += count;
+    }
+}
 
 //void RedrawHandler::_GridScroll(const msgpack::object_array &event)
 //{
