@@ -3,7 +3,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <memory>
-#include <map>
 #include <vector>
 
 
@@ -33,16 +32,24 @@ private:
     PtrT<TTF_Font> _font = NullPtr(TTF_CloseFont);
     int _advance = 0;
 
-    struct _Chunk
+    //struct _Chunk
+    //{
+    //    unsigned hl_id = 0;
+    //    std::string text;
+    //    std::vector<int> offsets;
+    //    PtrT<SDL_Texture> texture = NullPtr(SDL_DestroyTexture);
+    //};
+
+    struct _Line
     {
-        unsigned hl_id = 0;
         std::string text;
         std::vector<int> offsets;
-        PtrT<SDL_Texture> texture = NullPtr(SDL_DestroyTexture);
+        std::vector<unsigned> hl_id;
     };
 
-    using _LineT = std::map<int, _Chunk>;
-    std::vector<_LineT> _lines;
+    std::vector<_Line> _lines;
+    //using _LineT = std::map<int, _Chunk>;
+    //std::vector<_LineT> _lines;
 
-    std::vector<int> _CalcOffsets(const std::string &text);
+    std::vector<int> _CalcOffsets(const std::string &text, size_t init = 0);
 };
