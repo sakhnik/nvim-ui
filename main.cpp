@@ -2,7 +2,6 @@
 #include "RedrawHandler.hpp"
 
 #include <iostream>
-#include <msgpack.hpp>
 #include <uv.h>
 
 template <typename P, typename D>
@@ -65,7 +64,7 @@ int main(int argc, char* argv[])
             return 1;
         }
 
-        MsgPackRpcImpl rpc(&stdin_pipe, &stdout_pipe);
+        MsgPackRpc rpc(&stdin_pipe, &stdout_pipe);
         RedrawHandler redraw_handler(&rpc);
         redraw_handler.AttachUI();
 
