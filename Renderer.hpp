@@ -4,6 +4,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <memory>
 #include <vector>
+#include <list>
 
 
 template <typename T>
@@ -32,24 +33,25 @@ private:
     PtrT<TTF_Font> _font = NullPtr(TTF_CloseFont);
     int _advance = 0;
 
-    //struct _Chunk
-    //{
-    //    unsigned hl_id = 0;
-    //    std::string text;
-    //    std::vector<int> offsets;
-    //    PtrT<SDL_Texture> texture = NullPtr(SDL_DestroyTexture);
-    //};
+    struct _Texture
+    {
+        // Start column of the texture
+        int col = 0;
+        unsigned hl_id = 0;
+        std::string text;
+        PtrT<SDL_Texture> texture = NullPtr(SDL_DestroyTexture);
+    };
 
     struct _Line
     {
         std::string text;
         std::vector<int> offsets;
         std::vector<unsigned> hl_id;
+        // Remember the previously rendered textures, high chance they're reusable.
+        std::list<_Texture> texture_cache;
     };
 
     std::vector<_Line> _lines;
-    //using _LineT = std::map<int, _Chunk>;
-    //std::vector<_LineT> _lines;
 
     std::vector<int> _CalcOffsets(const std::string &text, size_t init = 0);
 };

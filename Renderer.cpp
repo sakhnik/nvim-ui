@@ -39,43 +39,65 @@ void Renderer::Flush()
 {
     SDL_RenderClear(_renderer.get());
 
-    unsigned hl_id = 0;
-    int col = 0;
-    std::string text;
-
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
-        auto print = [&]() {
-            SDL_Color fg = { 255, 255, 255 };
-            SDL_Color bg = { 0, 0, 0 };
-            auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_font.get(),
-                        text.c_str(), fg, bg), SDL_FreeSurface);
-            auto texture = PtrT<SDL_Texture>(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()), SDL_DestroyTexture);
-
-            int texW = 0;
-            int texH = 0;
-            SDL_QueryTexture(texture.get(), NULL, NULL, &texW, &texH);
-            SDL_Rect dstrect = { col * _advance, texH * row, texW, texH };
-            SDL_RenderCopy(_renderer.get(), texture.get(), NULL, &dstrect);
-        };
+        // Group text chunks by hl_id
+        _Texture texture;
 
         auto &line = _lines[row];
+        auto &tex_cache = line.texture_cache;
+        auto tit = tex_cache.begin();
+
+        auto print_group = [&]() {
+            // Remove potentially outdated cached textures
+            while (tit != tex_cache.end() && tit->col < texture.col)
+                tit = tex_cache.erase(tit);
+            while (tit != tex_cache.end() && tit->col == texture.col
+                && (tit->hl_id != texture.hl_id || tit->text != texture.text))
+                tit = tex_cache.erase(tit);
+
+            // Test whether the texture should be rendered again
+            if (tit == tex_cache.end()
+                || tit->col != texture.col || tit->hl_id != texture.hl_id
+                || tit->text != texture.text)
+            {
+                SDL_Color fg = { 255, 255, 255 };
+                SDL_Color bg = { 0, 0, 0 };
+                auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_font.get(),
+                            texture.text.c_str(), fg, bg), SDL_FreeSurface);
+                texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
+                tit = tex_cache.insert(tit, std::move(texture));
+            }
+
+            // Copy the texture (cached or new) to the renderer
+            int texW = 0;
+            int texH = 0;
+            SDL_QueryTexture(tit->texture.get(), NULL, NULL, &texW, &texH);
+            SDL_Rect dstrect = { tit->col * _advance, texH * row, texW, texH };
+            SDL_RenderCopy(_renderer.get(), tit->texture.get(), NULL, &dstrect);
+            ++tit;
+        };
+
         for (int c = 0, colN = line.hl_id.size(); c != colN; ++c)
         {
-            if (hl_id != line.hl_id[c])
+            if (texture.hl_id != line.hl_id[c])
             {
-                if (c != col)
-                    print();
-                hl_id = line.hl_id[c];
-                col = c;
-                text.clear();
+                if (c != texture.col)
+                    print_group();
+                texture.hl_id = line.hl_id[c];
+                texture.col = c;
+                texture.text.clear();
+                texture.texture.reset();
             }
-            text += std::string_view(line.text.data() + line.offsets[c], line.offsets[c+1] - line.offsets[c]);
+            texture.text += std::string_view(line.text.data() + line.offsets[c], line.offsets[c+1] - line.offsets[c]);
         }
-        print();
-    }
-    SDL_RenderPresent(_renderer.get());
+        print_group();
 
+        // Remove the unused rest of the cache
+        line.texture_cache.erase(tit, line.texture_cache.end());
+    }
+
+    SDL_RenderPresent(_renderer.get());
 }
 
 int Renderer::GridLine(int row, int col, const std::string &text, unsigned hl_id)
