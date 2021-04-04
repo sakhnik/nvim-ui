@@ -118,30 +118,37 @@ void RedrawHandler::_GridLine(const msgpack::object_array &event)
     int row = event.ptr[1].as<int>();
     int col = event.ptr[2].as<int>();
     const auto &cells = event.ptr[3].via.array;
+    // Group text chunks by hl_id
+    std::string text;
 
     unsigned hl_id = 0;
     for (size_t c = 0; c < cells.size; ++c)
     {
         const auto &cell = cells.ptr[c].via.array;
-        std::string text = cell.ptr[0].as<std::string>();
+        std::string chars = cell.ptr[0].as<std::string>();
         if (cell.size > 1)
-            hl_id = cell.ptr[1].as<unsigned>();
-        int repeat = 1;
+        {
+            unsigned new_hl_id = cell.ptr[1].as<unsigned>();
+            if (new_hl_id != hl_id && !text.empty())
+            {
+                _renderer->GridLine(row, col, text, hl_id);
+                text.clear();
+                hl_id = new_hl_id;
+            }
+        }
         // if repeat is greater than 1, we are guaranteed to send an hl_id
         // https://github.com/neovim/neovim/blob/master/src/nvim/api/ui.c#L483
+        int repeat = 1;
         if (cell.size > 2)
             repeat = cell.ptr[2].as<int>();
 
-        size_t count = Utf8Len(text.data()) * repeat;
-        size_t len = text.size();
-        while (--repeat)
-        {
-            text += std::string_view(text.data(), len);
-        }
-
-        _renderer->GridLine(row, col, text, hl_id);
+        size_t count = Utf8Len(chars.data()) * repeat;
         col += count;
+        while (repeat--)
+            text += chars;
     }
+
+    _renderer->GridLine(row, col, text, hl_id);
 }
 
 //void RedrawHandler::_GridScroll(const msgpack::object_array &event)
