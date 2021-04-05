@@ -17,6 +17,8 @@ Renderer::Renderer()
         line.offsets.push_back(line.text.size());
     }
 
+    _hl_attr[0] = {};
+
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
 
@@ -63,6 +65,31 @@ void Renderer::Flush()
             {
                 SDL_Color fg = { 255, 255, 255 };
                 SDL_Color bg = { 0, 0, 0 };
+
+                auto hlit = _hl_attr.find(tit->hl_id);
+                if (hlit == _hl_attr.end())
+                {
+                    std::cerr << "Undefined hl_id " << tit->hl_id << std::endl;
+                }
+                else
+                {
+                    const HlAttr &attr = hlit->second;
+
+                    auto calcSdlColor = [](std::optional<uint32_t> color, uint32_t def_color) -> SDL_Color {
+                        if (color.has_value())
+                            def_color = color.value();
+                        return SDL_Color{
+                            Uint8(def_color >> 16),
+                                Uint8((def_color >> 8) & 0xff),
+                                Uint8(def_color & 0xff),
+                        };
+                    };
+                    fg = calcSdlColor(attr.fg, _fg);
+                    bg = calcSdlColor(attr.bg, _bg);
+                    if ((attr.flags & HF_REVERSE))
+                        std::swap(fg, bg);
+                }
+
                 auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_font.get(),
                             texture.text.c_str(), fg, bg), SDL_FreeSurface);
                 texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
@@ -102,8 +129,6 @@ void Renderer::Flush()
 
 int Renderer::GridLine(int row, int col, const std::string &text, unsigned hl_id)
 {
-    std::cerr << "GridLine " << row << ", " << col << " " << hl_id << " «" << text << "»" << std::endl;
-
     _Line &line = _lines[row];
 
     auto offsets = _CalcOffsets(text);
@@ -193,4 +218,15 @@ std::vector<int> Renderer::_CalcOffsets(const std::string &utf8, size_t init)
         }
     }
     return offsets;
+}
+
+void Renderer::HlAttrDefine(unsigned hl_id, HlAttr attr)
+{
+    _hl_attr[hl_id] = attr;
+}
+
+void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
+{
+    _fg = fg;
+    _bg = bg;
 }

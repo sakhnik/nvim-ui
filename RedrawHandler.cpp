@@ -2,13 +2,13 @@
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
 #include "Utils.hpp"
+#include <iostream>
 
 
 RedrawHandler::RedrawHandler(MsgPackRpc *rpc, Renderer *renderer)
     : _rpc{rpc}
     , _renderer{renderer}
 {
-    //_AddHlAttr(0, {}, {}, false, false);
 }
 
 void RedrawHandler::AttachUI()
@@ -80,14 +80,17 @@ void RedrawHandler::_OnNotification(std::string method, const msgpack::object &o
         //{
         //    _GridScroll(event);
         //}
-        //else if (subtype == "hl_attr_define")
-        //{
-        //    _HlAttrDefine(event);
-        //}
-        //else if (subtype == "default_colors_set")
-        //{
-        //    _HlDefaultColorsSet(event);
-        //}
+        else if (subtype == "hl_attr_define")
+        {
+            for_each_event(event, [this](const auto &e) { _HlAttrDefine(e); });
+        }
+        else if (subtype == "default_colors_set")
+        {
+            const auto &inst = event.ptr[1].via.array;
+            unsigned fg = inst.ptr[0].as<unsigned>();
+            unsigned bg = inst.ptr[1].as<unsigned>();
+            _renderer->DefaultColorSet(fg, bg);
+        }
         else
         {
             std::cerr << "Ignoring redraw " << subtype << std::endl;
@@ -209,52 +212,38 @@ void RedrawHandler::_GridLine(const msgpack::object_array &event)
 
 //void RedrawHandler::_HlDefaultColorsSet(const msgpack::object_array &event)
 //{
-//    const auto &inst = event.ptr[1].via.array;
-//    _fg = inst.ptr[0].as<unsigned>();
-//    _bg = inst.ptr[1].as<unsigned>();
 //}
 
-//void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
-//{
-//    for (size_t j = 1; j < event.size; ++j)
-//    {
-//        const auto &inst = event.ptr[j].via.array;
-//        unsigned hl_id = inst.ptr[0].as<unsigned>();
-//        const auto &rgb_attr = inst.ptr[1].via.map;
+void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
+{
+    unsigned hl_id = event.ptr[0].as<unsigned>();
+    const auto &rgb_attr = event.ptr[1].via.map;
 
-//        std::optional<unsigned> fg, bg;
-//        //const auto &cterm_attr = inst.ptr[2].via.map;
-//        for (size_t i = 0; i < rgb_attr.size; ++i)
-//        {
-//            std::string key{rgb_attr.ptr[i].key.as<std::string>()};
-//            if (key == "foreground")
-//            {
-//                fg = rgb_attr.ptr[i].val.as<unsigned>();
-//            }
-//            else if (key == "background")
-//            {
-//                bg = rgb_attr.ptr[i].val.as<unsigned>();
-//            }
-//        }
-//        bool reverse{false};
-//        bool bold{false};
-//        // info = inst[3]
-//        // nvim api docs state that boolean keys here are only sent if true
-//        for (size_t i = 0; i < rgb_attr.size; ++i)
-//        {
-//            std::string key{rgb_attr.ptr[i].key.as<std::string>()};
-//            if (key == "reverse")
-//            {
-//                reverse = true;
-//            }
-//            else if (key == "bold")
-//            {
-//                bold = true;
-//            }
-//        }
-//        _AddHlAttr(hl_id, fg, bg, bold, reverse);
-//    }
-//}
+    Renderer::HlAttr attr;
+    for (size_t i = 0; i < rgb_attr.size; ++i)
+    {
+        std::string key{rgb_attr.ptr[i].key.as<std::string>()};
+        if (key == "foreground")
+            attr.fg = rgb_attr.ptr[i].val.as<unsigned>();
+        else if (key == "background")
+            attr.bg = rgb_attr.ptr[i].val.as<unsigned>();
+        // nvim api docs state that boolean keys here are only sent if true
+        else if (key == "reverse")
+            attr.flags |= Renderer::HF_REVERSE;
+        //else if (key == "bold")
+        //    attr.flags |= Renderer::HF_BOLD;
+        //else if (key == "italic")
+        //    attr.flags |= Renderer::HF_ITALIC;
+        //else if (key == "underline")
+        //    attr.flags |= Renderer::HF_UNDERLINE;
+        //else if (key == "undercurl")
+        //    attr.flags |= Renderer::HF_UNDERCURL;
+        else
+            std::cerr << "Unknown rgb attribute: " << key << std::endl;
+    }
+    // info = inst[3]
+    _renderer->HlAttrDefine(hl_id, attr);
+}
 
 //void RedrawHandler::_AddHlAttr(unsigned hl_id, std::optional<unsigned> fg, std::optional<unsigned> bg, bool bold, bool reverse)
 //{
