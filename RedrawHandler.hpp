@@ -18,7 +18,7 @@ private:
     MsgPackRpc *_rpc;
     Renderer *_renderer;
 
-    void _OnNotification(std::string method, const msgpack::object &obj);
+    void _OnNotification(std::string_view method, const msgpack::object &obj);
 
     void _GridCursorGoto(const msgpack::object_array &event);
     void _GridLine(const msgpack::object_array &event);

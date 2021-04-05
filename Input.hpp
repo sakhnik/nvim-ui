@@ -20,6 +20,6 @@ private:
     bool _control = false;
 
     void _PollEvents();
-    void _OnInput(const std::string &input);
+    void _OnInput(std::string_view input);
     void _RawInput(const char *input);
 };

@@ -28,11 +28,11 @@ void Input::Start()
     ::uv_timer_start(&_timer, on_timeout, 10, 10);
 }
 
-void Input::_OnInput(const std::string &input)
+void Input::_OnInput(std::string_view input)
 {
     _rpc->Request(
         [&](MsgPackRpc::PackerT &pk) {
-            pk.pack(std::string{"nvim_input"});
+            pk.pack("nvim_input");
             pk.pack_array(1);
             pk.pack(input);
         },

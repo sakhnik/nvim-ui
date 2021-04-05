@@ -76,7 +76,7 @@ void MsgPackRpc::_handle_data(const char *data, size_t length)
         else if (arr.ptr[0] == 2)
         {
             // Notification
-            _on_notification(arr.ptr[1].as<std::string>(), arr.ptr[2]);
+            _on_notification(arr.ptr[1].as<std::string_view>(), arr.ptr[2]);
         }
     }
 }

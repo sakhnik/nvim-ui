@@ -14,14 +14,14 @@ RedrawHandler::RedrawHandler(MsgPackRpc *rpc, Renderer *renderer)
 void RedrawHandler::AttachUI()
 {
     _rpc->OnNotifications(
-        [this] (std::string method, const msgpack::object &obj) {
-            _OnNotification(std::move(method), obj);
+        [this] (std::string_view method, const msgpack::object &obj) {
+            _OnNotification(method, obj);
         }
     );
 
     _rpc->Request(
         [](auto &pk) {
-            pk.pack(std::string{"nvim_ui_attach"});
+            pk.pack("nvim_ui_attach");
             pk.pack_array(3);
             pk.pack(80);
             pk.pack(25);
@@ -42,7 +42,7 @@ void RedrawHandler::AttachUI()
     );
 }
 
-void RedrawHandler::_OnNotification(std::string method, const msgpack::object &obj)
+void RedrawHandler::_OnNotification(std::string_view method, const msgpack::object &obj)
 {
     if (method != "redraw")
     {
@@ -62,7 +62,7 @@ void RedrawHandler::_OnNotification(std::string method, const msgpack::object &o
     for (size_t i = 0; i < arr.size; ++i)
     {
         const auto &event = arr.ptr[i].via.array;
-        std::string subtype = event.ptr[0].as<std::string>();
+        std::string_view subtype = event.ptr[0].as<std::string_view>();
         if (subtype == "flush")
         {
             _renderer->Flush();
@@ -122,7 +122,7 @@ void RedrawHandler::_GridLine(const msgpack::object_array &event)
     for (size_t c = 0; c < cells.size; ++c)
     {
         const auto &cell = cells.ptr[c].via.array;
-        std::string chars = cell.ptr[0].as<std::string>();
+        std::string_view chars = cell.ptr[0].as<std::string_view>();
         if (cell.size > 1)
         {
             unsigned new_hl_id = cell.ptr[1].as<unsigned>();
@@ -171,7 +171,7 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
     Renderer::HlAttr attr;
     for (size_t i = 0; i < rgb_attr.size; ++i)
     {
-        std::string key{rgb_attr.ptr[i].key.as<std::string>()};
+        std::string_view key{rgb_attr.ptr[i].key.as<std::string_view>()};
         if (key == "foreground")
             attr.fg = rgb_attr.ptr[i].val.as<unsigned>();
         else if (key == "background")
@@ -193,32 +193,3 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
     // info = inst[3]
     _renderer->HlAttrDefine(hl_id, attr);
 }
-
-//void RedrawHandler::_AddHlAttr(unsigned hl_id, std::optional<unsigned> fg, std::optional<unsigned> bg, bool bold, bool reverse)
-//{
-//    auto attr_to_string = [this, fg, bg, bold, reverse] {
-//        std::ostringstream oss;
-//        auto add_rgb = [&](unsigned rgb) {
-//            oss << ";" << (rgb >> 16)
-//                << ";" << ((rgb >> 8) & 0xff)
-//                << ";" << (rgb & 0xff);
-//        };
-//        oss << "[38;2";
-//        if (fg)
-//            add_rgb(*fg);
-//        else
-//            add_rgb(_fg);
-//        oss << ";48;2";
-//        if (bg)
-//            add_rgb(*bg);
-//        else
-//            add_rgb(_bg);
-//        if (bold)
-//            oss << ";1";
-//        if (reverse)
-//            oss << ";7";
-//        oss << "m";
-//        return oss.str();
-//    };
-//    _attributes[hl_id] = attr_to_string;
-//}
