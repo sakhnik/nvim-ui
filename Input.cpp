@@ -30,8 +30,6 @@ void Input::Start()
 
 void Input::_OnInput(const std::string &input)
 {
-    std::cerr << "Input " << input << std::endl;
-
     _rpc->Request(
         [&](MsgPackRpc::PackerT &pk) {
             pk.pack(std::string{"nvim_input"});
