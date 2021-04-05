@@ -1,6 +1,7 @@
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
 #include "RedrawHandler.hpp"
+#include "Input.hpp"
 
 #include <iostream>
 #include <uv.h>
@@ -65,8 +66,8 @@ int main(int argc, char* argv[])
         RedrawHandler redraw_handler(&rpc, &renderer);
         redraw_handler.AttachUI();
 
-        //Input input{io_context, &rpc};
-        //input.Start();
+        Input input{loop, &rpc};
+        input.Start();
 
         ::uv_run(loop, UV_RUN_DEFAULT);
     }
