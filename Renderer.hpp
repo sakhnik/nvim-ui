@@ -26,7 +26,7 @@ public:
     void Flush();
 
     // Return the number of columns
-    int GridLine(int row, int col, const std::string &text, unsigned hl_id);
+    int GridLine(int row, int col, std::string_view text, unsigned hl_id);
 
     enum HlFlags
     {
@@ -78,5 +78,5 @@ private:
 
     std::vector<_Line> _lines;
 
-    std::vector<int> _CalcOffsets(const std::string &text, size_t init = 0);
+    std::vector<int> _CalcOffsets(std::string_view text, size_t init = 0);
 };

@@ -139,7 +139,7 @@ void Renderer::Flush()
     SDL_RenderPresent(_renderer.get());
 }
 
-int Renderer::GridLine(int row, int col, const std::string &text, unsigned hl_id)
+int Renderer::GridLine(int row, int col, std::string_view text, unsigned hl_id)
 {
     _Line &line = _lines[row];
 
@@ -148,7 +148,7 @@ int Renderer::GridLine(int row, int col, const std::string &text, unsigned hl_id
 
     for (size_t i = 0; i < offsets.size(); ++i)
     {
-        line.hl_id[i] = hl_id;
+        line.hl_id[i + col] = hl_id;
     }
     int start_offset = line.offsets[col];
     int replace_len = line.offsets[col + offsets.size()] - start_offset;
@@ -168,7 +168,7 @@ int Renderer::GridLine(int row, int col, const std::string &text, unsigned hl_id
 
 // Scan through a UTF-8 string and remember the starts of cells when glyphs rendered
 // (advance != 0).
-std::vector<int> Renderer::_CalcOffsets(const std::string &utf8, size_t init)
+std::vector<int> Renderer::_CalcOffsets(std::string_view utf8, size_t init)
 {
     std::vector<int> offsets;
 
