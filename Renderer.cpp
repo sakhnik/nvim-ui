@@ -139,6 +139,29 @@ void Renderer::Flush()
     SDL_RenderPresent(_renderer.get());
 }
 
+void Renderer::_InsertText(int row, int col, std::string_view text,
+        size_t size, const int *offsets, const unsigned *hl_id)
+{
+    _Line &line = _lines[row];
+
+    if (hl_id)
+    {
+        for (size_t i = 0; i < size; ++i)
+            line.hl_id[col + i] = hl_id[i];
+    }
+
+    int start_offset = line.offsets[col];
+    int replace_len = line.offsets[col + size] - start_offset;
+    line.text.replace(start_offset, replace_len, text);
+
+    for (size_t i = 0; i < size; ++i)
+        line.offsets[col + i] = offsets[i] - offsets[0] + start_offset;
+
+    int doff = (int)text.size() - replace_len;
+    for (size_t i = col + size; i < line.offsets.size(); ++i)
+        line.offsets[i] += doff;
+}
+
 int Renderer::GridLine(int row, int col, std::string_view text, unsigned hl_id)
 {
     _Line &line = _lines[row];
@@ -146,22 +169,10 @@ int Renderer::GridLine(int row, int col, std::string_view text, unsigned hl_id)
     auto offsets = _CalcOffsets(text);
     int cols = offsets.size();
 
+    _InsertText(row, col, text, offsets.size(), offsets.data(), nullptr);
+
     for (size_t i = 0; i < offsets.size(); ++i)
-    {
         line.hl_id[i + col] = hl_id;
-    }
-    int start_offset = line.offsets[col];
-    int replace_len = line.offsets[col + offsets.size()] - start_offset;
-    line.text.replace(start_offset, replace_len, text);
-
-    for (size_t i = 0; i < offsets.size(); ++i)
-    {
-        line.offsets[col + i] = offsets[i] + start_offset;
-    }
-
-    int doff = (int)text.size() - replace_len;
-    for (size_t i = col + offsets.size(); i < line.offsets.size(); ++i)
-        line.offsets[i] += doff;
 
     return cols;
 }

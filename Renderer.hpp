@@ -79,4 +79,6 @@ private:
     std::vector<_Line> _lines;
 
     std::vector<int> _CalcOffsets(std::string_view text, size_t init = 0);
+    void _InsertText(int row, int col, std::string_view text,
+                     size_t size, const int *offsets, const unsigned *hl_id);
 };
