@@ -48,6 +48,7 @@ void Renderer::Flush()
     {
         // Group text chunks by hl_id
         _Texture texture;
+        std::string_view cur_text;
 
         auto &line = _lines[row];
         auto &tex_cache = line.texture_cache;
@@ -58,13 +59,13 @@ void Renderer::Flush()
             while (tit != tex_cache.end() && tit->col < texture.col)
                 tit = tex_cache.erase(tit);
             while (tit != tex_cache.end() && tit->col == texture.col
-                && (tit->hl_id != texture.hl_id || tit->text != texture.text))
+                && (tit->hl_id != texture.hl_id || tit->text != cur_text))
                 tit = tex_cache.erase(tit);
 
             // Test whether the texture should be rendered again
             if (tit == tex_cache.end()
                 || tit->col != texture.col || tit->hl_id != texture.hl_id
-                || tit->text != texture.text)
+                || tit->text != cur_text)
             {
                 SDL_Color fg = { 255, 255, 255 };
                 SDL_Color bg = { 0, 0, 0 };
@@ -93,6 +94,7 @@ void Renderer::Flush()
                         std::swap(fg, bg);
                 }
 
+                texture.text = cur_text;
                 auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_font.get(),
                             texture.text.c_str(), fg, bg), SDL_FreeSurface);
                 texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
@@ -119,7 +121,8 @@ void Renderer::Flush()
                 texture.text.clear();
                 texture.texture.reset();
             }
-            texture.text += std::string_view(line.text.data() + line.offsets[c], line.offsets[c+1] - line.offsets[c]);
+            cur_text = std::string_view(line.text.data() + line.offsets[texture.col],
+                    line.offsets[c+1] - line.offsets[texture.col]);
         }
         print_group();
 
