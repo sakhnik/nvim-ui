@@ -17,8 +17,6 @@ Renderer::Renderer()
         line.offsets.push_back(line.text.size());
     }
 
-    _hl_attr[0] = {};
-
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
 
@@ -40,8 +38,20 @@ Renderer::~Renderer()
     SDL_Quit();
 }
 
+namespace {
+
+inline SDL_Color GetColor(uint32_t val)
+{
+    return SDL_Color{ Uint8(val >> 16), Uint8((val >> 8) & 0xff), Uint8(val & 0xff) };
+}
+
+} //namespace
+
 void Renderer::Flush()
 {
+    const SDL_Color bg0 = GetColor(_bg);
+    const SDL_Color fg0 = GetColor(_fg);
+    SDL_SetRenderDrawColor(_renderer.get(), bg0.r, bg0.g, bg0.b, 255);
     SDL_RenderClear(_renderer.get());
 
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
@@ -63,33 +73,22 @@ void Renderer::Flush()
                 tit = tex_cache.erase(tit);
 
             // Test whether the texture should be rendered again
-            if (tit == tex_cache.end()
-                || tit->col != texture.col || tit->hl_id != texture.hl_id
-                || tit->text != cur_text)
-            {
-                SDL_Color fg = { 255, 255, 255 };
-                SDL_Color bg = { 0, 0, 0 };
+            //if (tit == tex_cache.end()
+            //    || tit->col != texture.col || tit->hl_id != texture.hl_id
+            //    || tit->text != cur_text)
+            //{
+                SDL_Color fg = fg0;
+                SDL_Color bg = bg0;
 
                 auto hlit = _hl_attr.find(tit->hl_id);
-                if (hlit == _hl_attr.end())
-                {
-                    std::cerr << "Undefined hl_id " << tit->hl_id << std::endl;
-                }
-                else
+                if (hlit != _hl_attr.end())
                 {
                     const HlAttr &attr = hlit->second;
 
-                    auto calcSdlColor = [](std::optional<uint32_t> color, uint32_t def_color) -> SDL_Color {
-                        if (color.has_value())
-                            def_color = color.value();
-                        return SDL_Color{
-                            Uint8(def_color >> 16),
-                                Uint8((def_color >> 8) & 0xff),
-                                Uint8(def_color & 0xff),
-                        };
-                    };
-                    fg = calcSdlColor(attr.fg, _fg);
-                    bg = calcSdlColor(attr.bg, _bg);
+                    if (attr.fg.has_value())
+                        fg = GetColor(attr.fg.value());
+                    if (attr.bg.has_value())
+                        bg = GetColor(attr.bg.value());
                     if ((attr.flags & HF_REVERSE))
                         std::swap(fg, bg);
                 }
@@ -99,7 +98,7 @@ void Renderer::Flush()
                             texture.text.c_str(), fg, bg), SDL_FreeSurface);
                 texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
                 tit = tex_cache.insert(tit, std::move(texture));
-            }
+            //}
 
             // Copy the texture (cached or new) to the renderer
             int texW = 0;

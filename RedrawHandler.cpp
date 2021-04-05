@@ -83,6 +83,10 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
         {
             for_each_event(event, [this](const auto &e) { _HlAttrDefine(e); });
         }
+        else if (subtype == "win_viewport")
+        {
+            // Just informational, skip
+        }
         else if (subtype == "default_colors_set")
         {
             const auto &inst = event.ptr[1].via.array;
@@ -130,8 +134,8 @@ void RedrawHandler::_GridLine(const msgpack::object_array &event)
             {
                 col += _renderer->GridLine(row, col, text, hl_id);
                 text.clear();
-                hl_id = new_hl_id;
             }
+            hl_id = new_hl_id;
         }
         // if repeat is greater than 1, we are guaranteed to send an hl_id
         // https://github.com/neovim/neovim/blob/master/src/nvim/api/ui.c#L483
