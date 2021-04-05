@@ -69,7 +69,7 @@ void Input::_PollEvents()
         switch (event.type)
         {
         case SDL_TEXTINPUT:
-            if (!_shift && !_control)
+            if (!_control)
                 _OnInput(event.text.text);
             break;
         case SDL_KEYUP:
@@ -103,7 +103,7 @@ void Input::_PollEvents()
                 _RawInput("cr");
                 break;
             default:
-                if (_shift || _control)
+                if (_control)
                 {
                     const char *keyname = SDL_GetKeyName(event.key.keysym.sym);
                     if (1 == strlen(keyname))
