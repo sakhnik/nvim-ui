@@ -27,8 +27,11 @@ Renderer::Renderer()
         768, 0));
     _renderer.reset(SDL_CreateRenderer(_window.get(), -1, SDL_RENDERER_ACCELERATED));
     _font.reset(TTF_OpenFont("DejaVuSansMono.ttf", 20));
+
+    // Check font metrics
     TTF_GlyphMetrics(_font.get(), '@', nullptr /*minx*/, nullptr /*maxx*/,
-            nullptr /*miny*/, nullptr /*maxy*/, &_advance);
+            nullptr /*miny*/, nullptr /*maxy*/, &_cell_width);
+    _cell_height = TTF_FontHeight(_font.get());
 }
 
 Renderer::~Renderer()
@@ -100,7 +103,7 @@ void Renderer::Flush()
             int texW = 0;
             int texH = 0;
             SDL_QueryTexture(tit->texture.get(), NULL, NULL, &texW, &texH);
-            SDL_Rect dstrect = { tit->col * _advance, texH * row, texW, texH };
+            SDL_Rect dstrect = { tit->col * _cell_width, _cell_height * row, texW, texH };
             SDL_RenderCopy(_renderer.get(), tit->texture.get(), NULL, &dstrect);
             ++tit;
         };
@@ -123,6 +126,12 @@ void Renderer::Flush()
         // Remove the unused rest of the cache
         line.texture_cache.erase(tit, line.texture_cache.end());
     }
+
+    // Draw the cursor
+    SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(_renderer.get(), _fg >> 16, (_fg >> 8) & 0xff, _fg & 0xff, 127);
+    SDL_Rect rect = { _cursor_col * _cell_width, _cell_height * _cursor_row, _cell_width, _cell_height };
+    SDL_RenderFillRect(_renderer.get(), &rect);
 
     SDL_RenderPresent(_renderer.get());
 }
@@ -229,4 +238,10 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
 {
     _fg = fg;
     _bg = bg;
+}
+
+void Renderer::GridCursorGoto(int row, int col)
+{
+    _cursor_row = row;
+    _cursor_col = col;
 }

@@ -66,12 +66,11 @@ void RedrawHandler::_OnNotification(std::string method, const msgpack::object &o
         if (subtype == "flush")
         {
             _renderer->Flush();
-            continue;
         }
-        //else if (subtype == "grid_cursor_goto")
-        //{
-        //    _GridCursorGoto(event);
-        //}
+        else if (subtype == "grid_cursor_goto")
+        {
+            for_each_event(event, [this](const auto &e) { _GridCursorGoto(e); });
+        }
         else if (subtype == "grid_line")
         {
             for_each_event(event, [this](const auto &e) { _GridLine(e); });
@@ -98,20 +97,15 @@ void RedrawHandler::_OnNotification(std::string method, const msgpack::object &o
     }
 }
 
-//void RedrawHandler::_GridCursorGoto(const msgpack::object_array &event)
-//{
-//    for (size_t j = 1; j < event.size; ++j)
-//    {
-//        const auto &inst = event.ptr[j].via.array;
-//        int grid = inst.ptr[0].as<int>();
-//        if (grid != 1)
-//            throw std::runtime_error("Multigrid not supported");
-//        //int row = inst.ptr[1].as<int>();
-//        //int col = inst.ptr[2].as<int>();
-
-//        //std::cout << "[" << (row+1) << ";" << (col+1) << "H";
-//    }
-//}
+void RedrawHandler::_GridCursorGoto(const msgpack::object_array &event)
+{
+    int grid = event.ptr[0].as<int>();
+    if (grid != 1)
+        throw std::runtime_error("Multigrid not supported");
+    int row = event.ptr[1].as<int>();
+    int col = event.ptr[2].as<int>();
+    _renderer->GridCursorGoto(row, col);
+}
 
 void RedrawHandler::_GridLine(const msgpack::object_array &event)
 {

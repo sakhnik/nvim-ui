@@ -20,7 +20,7 @@ private:
 
     void _OnNotification(std::string method, const msgpack::object &obj);
 
-    //void _GridCursorGoto(const msgpack::object_array &event);
+    void _GridCursorGoto(const msgpack::object_array &event);
     void _GridLine(const msgpack::object_array &event);
     //void _GridScroll(const msgpack::object_array &event);
     void _HlAttrDefine(const msgpack::object_array &event);

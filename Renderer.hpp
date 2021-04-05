@@ -44,15 +44,19 @@ public:
 
     void HlAttrDefine(unsigned hl_id, HlAttr attr);
     void DefaultColorSet(unsigned fg, unsigned bg);
+    void GridCursorGoto(int row, int col);
 
 private:
     PtrT<SDL_Window> _window = NullPtr(SDL_DestroyWindow);
     PtrT<SDL_Renderer> _renderer = NullPtr(SDL_DestroyRenderer);
     PtrT<TTF_Font> _font = NullPtr(TTF_CloseFont);
-    int _advance = 0;
+    int _cell_width = 0;
+    int _cell_height = 0;
     std::unordered_map<unsigned, HlAttr> _hl_attr;
     uint32_t _fg = 0xffffff; 
     uint32_t _bg = 0;
+    int _cursor_row = 0;
+    int _cursor_col = 0;
 
     struct _Texture
     {
