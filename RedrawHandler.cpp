@@ -75,10 +75,10 @@ void RedrawHandler::_OnNotification(std::string method, const msgpack::object &o
         {
             for_each_event(event, [this](const auto &e) { _GridLine(e); });
         }
-        //else if (subtype == "grid_scroll")
-        //{
-        //    _GridScroll(event);
-        //}
+        else if (subtype == "grid_scroll")
+        {
+            for_each_event(event, [this](const auto &e) { _GridScroll(e); });
+        }
         else if (subtype == "hl_attr_define")
         {
             for_each_event(event, [this](const auto &e) { _HlAttrDefine(e); });
@@ -146,67 +146,22 @@ void RedrawHandler::_GridLine(const msgpack::object_array &event)
     col += _renderer->GridLine(row, col, text, hl_id);
 }
 
-//void RedrawHandler::_GridScroll(const msgpack::object_array &event)
-//{
-//    for (size_t j = 1; j < event.size; ++j)
-//    {
-//        const auto &inst = event.ptr[j].via.array;
-//        int grid = inst.ptr[0].as<int>();
-//        if (grid != 1)
-//            throw std::runtime_error("Multigrid not supported");
-//        int top = inst.ptr[1].as<int>();
-//        int bot = inst.ptr[2].as<int>();
-//        int left = inst.ptr[3].as<int>();
-//        int right = inst.ptr[4].as<int>();
-//        int rows = inst.ptr[5].as<int>();
-//        int cols = inst.ptr[6].as<int>();
-//        if (cols)
-//            throw std::runtime_error("Column scrolling not expected");
+void RedrawHandler::_GridScroll(const msgpack::object_array &event)
+{
+    int grid = event.ptr[0].as<int>();
+    if (grid != 1)
+        throw std::runtime_error("Multigrid not supported");
+    int top = event.ptr[1].as<int>();
+    int bot = event.ptr[2].as<int>();
+    int left = event.ptr[3].as<int>();
+    int right = event.ptr[4].as<int>();
+    int rows = event.ptr[5].as<int>();
+    int cols = event.ptr[6].as<int>();
+    if (cols)
+        throw std::runtime_error("Column scrolling not expected");
 
-//        int start = 0;
-//        int stop = 0;
-//        int step = 0;
-
-//        --bot;
-//        if (rows > 0)
-//        {
-//            start = top;
-//            stop = bot - rows + 1;
-//            step = 1;
-//        }
-//        else if (rows < 0)
-//        {
-//            start = bot;
-//            stop = top - rows - 1;
-//            step = -1;
-//        }
-//        else
-//            throw std::runtime_error("Rows should not equal 0");
-
-//        // this is very inefficient, but there doesn't appear to be a curses function for extracting whole lines incl.
-//        // attributes. another alternative would be to keep our own copy of the screen buffer
-//        for (int r = start; r != stop; r += step)
-//        {
-//            //std::cout << "[" << (r+1) << ";" << (left+1) << "H";
-//            size_t idx = r * _size.ws_col + left;
-//            unsigned hl_id = _grid[idx].hl_id;
-//            //std::cout << _attributes[hl_id]();
-//            for (int c = left; c < right; ++c, ++idx)
-//            {
-//                if (hl_id != _grid[idx].hl_id)
-//                {
-//                    hl_id = _grid[idx].hl_id;
-//                    //std::cout << _attributes[hl_id]();
-//                }
-//                //std::cout << _grid[idx].text;
-//            }
-//        }
-//    }
-//}
-
-//void RedrawHandler::_HlDefaultColorsSet(const msgpack::object_array &event)
-//{
-//}
+    _renderer->GridScroll(top, bot, left, right, rows);
+}
 
 void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
 {

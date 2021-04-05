@@ -45,6 +45,7 @@ public:
     void HlAttrDefine(unsigned hl_id, HlAttr attr);
     void DefaultColorSet(unsigned fg, unsigned bg);
     void GridCursorGoto(int row, int col);
+    void GridScroll(int top, int bot, int left, int right, int rows);
 
 private:
     PtrT<SDL_Window> _window = NullPtr(SDL_DestroyWindow);

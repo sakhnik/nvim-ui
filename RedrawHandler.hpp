@@ -22,6 +22,6 @@ private:
 
     void _GridCursorGoto(const msgpack::object_array &event);
     void _GridLine(const msgpack::object_array &event);
-    //void _GridScroll(const msgpack::object_array &event);
+    void _GridScroll(const msgpack::object_array &event);
     void _HlAttrDefine(const msgpack::object_array &event);
 };

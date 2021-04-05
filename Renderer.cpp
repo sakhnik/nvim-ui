@@ -252,10 +252,40 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
 {
     _fg = fg;
     _bg = bg;
+
+    //for (auto &line : _lines)
+    //    line.texture_cache.clear();
 }
 
 void Renderer::GridCursorGoto(int row, int col)
 {
     _cursor_row = row;
     _cursor_col = col;
+}
+
+void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
+{
+    auto copy = [&](int row, int row_from) {
+        const auto &line_from = _lines[row_from];
+        size_t size = right - left;
+        const auto *offsets = line_from.offsets.data() + left;
+        const auto *hl_id = line_from.hl_id.data() + left;
+        std::string_view text_from(line_from.text.data() + offsets[0], offsets[size] - offsets[0]);
+        _InsertText(row, left, text_from, size, offsets, hl_id);
+    };
+
+    if (rows > 0)
+    {
+        for (int row = top; row < bot - rows; ++row)
+            copy(row, row + rows);
+    }
+    else if (rows < 0)
+    {
+        for (int row = bot - 1; row > top - rows - 1; --row)
+            copy(row, row + rows);
+    }
+    else
+    {
+        throw std::runtime_error("Rows should not equal 0");
+    }
 }
