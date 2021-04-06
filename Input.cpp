@@ -1,11 +1,13 @@
 #include "Input.hpp"
 #include "MsgPackRpc.hpp"
+#include "Renderer.hpp"
 #include <iostream>
 #include <SDL2/SDL.h>
 
 
-Input::Input(uv_loop_t *loop, MsgPackRpc *rpc)
+Input::Input(uv_loop_t *loop, MsgPackRpc *rpc, Renderer *renderer)
     : _rpc{rpc}
+    , _renderer{renderer}
 {
     ::uv_timer_init(loop, &_timer);
     _timer.data = this;
@@ -66,6 +68,14 @@ void Input::_PollEvents()
     {
         switch (event.type)
         {
+        case SDL_WINDOWEVENT:
+            switch (event.window.event)
+            {
+            case SDL_WINDOWEVENT_RESIZED:
+                _renderer->OnResized(/*event.window.data1, event.window.data2*/);
+                break;
+            }
+            break;
         case SDL_TEXTINPUT:
             if (!_control)
                 _OnInput(event.text.text);

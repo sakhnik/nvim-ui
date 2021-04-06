@@ -62,11 +62,11 @@ int main(int argc, char* argv[])
         }
 
         MsgPackRpc rpc(&stdin_pipe, &stdout_pipe);
-        Renderer renderer;
+        Renderer renderer(&rpc);
         RedrawHandler redraw_handler(&rpc, &renderer);
         redraw_handler.AttachUI();
 
-        Input input{loop, &rpc};
+        Input input{loop, &rpc, &renderer};
         input.Start();
 
         ::uv_run(loop, UV_RUN_DEFAULT);

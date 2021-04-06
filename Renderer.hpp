@@ -7,6 +7,7 @@
 #include <list>
 #include <unordered_map>
 
+class MsgPackRpc;
 
 template <typename T>
 using PtrT = std::unique_ptr<T, void(*)(T*)>;
@@ -20,7 +21,7 @@ PtrT<T> NullPtr(void(*d)(T*))
 class Renderer
 {
 public:
-    Renderer();
+    Renderer(MsgPackRpc *);
     ~Renderer();
 
     void Flush();
@@ -42,12 +43,17 @@ public:
         unsigned flags = 0;
     };
 
+    // Window was resized
+    void OnResized();
+
     void HlAttrDefine(unsigned hl_id, HlAttr attr);
     void DefaultColorSet(unsigned fg, unsigned bg);
     void GridCursorGoto(int row, int col);
     void GridScroll(int top, int bot, int left, int right, int rows);
+    void GridResize(int width, int height);
 
 private:
+    MsgPackRpc *_rpc;
     PtrT<SDL_Window> _window = NullPtr(SDL_DestroyWindow);
     PtrT<SDL_Renderer> _renderer = NullPtr(SDL_DestroyRenderer);
     PtrT<TTF_Font> _font = NullPtr(TTF_CloseFont);

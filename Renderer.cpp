@@ -1,35 +1,37 @@
 #include "Renderer.hpp"
+#include "MsgPackRpc.hpp"
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
 
 
-Renderer::Renderer()
-    : _lines(25)
+Renderer::Renderer(MsgPackRpc *rpc)
+    : _rpc{rpc}
 {
-    for (auto &line : _lines)
-    {
-        for (int col = 0; col < 80; ++col)
-        {
-            line.text.push_back(' ');
-            line.hl_id.push_back(0);
-            line.offsets.push_back(col);
-        }
-        line.offsets.push_back(line.text.size());
-    }
-
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
 
+    const int WIN_W = 1024;
+    const int WIN_H = 768;
+
     _window.reset(SDL_CreateWindow("NeoVim",
-        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024,
-        768, 0));
+        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+        WIN_W, WIN_H,
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI));
     _renderer.reset(SDL_CreateRenderer(_window.get(), -1, SDL_RENDERER_ACCELERATED));
-    _font.reset(TTF_OpenFont("DejaVuSansMono.ttf", 20));
+
+    int wp{}, hp{};
+    SDL_GetRendererOutputSize(_renderer.get(), &wp, &hp);
+    int hidpi_scale = wp / WIN_W;
+
+    const int FONT_SIZE = 20;
+    _font.reset(TTF_OpenFont("DejaVuSansMono.ttf", FONT_SIZE * hidpi_scale));
 
     // Check font metrics
     TTF_GlyphMetrics(_font.get(), '@', nullptr /*minx*/, nullptr /*maxx*/,
             nullptr /*miny*/, nullptr /*maxy*/, &_cell_width);
     _cell_height = TTF_FontHeight(_font.get());
+
+    GridResize(80, 25);
 }
 
 Renderer::~Renderer()
@@ -285,5 +287,61 @@ void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
     else
     {
         throw std::runtime_error("Rows should not equal 0");
+    }
+}
+
+void Renderer::OnResized()
+{
+    int wp{}, hp{};
+    SDL_GetRendererOutputSize(_renderer.get(), &wp, &hp);
+
+    int new_width = std::max(1, wp / _cell_width);
+    int new_height = std::max(1, hp / _cell_height);
+
+    if (new_height != static_cast<int>(_lines.size()) ||
+        new_width != static_cast<int>(_lines[0].offsets.size()))
+    {
+        _rpc->Request(
+            [&](auto &pk) {
+                pk.pack("nvim_ui_try_resize");
+                pk.pack_array(2);
+                pk.pack(new_width);
+                pk.pack(new_height);
+            },
+            [](const msgpack::object &err, const auto &resp) {
+                if (!err.is_nil())
+                {
+                    std::ostringstream oss;
+                    oss << "Failed to resize UI " << err << std::endl;
+                    throw std::runtime_error(oss.str());
+                }
+            }
+        );
+    }
+}
+
+void Renderer::GridResize(int width, int height)
+{
+    _lines.resize(height);
+    for (auto &line : _lines)
+    {
+        int prev_width = line.hl_id.size();
+        if (prev_width > width)
+        {
+            line.hl_id.resize(width);
+            line.offsets.resize(width + 1);
+            line.text.resize(line.offsets.back());
+        }
+        else
+        {
+            if (line.offsets.empty())
+                line.offsets.push_back(0);
+            for (int col = prev_width; col < width; ++col)
+            {
+                line.hl_id.push_back(0);
+                line.text.push_back(' ');
+                line.offsets.push_back(line.offsets.back() + 1);
+            }
+        }
     }
 }

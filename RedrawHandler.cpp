@@ -94,6 +94,10 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
             unsigned bg = inst.ptr[1].as<unsigned>();
             _renderer->DefaultColorSet(fg, bg);
         }
+        else if (subtype == "grid_resize")
+        {
+            for_each_event(event, [this](const auto &e) { _GridResize(e); });
+        }
         else
         {
             std::cerr << "Ignoring redraw " << subtype << std::endl;
@@ -196,4 +200,14 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
     }
     // info = inst[3]
     _renderer->HlAttrDefine(hl_id, attr);
+}
+
+void RedrawHandler::_GridResize(const msgpack::object_array &event)
+{
+    int grid = event.ptr[0].as<int>();
+    if (grid != 1)
+        throw std::runtime_error("Multigrid not supported");
+    int width = event.ptr[1].as<int>();
+    int height = event.ptr[2].as<int>();
+    _renderer->GridResize(width, height);
 }
