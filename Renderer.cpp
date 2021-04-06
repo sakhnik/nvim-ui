@@ -73,14 +73,14 @@ void Renderer::Flush()
                 tit = tex_cache.erase(tit);
 
             // Test whether the texture should be rendered again
-            //if (tit == tex_cache.end()
-            //    || tit->col != texture.col || tit->hl_id != texture.hl_id
-            //    || tit->text != cur_text)
-            //{
+            if (tit == tex_cache.end()
+                || tit->col != texture.col || tit->hl_id != texture.hl_id
+                || tit->text != cur_text || !tit->texture)
+            {
+                auto hlit = _hl_attr.find(texture.hl_id);
+
                 SDL_Color fg = fg0;
                 SDL_Color bg = bg0;
-
-                auto hlit = _hl_attr.find(tit->hl_id);
                 if (hlit != _hl_attr.end())
                 {
                     const HlAttr &attr = hlit->second;
@@ -98,7 +98,7 @@ void Renderer::Flush()
                             texture.text.c_str(), fg, bg), SDL_FreeSurface);
                 texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
                 tit = tex_cache.insert(tit, std::move(texture));
-            //}
+            }
 
             // Copy the texture (cached or new) to the renderer
             int texW = 0;
@@ -124,7 +124,6 @@ void Renderer::Flush()
                     line.offsets[c+1] - line.offsets[texture.col]);
         }
         print_group();
-
         // Remove the unused rest of the cache
         line.texture_cache.erase(tit, line.texture_cache.end());
     }
@@ -252,8 +251,8 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
     _fg = fg;
     _bg = bg;
 
-    //for (auto &line : _lines)
-    //    line.texture_cache.clear();
+    for (auto &line : _lines)
+        line.texture_cache.clear();
 }
 
 void Renderer::GridCursorGoto(int row, int col)
