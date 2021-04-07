@@ -62,7 +62,19 @@ private:
     MsgPackRpc *_rpc;
     PtrT<SDL_Window> _window = NullPtr(SDL_DestroyWindow);
     PtrT<SDL_Renderer> _renderer = NullPtr(SDL_DestroyRenderer);
-    PtrT<TTF_Font> _font = NullPtr(TTF_CloseFont);
+
+    enum FontStyleBit
+    {
+        FS_BOLD = 0x1,
+        FS_ITALIC = 0x2,
+    };
+    std::array<PtrT<TTF_Font>, 4> _fonts = {
+        NullPtr(TTF_CloseFont),
+        NullPtr(TTF_CloseFont),
+        NullPtr(TTF_CloseFont),
+        NullPtr(TTF_CloseFont)
+    };
+
     int _cell_width = 0;
     int _cell_height = 0;
     std::unordered_map<unsigned, HlAttr> _hl_attr;

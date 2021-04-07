@@ -9,20 +9,19 @@ The required font DejaVuSansMono.ttf is ubiquitously available in Linux. In Wind
 # TODO
 
  - [ ] Cursor shapes
- - [ ] Use pango for text layout
+ - [ ] Underline, undercurl
+ - [ ] Add configuration file (property tree)
  - [ ] Log to a file instead of stdout
  - [ ] Properly close the editor when the window is about to be closed
  - [ ] Allow selecting GUI font
  - [ ] Mouse support
  - [ ] Fast zoom with mouse wheel
  - [ ] Automatic testing
- - [ ] Make redrawing atomic with flush
- - [ ] Handle special keys like arrows, functional keys
+ - [ ] Handle special keys like arrows
  - [ ] Handle the rest of highlight attributes
- - [ ] Handle errors and failures
+ - [ ] Handle errors and failures, suggest restarting nvim on crash
  - [ ] Consider externalizing popup menus to add scrollbars
  - [ ] Configuration of fonts and behaviour tweaking (consider using lua)
  - [ ] Change mouse pointer on busy_start/busy_stop notifications
- - [ ] Create window after neovim has been launched and initialized to avoid white flash during startup
  - [ ] Setup automatic releases (win32, appimage)
  - [ ] Track mode_info

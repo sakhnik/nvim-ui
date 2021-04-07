@@ -187,10 +187,10 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
         // nvim api docs state that boolean keys here are only sent if true
         else if (key == "reverse")
             attr.flags |= Renderer::HF_REVERSE;
-        //else if (key == "bold")
-        //    attr.flags |= Renderer::HF_BOLD;
-        //else if (key == "italic")
-        //    attr.flags |= Renderer::HF_ITALIC;
+        else if (key == "bold")
+            attr.flags |= Renderer::HF_BOLD;
+        else if (key == "italic")
+            attr.flags |= Renderer::HF_ITALIC;
         //else if (key == "underline")
         //    attr.flags |= Renderer::HF_UNDERLINE;
         //else if (key == "undercurl")

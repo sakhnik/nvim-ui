@@ -31,12 +31,15 @@ Renderer::Renderer(MsgPackRpc *rpc)
 # define FONT_PATH "/usr/share/fonts/TTF/"
 #endif
     const int FONT_SIZE = 20;
-    _font.reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono.ttf", FONT_SIZE * hidpi_scale));
+    _fonts[0].reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono.ttf", FONT_SIZE * hidpi_scale));
+    _fonts[FS_BOLD].reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono-Bold.ttf", FONT_SIZE * hidpi_scale));
+    _fonts[FS_ITALIC].reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono-Oblique.ttf", FONT_SIZE * hidpi_scale));
+    _fonts[FS_BOLD|FS_ITALIC].reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono-BoldOblique.ttf", FONT_SIZE * hidpi_scale));
 
     // Check font metrics
-    TTF_GlyphMetrics(_font.get(), '@', nullptr /*minx*/, nullptr /*maxx*/,
+    TTF_GlyphMetrics(_fonts[0].get(), '@', nullptr /*minx*/, nullptr /*maxx*/,
             nullptr /*miny*/, nullptr /*maxy*/, &_cell_width);
-    _cell_height = TTF_FontHeight(_font.get());
+    _cell_height = TTF_FontHeight(_fonts[0].get());
 
     // Prepare the initial cell grid to fill the whole window.
     // The NeoVim UI will be attached using these dimensions.
@@ -114,6 +117,7 @@ void Renderer::Flush()
 
                 SDL_Color fg = fg0;
                 SDL_Color bg = bg0;
+                int font = 0;
                 if (hlit != _hl_attr.end())
                 {
                     const HlAttr &attr = hlit->second;
@@ -124,10 +128,14 @@ void Renderer::Flush()
                         bg = GetColor(attr.bg.value());
                     if ((attr.flags & HF_REVERSE))
                         std::swap(fg, bg);
+                    if ((attr.flags & HF_BOLD))
+                        font |= FS_BOLD;
+                    if ((attr.flags & HF_ITALIC))
+                        font |= FS_ITALIC;
                 }
 
                 texture.text = cur_text;
-                auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_font.get(),
+                auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_fonts[font].get(),
                             texture.text.c_str(), fg, bg), SDL_FreeSurface);
                 texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
                 tit = tex_cache.insert(tit, std::move(texture));
@@ -261,7 +269,7 @@ std::vector<int> Renderer::_CalcOffsets(std::string_view utf8, size_t init)
 
         // If advance is zero, the glyph doesn't start a new cell.
         int advance(0);
-        TTF_GlyphMetrics(_font.get(), uni, nullptr, nullptr, nullptr, nullptr, &advance);
+        TTF_GlyphMetrics(_fonts[0].get(), uni, nullptr, nullptr, nullptr, nullptr, &advance);
         if (advance)
         {
             offsets.push_back(utf8_start);
