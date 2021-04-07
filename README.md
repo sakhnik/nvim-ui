@@ -4,7 +4,7 @@ NeoVim UI implemented in SDL2
 
 I need an easy deployable low latency UI for NeoVim in Windows. It should be both simple and flexible. Turns out, it's quite easy to code after experiments with SpyUI.
 
-The required font DejaVuSansMono.ttf is ubiquitously installed in Linux. In Windows, they it could be installed with [chocolatey](https://community.chocolatey.org/packages/dejavufonts): `choco install dejavufonts`.
+The required font DejaVuSansMono.ttf is ubiquitously available in Linux. In Windows, they it could be installed with [chocolatey](https://community.chocolatey.org/packages/dejavufonts): `choco install dejavufonts`.
 
 # TODO
 
