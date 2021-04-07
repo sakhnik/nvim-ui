@@ -6,8 +6,27 @@ jobs:
     timeout-minutes: 30
     steps:
     - uses: actions/checkout@v2
-    - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        submodules: true
+    - name: Prepare environment
+      id: prep
+      run: |
+        Add-Content -Path $env:GITHUB_ENV "WORKSPACE_MSYS2=/$($env:GITHUB_WORKSPACE -replace ':?\\','/')"
+        Add-Content -Path $env:GITHUB_ENV "MSYSTEM=MINGW64"
+    - name: Install MSYS2
+      run: choco install msys2
+    - name: Install tools and libraries
+      run: |
+        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/install-mingw.sh"
     - name: Build
       run: |
-        cmake -G "NMake Makefiles" .
-        nmake
+        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/build.sh"
+    - name: Package
+      run: |
+        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/package.sh"
+    - name: Upload artifacts
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: win64
+        path: dist/nvim-sdl2-win64.zip
