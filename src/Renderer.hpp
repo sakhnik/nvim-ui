@@ -1,11 +1,13 @@
 #pragma once
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 #include <memory>
 #include <vector>
 #include <list>
 #include <unordered_map>
+#include <string_view>
+#include <string>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 class MsgPackRpc;
 

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(nvim-sdl2)
 find_package(Threads)
-add_definitions(-std=c++20 -Wall)
+add_definitions(-std=c++17 -Wall)
 add_executable(nvim-sdl2
     src/main.cpp
     src/MsgPackRpc.cpp
