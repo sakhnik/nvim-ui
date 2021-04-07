@@ -13,10 +13,6 @@ dlls=$(ntldd.exe -R build/$package.exe | grep -Po "[^ ]+?msys64[^ ]+" | sort -u 
 for dll in $dlls; do
   cp /mingw64/bin/$dll dist/$package/bin
 done
-cp /mingw64/bin/gspawn* dist/$package/bin
-
-cp -R /mingw64/lib/gdk-pixbuf-2.0 dist/$package/lib/
-cp -R /mingw64/share/{glib-2.0,icons} dist/$package/share/
 
 pushd dist
 zip -r $package-win64.zip *
