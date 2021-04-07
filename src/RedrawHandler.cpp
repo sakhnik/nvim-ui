@@ -20,11 +20,11 @@ void RedrawHandler::AttachUI()
     );
 
     _rpc->Request(
-        [](auto &pk) {
+        [this](auto &pk) {
             pk.pack("nvim_ui_attach");
             pk.pack_array(3);
-            pk.pack(80);
-            pk.pack(25);
+            pk.pack(_renderer->GetWidth());
+            pk.pack(_renderer->GetHeight());
             pk.pack_map(2);
             pk.pack("rgb");
             pk.pack(true);

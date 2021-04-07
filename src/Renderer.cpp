@@ -13,12 +13,14 @@ Renderer::Renderer(MsgPackRpc *rpc)
     const int WIN_W = 1024;
     const int WIN_H = 768;
 
+    // Create a window
     _window.reset(SDL_CreateWindow("NeoVim",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         WIN_W, WIN_H,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI));
     _renderer.reset(SDL_CreateRenderer(_window.get(), -1, SDL_RENDERER_ACCELERATED));
 
+    // Get the window size in pixels to cope with HiDPI
     int wp{}, hp{};
     SDL_GetRendererOutputSize(_renderer.get(), &wp, &hp);
     int hidpi_scale = wp / WIN_W;
@@ -36,7 +38,11 @@ Renderer::Renderer(MsgPackRpc *rpc)
             nullptr /*miny*/, nullptr /*maxy*/, &_cell_width);
     _cell_height = TTF_FontHeight(_font.get());
 
-    GridResize(80, 25);
+    // Prepare the initial cell grid to fill the whole window.
+    // The NeoVim UI will be attached using these dimensions.
+    int width = std::max(1, wp / _cell_width);
+    int height = std::max(1, hp / _cell_height);
+    GridResize(width, height);
 }
 
 Renderer::~Renderer()

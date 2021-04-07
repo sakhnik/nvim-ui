@@ -26,6 +26,10 @@ public:
     Renderer(MsgPackRpc *);
     ~Renderer();
 
+    // Get current grid cell dimensions
+    int GetHeight() const { return _lines.size(); }
+    int GetWidth() const { return _lines[0].hl_id.size(); }
+
     void Flush();
 
     // Return the number of columns
