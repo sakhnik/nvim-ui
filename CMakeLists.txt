@@ -11,4 +11,5 @@ add_executable(nvim-sdl2
     src/Input.cpp
 )
 target_link_libraries(nvim-sdl2 ${CMAKE_THREAD_LIBS_INIT} -luv -lSDL2 -lSDL2_ttf)
+add_definitions(-DSDL_MAIN_HANDLED)
 #target_precompile_headers(nvim-cur PRIVATE pch.hpp)

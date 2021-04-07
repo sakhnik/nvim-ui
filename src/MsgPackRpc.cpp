@@ -49,10 +49,9 @@ void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
         delete reinterpret_cast<Write*>(req);
     };
 
-    uv_buf_t buf = {
-        .base = w->buffer.data(),
-        .len = w->buffer.size(),
-    };
+    uv_buf_t buf;
+    buf.base = w->buffer.data();
+    buf.len = w->buffer.size();
 
     uv_write(w.release(), reinterpret_cast<uv_stream_t*>(_stdin_pipe), &buf, 1, cb);
 }

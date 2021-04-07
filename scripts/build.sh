@@ -6,5 +6,5 @@ fi
 
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+ninja -v
