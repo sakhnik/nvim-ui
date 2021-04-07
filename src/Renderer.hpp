@@ -83,6 +83,8 @@ private:
         std::vector<unsigned> hl_id;
         // Remember the previously rendered textures, high chance they're reusable.
         std::list<_Texture> texture_cache;
+        // Is it necessary to redraw this line carefully or can just draw from the texture cache?
+        bool dirty = true;
     };
 
     std::vector<_Line> _lines;

@@ -63,12 +63,32 @@ void Renderer::Flush()
 
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
+        auto &line = _lines[row];
+        auto &tex_cache = line.texture_cache;
+
+        auto copy_texture = [this, row](const _Texture &tex) {
+            int texW = 0;
+            int texH = 0;
+            SDL_QueryTexture(tex.texture.get(), NULL, NULL, &texW, &texH);
+            SDL_Rect dstrect = { tex.col * _cell_width, _cell_height * row, texW, texH };
+            SDL_RenderCopy(_renderer.get(), tex.texture.get(), NULL, &dstrect);
+        };
+
+        // Check if it's possible to just copy the prepared textures first
+        if (!line.dirty)
+        {
+            for (const auto &tex : line.texture_cache)
+                copy_texture(tex);
+            continue;
+        }
+        // Mark the line clear as we're going to redraw the necessary parts
+        // and update the texture cache.
+        line.dirty = false;
+
         // Group text chunks by hl_id
         _Texture texture;
         std::string_view cur_text;
 
-        auto &line = _lines[row];
-        auto &tex_cache = line.texture_cache;
         auto tit = tex_cache.begin();
 
         auto print_group = [&]() {
@@ -108,12 +128,7 @@ void Renderer::Flush()
             }
 
             // Copy the texture (cached or new) to the renderer
-            int texW = 0;
-            int texH = 0;
-            SDL_QueryTexture(tit->texture.get(), NULL, NULL, &texW, &texH);
-            SDL_Rect dstrect = { tit->col * _cell_width, _cell_height * row, texW, texH };
-            SDL_RenderCopy(_renderer.get(), tit->texture.get(), NULL, &dstrect);
-            ++tit;
+            copy_texture(*tit++);
         };
 
         for (int c = 0, colN = line.hl_id.size(); c != colN; ++c)
@@ -148,6 +163,7 @@ void Renderer::_InsertText(int row, int col, std::string_view text,
         size_t size, const int *offsets, const unsigned *hl_id)
 {
     _Line &line = _lines[row];
+    line.dirty = true;
 
     if (hl_id)
     {
@@ -259,7 +275,10 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
     _bg = bg;
 
     for (auto &line : _lines)
+    {
+        line.dirty = true;
         line.texture_cache.clear();
+    }
 }
 
 void Renderer::GridCursorGoto(int row, int col)
