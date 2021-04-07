@@ -23,8 +23,13 @@ Renderer::Renderer(MsgPackRpc *rpc)
     SDL_GetRendererOutputSize(_renderer.get(), &wp, &hp);
     int hidpi_scale = wp / WIN_W;
 
+#ifdef WIN32
+# define FONT_PATH "c:/windows/fonts/"
+#else
+# define FONT_PATH "/usr/share/fonts/TTF/"
+#endif
     const int FONT_SIZE = 20;
-    _font.reset(TTF_OpenFont("DejaVuSansMono.ttf", FONT_SIZE * hidpi_scale));
+    _font.reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono.ttf", FONT_SIZE * hidpi_scale));
 
     // Check font metrics
     TTF_GlyphMetrics(_font.get(), '@', nullptr /*minx*/, nullptr /*maxx*/,
