@@ -110,6 +110,48 @@ void Input::_PollEvents()
             case SDLK_RETURN:
                 _RawInput("cr");
                 break;
+            case SDLK_TAB:
+                _RawInput("tab");
+                break;
+            case SDLK_BACKSPACE:
+                _RawInput("bs");
+                break;
+            case SDLK_F1:
+                _RawInput("f1");
+                break;
+            case SDLK_F2:
+                _RawInput("f2");
+                break;
+            case SDLK_F3:
+                _RawInput("f3");
+                break;
+            case SDLK_F4:
+                _RawInput("f4");
+                break;
+            case SDLK_F5:
+                _RawInput("f5");
+                break;
+            case SDLK_F6:
+                _RawInput("f6");
+                break;
+            case SDLK_F7:
+                _RawInput("f7");
+                break;
+            case SDLK_F8:
+                _RawInput("f8");
+                break;
+            case SDLK_F9:
+                _RawInput("f9");
+                break;
+            case SDLK_F10:
+                _RawInput("f10");
+                break;
+            case SDLK_F11:
+                _RawInput("f11");
+                break;
+            case SDLK_F12:
+                _RawInput("f12");
+                break;
             default:
                 if (_control)
                 {
