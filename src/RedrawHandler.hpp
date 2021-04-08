@@ -26,4 +26,5 @@ private:
     void _GridScroll(const msgpack::object_array &event);
     void _HlAttrDefine(const msgpack::object_array &event);
     void _GridResize(const msgpack::object_array &event);
+    void _ModeChange(const msgpack::object_array &event);
 };

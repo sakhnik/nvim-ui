@@ -8,7 +8,7 @@ The required font DejaVuSansMono.ttf is ubiquitously available in Linux. In Wind
 
 # TODO
 
- - [ ] Cursor shapes
+ - [x] Cursor shapes
  - [ ] Underline, undercurl
  - [ ] Add configuration file (property tree)
  - [ ] Log to a file instead of stdout

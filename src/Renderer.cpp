@@ -164,13 +164,43 @@ void Renderer::Flush()
         line.texture_cache.erase(tit, line.texture_cache.end());
     }
 
-    // Draw the cursor
+    _DrawCursor();
+    SDL_RenderPresent(_renderer.get());
+}
+
+void Renderer::_DrawCursor()
+{
     SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(_renderer.get(), _fg >> 16, (_fg >> 8) & 0xff, _fg & 0xff, 127);
-    SDL_Rect rect = { _cursor_col * _cell_width, _cell_height * _cursor_row, _cell_width, _cell_height };
+    SDL_Rect rect;
+    if (_mode == "insert")
+    {
+        rect = {
+            _cursor_col * _cell_width,
+            _cell_height * _cursor_row,
+            _cell_width / 4,
+            _cell_height
+        };
+    }
+    else if (_mode == "replace" || _mode == "operator")
+    {
+        rect = {
+            _cursor_col * _cell_width,
+            _cell_height * _cursor_row + _cell_height * 3 / 4,
+            _cell_width,
+            _cell_height / 4
+        };
+    }
+    else
+    {
+        rect = {
+            _cursor_col * _cell_width,
+            _cell_height * _cursor_row,
+            _cell_width,
+            _cell_height
+        };
+    }
     SDL_RenderFillRect(_renderer.get(), &rect);
-
-    SDL_RenderPresent(_renderer.get());
 }
 
 void Renderer::_InsertText(int row, int col, std::string_view text,
@@ -382,4 +412,9 @@ void Renderer::GridResize(int width, int height)
             }
         }
     }
+}
+
+void Renderer::ModeChange(std::string_view mode)
+{
+    _mode = mode;
 }

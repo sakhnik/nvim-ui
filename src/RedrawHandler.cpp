@@ -98,6 +98,14 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
         {
             for_each_event(event, [this](const auto &e) { _GridResize(e); });
         }
+        else if (subtype == "mode_change")
+        {
+            for_each_event(event, [this](const auto &e) { _ModeChange(e); });
+        }
+        else if (subtype == "mode_info_set")
+        {
+            // Just ignore for now
+        }
         else
         {
             std::cerr << "Ignoring redraw " << subtype << std::endl;
@@ -210,4 +218,10 @@ void RedrawHandler::_GridResize(const msgpack::object_array &event)
     int width = event.ptr[1].as<int>();
     int height = event.ptr[2].as<int>();
     _renderer->GridResize(width, height);
+}
+
+void RedrawHandler::_ModeChange(const msgpack::object_array &event)
+{
+    auto mode = event.ptr[0].as<std::string_view>();
+    _renderer->ModeChange(mode);
 }

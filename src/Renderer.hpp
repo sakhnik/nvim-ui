@@ -57,6 +57,7 @@ public:
     void GridCursorGoto(int row, int col);
     void GridScroll(int top, int bot, int left, int right, int rows);
     void GridResize(int width, int height);
+    void ModeChange(std::string_view mode);
 
 private:
     MsgPackRpc *_rpc;
@@ -82,6 +83,7 @@ private:
     uint32_t _bg = 0;
     int _cursor_row = 0;
     int _cursor_col = 0;
+    std::string _mode;
 
     struct _Texture
     {
@@ -108,4 +110,5 @@ private:
     std::vector<int> _CalcOffsets(std::string_view text, size_t init = 0);
     void _InsertText(int row, int col, std::string_view text,
                      size_t size, const int *offsets, const unsigned *hl_id);
+    void _DrawCursor();
 };
