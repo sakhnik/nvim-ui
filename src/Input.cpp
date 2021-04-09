@@ -38,12 +38,17 @@ void Input::_OnInput(std::string_view input)
             pk.pack_array(1);
             pk.pack(input);
         },
-        [](const msgpack::object &err, const auto &resp) {
+        [&](const msgpack::object &err, const msgpack::object &resp) {
             if (!err.is_nil())
             {
                 std::ostringstream oss;
                 oss << "Input error: " << err;
                 throw std::runtime_error(oss.str());
+            }
+            size_t consumed = resp.as<size_t>();
+            if (consumed < input.size())
+            {
+                std::cerr << "[input] Consumed " << consumed << "/" << input.size() << " bytes" << std::endl;
             }
         }
     );
@@ -78,7 +83,13 @@ void Input::_PollEvents()
             break;
         case SDL_TEXTINPUT:
             if (!_control)
-                _OnInput(event.text.text);
+            {
+                std::string_view lt("<");
+                if (lt == event.text.text)
+                    _OnInput("<lt>");
+                else
+                    _OnInput(event.text.text);
+            }
             break;
         case SDL_KEYUP:
             switch (event.key.keysym.sym)
