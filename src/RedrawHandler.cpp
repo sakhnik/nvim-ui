@@ -128,38 +128,27 @@ void RedrawHandler::_GridLine(const msgpack::object_array &event)
     int grid = event.ptr[0].as<int>();
     if (grid != 1)
         throw std::runtime_error("Multigrid not supported");
+
     int row = event.ptr[1].as<int>();
     int col = event.ptr[2].as<int>();
     const auto &cells = event.ptr[3].via.array;
-    // Group text chunks by hl_id
-    std::string text;
-
     unsigned hl_id = 0;
+
     for (size_t c = 0; c < cells.size; ++c)
     {
         const auto &cell = cells.ptr[c].via.array;
         std::string_view chars = cell.ptr[0].as<std::string_view>();
         if (cell.size > 1)
-        {
-            unsigned new_hl_id = cell.ptr[1].as<unsigned>();
-            if (new_hl_id != hl_id && !text.empty())
-            {
-                col += _renderer->GridLine(row, col, text, hl_id);
-                text.clear();
-            }
-            hl_id = new_hl_id;
-        }
+            hl_id = cell.ptr[1].as<unsigned>();
         // if repeat is greater than 1, we are guaranteed to send an hl_id
         // https://github.com/neovim/neovim/blob/master/src/nvim/api/ui.c#L483
         int repeat = 1;
         if (cell.size > 2)
             repeat = cell.ptr[2].as<int>();
 
-        while (repeat--)
-            text += chars;
+        _renderer->GridLine(row, col, chars, hl_id, repeat);
+        col += repeat;
     }
-
-    col += _renderer->GridLine(row, col, text, hl_id);
 }
 
 void RedrawHandler::_GridScroll(const msgpack::object_array &event)

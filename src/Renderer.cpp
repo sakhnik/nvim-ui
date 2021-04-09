@@ -96,7 +96,6 @@ void Renderer::Flush()
 
         // Group text chunks by hl_id
         _Texture texture;
-        std::string_view cur_text;
 
         auto tit = tex_cache.begin();
 
@@ -105,13 +104,13 @@ void Renderer::Flush()
             while (tit != tex_cache.end() && tit->col < texture.col)
                 tit = tex_cache.erase(tit);
             while (tit != tex_cache.end() && tit->col == texture.col
-                && (tit->hl_id != texture.hl_id || tit->text != cur_text))
+                && (tit->hl_id != texture.hl_id || tit->text != texture.text))
                 tit = tex_cache.erase(tit);
 
             // Test whether the texture should be rendered again
             if (tit == tex_cache.end()
                 || tit->col != texture.col || tit->hl_id != texture.hl_id
-                || tit->text != cur_text || !tit->texture)
+                || tit->text != texture.text || !tit->texture)
             {
                 auto hlit = _hl_attr.find(texture.hl_id);
 
@@ -134,7 +133,6 @@ void Renderer::Flush()
                         font |= FS_ITALIC;
                 }
 
-                texture.text = cur_text;
                 auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_fonts[font].get(),
                             texture.text.c_str(), fg, bg), SDL_FreeSurface);
                 texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
@@ -156,8 +154,7 @@ void Renderer::Flush()
                 texture.text.clear();
                 texture.texture.reset();
             }
-            cur_text = std::string_view(line.text.data() + line.offsets[texture.col],
-                    line.offsets[c+1] - line.offsets[texture.col]);
+            texture.text += line.text[c];
         }
         print_group();
         // Remove the unused rest of the cache
@@ -203,109 +200,16 @@ void Renderer::_DrawCursor()
     SDL_RenderFillRect(_renderer.get(), &rect);
 }
 
-void Renderer::_InsertText(int row, int col, std::string_view text,
-        size_t size, const int *offsets, const unsigned *hl_id)
+void Renderer::GridLine(int row, int col, std::string_view chunk, unsigned hl_id, int repeat)
 {
     _Line &line = _lines[row];
     line.dirty = true;
 
-    if (hl_id)
+    for (int i = 0; i < repeat; ++i)
     {
-        for (size_t i = 0; i < size; ++i)
-            line.hl_id[col + i] = hl_id[i];
+        line.text[col + i] = chunk;
+        line.hl_id[col + i] = hl_id;
     }
-
-    int start_offset = line.offsets[col];
-    int replace_len = line.offsets[col + size] - start_offset;
-    line.text.replace(start_offset, replace_len, text);
-
-    for (size_t i = 0; i < size; ++i)
-        line.offsets[col + i] = offsets[i] - offsets[0] + start_offset;
-
-    int doff = (int)text.size() - replace_len;
-    for (size_t i = col + size; i < line.offsets.size(); ++i)
-        line.offsets[i] += doff;
-}
-
-int Renderer::GridLine(int row, int col, std::string_view text, unsigned hl_id)
-{
-    _Line &line = _lines[row];
-
-    auto offsets = _CalcOffsets(text);
-    int cols = offsets.size();
-
-    _InsertText(row, col, text, offsets.size(), offsets.data(), nullptr);
-
-    for (size_t i = 0; i < offsets.size(); ++i)
-        line.hl_id[i + col] = hl_id;
-
-    return cols;
-}
-
-// Scan through a UTF-8 string and remember the starts of cells when glyphs rendered
-// (advance != 0).
-std::vector<int> Renderer::_CalcOffsets(std::string_view utf8, size_t init)
-{
-    std::vector<int> offsets;
-
-    size_t i = init;
-    while (i < utf8.size())
-    {
-        size_t utf8_start = i;
-
-        uint16_t uni;
-        size_t todo;
-        unsigned char ch = utf8[i++];
-        if (ch <= 0x7F)
-        {
-            uni = ch;
-            todo = 0;
-        }
-        else if (ch <= 0xBF)
-        {
-            // TODO: fall back to one glyph one cell
-            throw std::logic_error("not a UTF-8 string");
-        }
-        else if (ch <= 0xDF)
-        {
-            uni = ch & 0x1F;
-            todo = 1;
-        }
-        else if (ch <= 0xEF)
-        {
-            uni = ch & 0x0F;
-            todo = 2;
-        }
-        else if (ch <= 0xF7)
-        {
-            uni = ch & 0x07;
-            todo = 3;
-        }
-        else
-        {
-            throw std::logic_error("not a UTF-8 string");
-        }
-
-        for (size_t j = 0; j < todo; ++j)
-        {
-            if (i == utf8.size())
-                throw std::logic_error("not a UTF-8 string");
-            unsigned char ch = utf8[i++];
-            if (ch < 0x80 || ch > 0xBF)
-                throw std::logic_error("not a UTF-8 string");
-            uni <<= 6;
-            uni += ch & 0x3F;
-        }
-
-        // If advance is zero, the glyph doesn't start a new cell.
-        int advance(0);
-        TTF_GlyphMetrics(_fonts[0].get(), uni, nullptr, nullptr, nullptr, nullptr, &advance);
-        if (advance)
-        {
-            offsets.push_back(utf8_start);
-        }
-    }
-    return offsets;
 }
 
 void Renderer::HlAttrDefine(unsigned hl_id, HlAttr attr)
@@ -335,11 +239,13 @@ void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
 {
     auto copy = [&](int row, int row_from) {
         const auto &line_from = _lines[row_from];
-        size_t size = right - left;
-        const auto *offsets = line_from.offsets.data() + left;
-        const auto *hl_id = line_from.hl_id.data() + left;
-        std::string_view text_from(line_from.text.data() + offsets[0], offsets[size] - offsets[0]);
-        _InsertText(row, left, text_from, size, offsets, hl_id);
+        auto &line_to = _lines[row];
+        line_to.dirty = true;
+        for (int col = left; col < right; ++col)
+        {
+            line_to.text[col] = line_from.text[col];
+            line_to.hl_id[col] = line_from.hl_id[col];
+        }
     };
 
     if (rows > 0)
@@ -367,7 +273,7 @@ void Renderer::OnResized()
     int new_height = std::max(1, hp / _cell_height);
 
     if (new_height != static_cast<int>(_lines.size()) ||
-        new_width != static_cast<int>(_lines[0].offsets.size()))
+        new_width != static_cast<int>(_lines[0].text.size()))
     {
         _rpc->Request(
             [&](auto &pk) {
@@ -393,24 +299,8 @@ void Renderer::GridResize(int width, int height)
     _lines.resize(height);
     for (auto &line : _lines)
     {
-        int prev_width = line.hl_id.size();
-        if (prev_width > width)
-        {
-            line.hl_id.resize(width);
-            line.offsets.resize(width + 1);
-            line.text.resize(line.offsets.back());
-        }
-        else
-        {
-            if (line.offsets.empty())
-                line.offsets.push_back(0);
-            for (int col = prev_width; col < width; ++col)
-            {
-                line.hl_id.push_back(0);
-                line.text.push_back(' ');
-                line.offsets.push_back(line.offsets.back() + 1);
-            }
-        }
+        line.hl_id.resize(width, 0);
+        line.text.resize(width, " ");
     }
 }
 

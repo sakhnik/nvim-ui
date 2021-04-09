@@ -32,9 +32,6 @@ public:
 
     void Flush();
 
-    // Return the number of columns
-    int GridLine(int row, int col, std::string_view text, unsigned hl_id);
-
     enum HlFlags
     {
         HF_BOLD = 1 << 0,
@@ -52,6 +49,7 @@ public:
     // Window was resized
     void OnResized();
 
+    void GridLine(int row, int col, std::string_view chunk, unsigned hl_id, int repeat);
     void HlAttrDefine(unsigned hl_id, HlAttr attr);
     void DefaultColorSet(unsigned fg, unsigned bg);
     void GridCursorGoto(int row, int col);
@@ -96,8 +94,7 @@ private:
 
     struct _Line
     {
-        std::string text;
-        std::vector<int> offsets;
+        std::vector<std::string> text;
         std::vector<unsigned> hl_id;
         // Remember the previously rendered textures, high chance they're reusable.
         std::list<_Texture> texture_cache;
@@ -108,7 +105,5 @@ private:
     std::vector<_Line> _lines;
 
     std::vector<int> _CalcOffsets(std::string_view text, size_t init = 0);
-    void _InsertText(int row, int col, std::string_view text,
-                     size_t size, const int *offsets, const unsigned *hl_id);
     void _DrawCursor();
 };
