@@ -10,6 +10,7 @@
 int main(int argc, char* argv[])
 {
     setlocale(LC_CTYPE, "");
+    std::cout << "nvim-sdl2 v0.0.1" << std::endl;
     try
     {
         auto loop = uv_default_loop();
