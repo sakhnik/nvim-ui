@@ -32,13 +32,14 @@ void Input::Start()
 
 void Input::_OnInput(std::string_view input)
 {
+    size_t input_size = input.size();
     _rpc->Request(
         [&](MsgPackRpc::PackerT &pk) {
             pk.pack("nvim_input");
             pk.pack_array(1);
             pk.pack(input);
         },
-        [&](const msgpack::object &err, const msgpack::object &resp) {
+        [=](const msgpack::object &err, const msgpack::object &resp) {
             if (!err.is_nil())
             {
                 std::ostringstream oss;
@@ -46,9 +47,9 @@ void Input::_OnInput(std::string_view input)
                 throw std::runtime_error(oss.str());
             }
             size_t consumed = resp.as<size_t>();
-            if (consumed < input.size())
+            if (consumed < input_size)
             {
-                std::cerr << "[input] Consumed " << consumed << "/" << input.size() << " bytes" << std::endl;
+                std::cerr << "[input] Consumed " << consumed << "/" << input_size << " bytes" << std::endl;
             }
         }
     );
