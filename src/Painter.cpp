@@ -8,7 +8,7 @@ Painter::Painter(double scale_x, double scale_y)
 {
 }
 
-void Painter::Paint(SDL_Surface *surface)
+void Painter::Paint(SDL_Surface *surface, const std::string &text, const HlAttr &attr, const HlAttr &def_attr)
 {
     auto cr_surface = PtrT<cairo_surface_t>(
         cairo_image_surface_create_for_data(static_cast<unsigned char *>(surface->pixels),

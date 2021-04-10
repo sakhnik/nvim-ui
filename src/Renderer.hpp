@@ -2,6 +2,7 @@
 
 #include "Utils.hpp"
 #include "Painter.hpp"
+#include "HlAttr.hpp"
 
 #include <vector>
 #include <list>
@@ -24,20 +25,6 @@ public:
     int GetWidth() const { return _lines[0].hl_id.size(); }
 
     void Flush();
-
-    enum HlFlags
-    {
-        HF_BOLD = 1 << 0,
-        HF_REVERSE = 1 << 1,
-        HF_ITALIC = 1 << 2,
-        HF_UNDERLINE = 1 << 3,
-        HF_UNDERCURL = 1 << 4,
-    };
-    struct HlAttr
-    {
-        std::optional<uint32_t> fg, bg;
-        unsigned flags = 0;
-    };
 
     // Window was resized
     void OnResized();
@@ -73,8 +60,7 @@ private:
     int _cell_width = 0;
     int _cell_height = 0;
     std::unordered_map<unsigned, HlAttr> _hl_attr;
-    uint32_t _fg = 0xffffff; 
-    uint32_t _bg = 0;
+    HlAttr _def_attr;
     int _cursor_row = 0;
     int _cursor_col = 0;
     std::string _mode;

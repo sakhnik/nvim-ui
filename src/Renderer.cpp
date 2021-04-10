@@ -8,6 +8,10 @@
 Renderer::Renderer(MsgPackRpc *rpc)
     : _rpc{rpc}
 {
+    // Default hightlight attributes
+    _def_attr.fg = 0xffffff;
+    _def_attr.bg = 0;
+
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
 
@@ -69,8 +73,8 @@ inline SDL_Color GetColor(uint32_t val)
 
 void Renderer::Flush()
 {
-    const SDL_Color bg0 = GetColor(_bg);
-    const SDL_Color fg0 = GetColor(_fg);
+    const SDL_Color bg0 = GetColor(_def_attr.bg.value());
+    const SDL_Color fg0 = GetColor(_def_attr.fg.value());
     SDL_SetRenderDrawColor(_renderer.get(), bg0.r, bg0.g, bg0.b, 255);
     SDL_RenderClear(_renderer.get());
 
@@ -120,7 +124,6 @@ void Renderer::Flush()
                     texture.width * _cell_width, _cell_height,
                     32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0),
                     SDL_FreeSurface);
-                _painter->Paint(surface2.get());
 
                 auto hlit = _hl_attr.find(texture.hl_id);
 
@@ -130,18 +133,21 @@ void Renderer::Flush()
                 if (hlit != _hl_attr.end())
                 {
                     const HlAttr &attr = hlit->second;
+                    _painter->Paint(surface2.get(), texture.text, attr, _def_attr);
 
                     if (attr.fg.has_value())
                         fg = GetColor(attr.fg.value());
                     if (attr.bg.has_value())
                         bg = GetColor(attr.bg.value());
-                    if ((attr.flags & HF_REVERSE))
+                    if ((attr.flags & HlAttr::F_REVERSE))
                         std::swap(fg, bg);
-                    if ((attr.flags & HF_BOLD))
+                    if ((attr.flags & HlAttr::F_BOLD))
                         font |= FS_BOLD;
-                    if ((attr.flags & HF_ITALIC))
+                    if ((attr.flags & HlAttr::F_ITALIC))
                         font |= FS_ITALIC;
                 }
+                else
+                    _painter->Paint(surface2.get(), texture.text, _def_attr, _def_attr);
 
                 auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_fonts[font].get(),
                             texture.text.c_str(), fg, bg), SDL_FreeSurface);
@@ -180,7 +186,8 @@ void Renderer::Flush()
 void Renderer::_DrawCursor()
 {
     SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(_renderer.get(), _fg >> 16, (_fg >> 8) & 0xff, _fg & 0xff, 127);
+    auto fg = _def_attr.fg.value();
+    SDL_SetRenderDrawColor(_renderer.get(), fg >> 16, (fg >> 8) & 0xff, fg & 0xff, 127);
     SDL_Rect rect;
     if (_mode == "insert")
     {
@@ -231,8 +238,8 @@ void Renderer::HlAttrDefine(unsigned hl_id, HlAttr attr)
 
 void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
 {
-    _fg = fg;
-    _bg = bg;
+    _def_attr.fg = fg;
+    _def_attr.bg = bg;
 
     for (auto &line : _lines)
     {

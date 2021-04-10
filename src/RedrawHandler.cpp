@@ -173,7 +173,7 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
     unsigned hl_id = event.ptr[0].as<unsigned>();
     const auto &rgb_attr = event.ptr[1].via.map;
 
-    Renderer::HlAttr attr;
+    HlAttr attr;
     for (size_t i = 0; i < rgb_attr.size; ++i)
     {
         std::string_view key{rgb_attr.ptr[i].key.as<std::string_view>()};
@@ -183,11 +183,11 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
             attr.bg = rgb_attr.ptr[i].val.as<unsigned>();
         // nvim api docs state that boolean keys here are only sent if true
         else if (key == "reverse")
-            attr.flags |= Renderer::HF_REVERSE;
+            attr.flags |= HlAttr::F_REVERSE;
         else if (key == "bold")
-            attr.flags |= Renderer::HF_BOLD;
+            attr.flags |= HlAttr::F_BOLD;
         else if (key == "italic")
-            attr.flags |= Renderer::HF_ITALIC;
+            attr.flags |= HlAttr::F_ITALIC;
         //else if (key == "underline")
         //    attr.flags |= Renderer::HF_UNDERLINE;
         //else if (key == "undercurl")
