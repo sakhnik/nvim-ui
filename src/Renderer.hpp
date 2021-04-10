@@ -1,6 +1,8 @@
 #pragma once
 
-#include <memory>
+#include "Utils.hpp"
+#include "Painter.hpp"
+
 #include <vector>
 #include <list>
 #include <unordered_map>
@@ -10,15 +12,6 @@
 #include <SDL2/SDL_ttf.h>
 
 class MsgPackRpc;
-
-template <typename T>
-using PtrT = std::unique_ptr<T, void(*)(T*)>;
-
-template <typename T>
-PtrT<T> NullPtr(void(*d)(T*))
-{
-    return PtrT<T>(nullptr, d);
-}
 
 class Renderer
 {
@@ -61,6 +54,7 @@ private:
     MsgPackRpc *_rpc;
     PtrT<SDL_Window> _window = NullPtr(SDL_DestroyWindow);
     PtrT<SDL_Renderer> _renderer = NullPtr(SDL_DestroyRenderer);
+    std::unique_ptr<Painter> _painter;
 
     enum FontStyleBit
     {
@@ -74,6 +68,8 @@ private:
         NullPtr(TTF_CloseFont)
     };
 
+    double _scale_x = 1.0;
+    double _scale_y = 1.0;
     int _cell_width = 0;
     int _cell_height = 0;
     std::unordered_map<unsigned, HlAttr> _hl_attr;
@@ -87,6 +83,7 @@ private:
     {
         // Start column of the texture
         int col = 0;
+        int width = 0; // count of cells
         unsigned hl_id = 0;
         std::string text;
         PtrT<SDL_Texture> texture = NullPtr(SDL_DestroyTexture);

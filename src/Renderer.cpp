@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 #include "MsgPackRpc.hpp"
+#include "Painter.hpp"
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
 
@@ -23,6 +24,9 @@ Renderer::Renderer(MsgPackRpc *rpc)
     // Get the window size in pixels to cope with HiDPI
     int wp{}, hp{};
     SDL_GetRendererOutputSize(_renderer.get(), &wp, &hp);
+    _scale_x = static_cast<double>(wp) / WIN_W;
+    _scale_y = static_cast<double>(hp) / WIN_H;
+    _painter.reset(new Painter(_scale_x, _scale_y));
     int hidpi_scale = wp / WIN_W;
 
 #ifdef WIN32
@@ -112,6 +116,12 @@ void Renderer::Flush()
                 || tit->col != texture.col || tit->hl_id != texture.hl_id
                 || tit->text != texture.text || !tit->texture)
             {
+                auto surface2 = PtrT<SDL_Surface>(SDL_CreateRGBSurface(0,
+                    texture.width * _cell_width, _cell_height,
+                    32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0),
+                    SDL_FreeSurface);
+                _painter->Paint(surface2.get());
+
                 auto hlit = _hl_attr.find(texture.hl_id);
 
                 SDL_Color fg = fg0;
@@ -151,10 +161,12 @@ void Renderer::Flush()
                     print_group();
                 texture.hl_id = line.hl_id[c];
                 texture.col = c;
+                texture.width = 0;
                 texture.text.clear();
                 texture.texture.reset();
             }
             texture.text += line.text[c];
+            ++texture.width;
         }
         print_group();
         // Remove the unused rest of the cache
