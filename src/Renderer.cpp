@@ -1,7 +1,6 @@
 #include "Renderer.hpp"
 #include "MsgPackRpc.hpp"
 #include "Painter.hpp"
-#include <SDL2/SDL_ttf.h>
 #include <iostream>
 
 
@@ -13,7 +12,6 @@ Renderer::Renderer(MsgPackRpc *rpc)
     _def_attr.bg = 0;
 
     SDL_Init(SDL_INIT_VIDEO);
-    TTF_Init();
 
     const int WIN_W = 1024;
     const int WIN_H = 768;
@@ -31,18 +29,6 @@ Renderer::Renderer(MsgPackRpc *rpc)
     _scale_x = static_cast<double>(wp) / WIN_W;
     _scale_y = static_cast<double>(hp) / WIN_H;
     _painter.reset(new Painter(_scale_x, _scale_y));
-    int hidpi_scale = wp / WIN_W;
-
-#ifdef WIN32
-# define FONT_PATH "c:/windows/fonts/"
-#else
-# define FONT_PATH "/usr/share/fonts/TTF/"
-#endif
-    const int FONT_SIZE = 20;
-    _fonts[0].reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono.ttf", FONT_SIZE * hidpi_scale));
-    _fonts[FS_BOLD].reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono-Bold.ttf", FONT_SIZE * hidpi_scale));
-    _fonts[FS_ITALIC].reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono-Oblique.ttf", FONT_SIZE * hidpi_scale));
-    _fonts[FS_BOLD|FS_ITALIC].reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono-BoldOblique.ttf", FONT_SIZE * hidpi_scale));
 
     // Prepare the initial cell grid to fill the whole window.
     // The NeoVim UI will be attached using these dimensions.
@@ -57,7 +43,6 @@ Renderer::Renderer(MsgPackRpc *rpc)
 
 Renderer::~Renderer()
 {
-    TTF_Quit();
     SDL_Quit();
 }
 
@@ -131,7 +116,6 @@ void Renderer::Flush()
 
                 SDL_Color fg = fg0;
                 SDL_Color bg = bg0;
-                int font = 0;
                 if (hlit != _hl_attr.end())
                 {
                     const HlAttr &attr = hlit->second;
@@ -143,17 +127,11 @@ void Renderer::Flush()
                         bg = GetColor(attr.bg.value());
                     if ((attr.flags & HlAttr::F_REVERSE))
                         std::swap(fg, bg);
-                    if ((attr.flags & HlAttr::F_BOLD))
-                        font |= FS_BOLD;
-                    if ((attr.flags & HlAttr::F_ITALIC))
-                        font |= FS_ITALIC;
                 }
                 else
                     _painter->Paint(surface2.get(), texture.text, _def_attr, _def_attr);
 
-                auto surface = PtrT<SDL_Surface>(TTF_RenderUTF8_Shaded(_fonts[font].get(),
-                            texture.text.c_str(), fg, bg), SDL_FreeSurface);
-                texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
+                texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface2.get()));
                 tit = tex_cache.insert(tit, std::move(texture));
             }
 

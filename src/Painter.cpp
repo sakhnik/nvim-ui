@@ -46,4 +46,12 @@ void Painter::Paint(SDL_Surface *surface, const std::string &text, const HlAttr 
     cairo_surface_set_device_scale(cr_surface.get(), _scale_x, _scale_y);
     auto cr = PtrT<cairo_t>(cairo_create(cr_surface.get()), cairo_destroy);
 
+    auto layout = PtrT<PangoLayout>(pango_cairo_create_layout(cr.get()),
+            [](PangoLayout *l) { g_object_unref(l); });
+    pango_layout_set_font_description(layout.get(), _font_desc.get());
+    pango_layout_set_text(layout.get(), text.data(), text.size());
+
+    cairo_set_source_rgb(cr.get(), 1, 0, 0);
+    cairo_move_to(cr.get(), 0, 0);
+    pango_cairo_show_layout(cr.get(), layout.get());
 }

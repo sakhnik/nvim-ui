@@ -10,7 +10,6 @@
 #include <string_view>
 #include <string>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 
 class MsgPackRpc;
 
@@ -43,18 +42,6 @@ private:
     PtrT<SDL_Renderer> _renderer = NullPtr(SDL_DestroyRenderer);
     std::unique_ptr<Painter> _painter;
 
-    enum FontStyleBit
-    {
-        FS_BOLD = 0x1,
-        FS_ITALIC = 0x2,
-    };
-    std::array<PtrT<TTF_Font>, 4> _fonts = {
-        NullPtr(TTF_CloseFont),
-        NullPtr(TTF_CloseFont),
-        NullPtr(TTF_CloseFont),
-        NullPtr(TTF_CloseFont)
-    };
-
     double _scale_x = 1.0;
     double _scale_y = 1.0;
     std::unordered_map<unsigned, HlAttr> _hl_attr;
@@ -85,6 +72,5 @@ private:
 
     std::vector<_Line> _lines;
 
-    std::vector<int> _CalcOffsets(std::string_view text, size_t init = 0);
     void _DrawCursor();
 };
