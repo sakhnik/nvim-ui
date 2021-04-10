@@ -57,8 +57,6 @@ private:
 
     double _scale_x = 1.0;
     double _scale_y = 1.0;
-    int _cell_width = 0;
-    int _cell_height = 0;
     std::unordered_map<unsigned, HlAttr> _hl_attr;
     HlAttr _def_attr;
     int _cursor_row = 0;

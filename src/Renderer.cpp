@@ -44,15 +44,14 @@ Renderer::Renderer(MsgPackRpc *rpc)
     _fonts[FS_ITALIC].reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono-Oblique.ttf", FONT_SIZE * hidpi_scale));
     _fonts[FS_BOLD|FS_ITALIC].reset(TTF_OpenFont(FONT_PATH "DejaVuSansMono-BoldOblique.ttf", FONT_SIZE * hidpi_scale));
 
-    // Check font metrics
-    TTF_GlyphMetrics(_fonts[0].get(), '@', nullptr /*minx*/, nullptr /*maxx*/,
-            nullptr /*miny*/, nullptr /*maxy*/, &_cell_width);
-    _cell_height = TTF_FontHeight(_fonts[0].get());
-
     // Prepare the initial cell grid to fill the whole window.
     // The NeoVim UI will be attached using these dimensions.
-    int width = std::max(1, wp / _cell_width);
-    int height = std::max(1, hp / _cell_height);
+    int width = wp / (_painter->GetCellWidth() * _scale_x);
+    if (width < 1)
+        width = 1;
+    int height = hp / (_painter->GetCellHeight() * _scale_y);
+    if (height < 1)
+        height = 1;
     GridResize(width, height);
 }
 
@@ -78,16 +77,19 @@ void Renderer::Flush()
     SDL_SetRenderDrawColor(_renderer.get(), bg0.r, bg0.g, bg0.b, 255);
     SDL_RenderClear(_renderer.get());
 
+    int cell_width = _painter->GetCellWidth() * _scale_x;
+    int cell_height = _painter->GetCellHeight() * _scale_y;
+
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
         auto &line = _lines[row];
         auto &tex_cache = line.texture_cache;
 
-        auto copy_texture = [this, row](const _Texture &tex) {
+        auto copy_texture = [&](const _Texture &tex) {
             int texW = 0;
             int texH = 0;
             SDL_QueryTexture(tex.texture.get(), NULL, NULL, &texW, &texH);
-            SDL_Rect dstrect = { tex.col * _cell_width, _cell_height * row, texW, texH };
+            SDL_Rect dstrect = { tex.col * cell_width, cell_height * row, texW, texH };
             SDL_RenderCopy(_renderer.get(), tex.texture.get(), NULL, &dstrect);
         };
 
@@ -121,7 +123,7 @@ void Renderer::Flush()
                 || tit->text != texture.text || !tit->texture)
             {
                 auto surface2 = PtrT<SDL_Surface>(SDL_CreateRGBSurface(0,
-                    texture.width * _cell_width, _cell_height,
+                    texture.width * cell_width, cell_height,
                     32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0),
                     SDL_FreeSurface);
 
@@ -185,6 +187,9 @@ void Renderer::Flush()
 
 void Renderer::_DrawCursor()
 {
+    int cell_width = _painter->GetCellWidth() * _scale_x;
+    int cell_height = _painter->GetCellHeight() * _scale_y;
+
     SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
     auto fg = _def_attr.fg.value();
     SDL_SetRenderDrawColor(_renderer.get(), fg >> 16, (fg >> 8) & 0xff, fg & 0xff, 127);
@@ -192,28 +197,28 @@ void Renderer::_DrawCursor()
     if (_mode == "insert")
     {
         rect = {
-            _cursor_col * _cell_width,
-            _cell_height * _cursor_row,
-            _cell_width / 4,
-            _cell_height
+            _cursor_col * cell_width,
+            cell_height * _cursor_row,
+            cell_width / 4,
+            cell_height
         };
     }
     else if (_mode == "replace" || _mode == "operator")
     {
         rect = {
-            _cursor_col * _cell_width,
-            _cell_height * _cursor_row + _cell_height * 3 / 4,
-            _cell_width,
-            _cell_height / 4
+            _cursor_col * cell_width,
+            cell_height * _cursor_row + cell_height * 3 / 4,
+            cell_width,
+            cell_height / 4
         };
     }
     else
     {
         rect = {
-            _cursor_col * _cell_width,
-            _cell_height * _cursor_row,
-            _cell_width,
-            _cell_height
+            _cursor_col * cell_width,
+            cell_height * _cursor_row,
+            cell_width,
+            cell_height
         };
     }
     SDL_RenderFillRect(_renderer.get(), &rect);
@@ -288,8 +293,10 @@ void Renderer::OnResized()
     int wp{}, hp{};
     SDL_GetRendererOutputSize(_renderer.get(), &wp, &hp);
 
-    int new_width = std::max(1, wp / _cell_width);
-    int new_height = std::max(1, hp / _cell_height);
+    int cell_width = _painter->GetCellWidth() * _scale_x;
+    int cell_height = _painter->GetCellHeight() * _scale_y;
+    int new_width = std::max(1, wp / cell_width);
+    int new_height = std::max(1, hp / cell_height);
 
     if (new_height != static_cast<int>(_lines.size()) ||
         new_width != static_cast<int>(_lines[0].text.size()))
