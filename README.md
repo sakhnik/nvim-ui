@@ -9,7 +9,7 @@ The required font DejaVuSansMono.ttf is ubiquitously available in Linux. In Wind
 # TODO
 
  - [x] Cursor shapes
- - [ ] Use pango and cairo for text rendering and drawing
+ - [x] Use pango and cairo for text rendering and drawing => digraphs, ligatures whatnot
  - [ ] Underline, undercurl
  - [ ] Pass command line arguments to neovim
  - [ ] Add configuration file (property tree)

@@ -58,7 +58,6 @@ inline SDL_Color GetColor(uint32_t val)
 void Renderer::Flush()
 {
     const SDL_Color bg0 = GetColor(_def_attr.bg.value());
-    const SDL_Color fg0 = GetColor(_def_attr.fg.value());
     SDL_SetRenderDrawColor(_renderer.get(), bg0.r, bg0.g, bg0.b, 255);
     SDL_RenderClear(_renderer.get());
 
@@ -107,31 +106,20 @@ void Renderer::Flush()
                 || tit->col != texture.col || tit->hl_id != texture.hl_id
                 || tit->text != texture.text || !tit->texture)
             {
-                auto surface2 = PtrT<SDL_Surface>(SDL_CreateRGBSurface(0,
+                auto surface = PtrT<SDL_Surface>(SDL_CreateRGBSurface(0,
                     texture.width * cell_width, cell_height,
                     32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0),
                     SDL_FreeSurface);
 
+                // Paint the text on the surface carefully
                 auto hlit = _hl_attr.find(texture.hl_id);
+                _painter->Paint(surface.get(),
+                        texture.text,
+                        hlit != _hl_attr.end() ? hlit->second : _def_attr,
+                        _def_attr);
 
-                SDL_Color fg = fg0;
-                SDL_Color bg = bg0;
-                if (hlit != _hl_attr.end())
-                {
-                    const HlAttr &attr = hlit->second;
-                    _painter->Paint(surface2.get(), texture.text, attr, _def_attr);
-
-                    if (attr.fg.has_value())
-                        fg = GetColor(attr.fg.value());
-                    if (attr.bg.has_value())
-                        bg = GetColor(attr.bg.value());
-                    if ((attr.flags & HlAttr::F_REVERSE))
-                        std::swap(fg, bg);
-                }
-                else
-                    _painter->Paint(surface2.get(), texture.text, _def_attr, _def_attr);
-
-                texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface2.get()));
+                // Create a possibly hardware accelerated texture from the surface
+                texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
                 tit = tex_cache.insert(tit, std::move(texture));
             }
 
