@@ -4,7 +4,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>neovim-sdl2</id>
-    <version>0.0.1-dev</version>
+    <version>VERSION</version>
     <packageSourceUrl>https://github.com/sakhnik/neovim-sdl2/chocolatey</packageSourceUrl>
     <owners>Anatolii Sakhnik</owners>
 
