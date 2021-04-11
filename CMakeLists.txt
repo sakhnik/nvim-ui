@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(nvim-sdl2)
 
+set(VERSION 0.0.1)
+
 find_package(Threads)
 find_package(PkgConfig REQUIRED) 
 pkg_check_modules(LIBUV REQUIRED IMPORTED_TARGET libuv)
@@ -9,7 +11,7 @@ pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
 pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pango)
 pkg_check_modules(PANGOCAIRO REQUIRED IMPORTED_TARGET pangocairo)
 
-add_definitions(-std=c++17 -Wall)
+add_definitions(-std=c++17 -Wall -DVERSION=\"${VERSION}\")
 if(${MINGW})
     add_definitions(-mwindows)
 endif()
