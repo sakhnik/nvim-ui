@@ -4,16 +4,13 @@ if [[ "$WORKSPACE_MSYS2" ]]; then
   cd "$WORKSPACE_MSYS2"
 fi
 
-package=nvim-sdl2
+mkdir -p dist/{bin,lib,share}
+cp build/nvim-sdl2.exe dist/bin
 
-mkdir -p dist/$package/{bin,lib,share}
-cp build/$package.exe dist/$package/bin
-
-dlls=$(ntldd.exe -R build/$package.exe | grep -Po "[^ ]+?msys64[^ ]+" | sort -u | grep -Po '[^\\]+$')
+dlls=$(ntldd.exe -R build/nvim-sdl2.exe | grep -Po "[^ ]+?msys64[^ ]+" | sort -u | grep -Po '[^\\]+$')
 for dll in $dlls; do
-  cp /mingw64/bin/$dll dist/$package/bin
+  cp /mingw64/bin/$dll dist/bin
 done
 
-pushd dist
-zip -r $package-win64.zip *
-popd
+cp -r chocolatey/* dist/
+# TODO: adjust the version

@@ -24,9 +24,11 @@ jobs:
     - name: Package
       run: |
         c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/package.sh"
+        cd dist
+        choco pack
     - name: Upload artifacts
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
-        name: win64
-        path: dist/nvim-sdl2-win64.zip
+        name: neovim-sdl2.nupkg
+        path: dist/*.nupkg
