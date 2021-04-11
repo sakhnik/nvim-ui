@@ -188,8 +188,8 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
             attr.flags |= HlAttr::F_BOLD;
         else if (key == "italic")
             attr.flags |= HlAttr::F_ITALIC;
-        //else if (key == "underline")
-        //    attr.flags |= Renderer::HF_UNDERLINE;
+        else if (key == "underline")
+            attr.flags |= HlAttr::F_UNDERLINE;
         //else if (key == "undercurl")
         //    attr.flags |= Renderer::HF_UNDERCURL;
         else

@@ -41,6 +41,34 @@ void Painter::CalcCellInfo()
     _cell_height = 1.0 * rect.height / PANGO_SCALE;
 }
 
+namespace {
+
+void SetSource(cairo_t *cr, unsigned rgb)
+{
+    cairo_set_source_rgb(cr,
+        static_cast<double>(rgb >> 16) / 255,
+        static_cast<double>((rgb >> 8) & 0xff) / 255,
+        static_cast<double>(rgb & 0xff) / 255);
+}
+
+PtrT<PangoAttrList> CreateAttrList(const HlAttr &attr)
+{
+    PtrT<PangoAttrList> al(nullptr, [](PangoAttrList *l) { pango_attr_list_unref(l); });
+
+    auto add = [&](PangoAttribute *a) {
+        if (!al)
+            al.reset(pango_attr_list_new());
+        pango_attr_list_insert(al.get(), a);
+    };
+
+    if ((attr.flags & HlAttr::F_UNDERLINE))
+        add(pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
+
+    return al;
+}
+
+} //namespace;
+
 void Painter::Paint(SDL_Surface *surface, const std::string &text, const HlAttr &attr, const HlAttr &def_attr)
 {
     auto cr_surface = PtrT<cairo_surface_t>(
@@ -60,12 +88,9 @@ void Painter::Paint(SDL_Surface *surface, const std::string &text, const HlAttr 
     pango_layout_set_font_description(layout.get(), _font_desc.get());
     pango_layout_set_text(layout.get(), text.data(), text.size());
 
-    auto set_source = [&](unsigned rgb) {
-        cairo_set_source_rgb(cr.get(),
-            static_cast<double>(rgb >> 16) / 255,
-            static_cast<double>((rgb >> 8) & 0xff) / 255,
-            static_cast<double>(rgb & 0xff) / 255);
-    };
+    auto al = CreateAttrList(attr);
+    if (al)
+        pango_layout_set_attributes(layout.get(), al.get());
 
     unsigned bg = attr.bg.has_value() ? attr.bg.value() : def_attr.bg.value();
     unsigned fg = attr.fg.has_value() ? attr.fg.value() : def_attr.fg.value();
@@ -73,11 +98,11 @@ void Painter::Paint(SDL_Surface *surface, const std::string &text, const HlAttr 
         std::swap(bg, fg);
 
     // Paint the background
-    set_source(bg);
+    SetSource(cr.get(), bg);
     cairo_paint(cr.get());
 
     // Print the foreground text
-    set_source(fg);
+    SetSource(cr.get(), fg);
     cairo_move_to(cr.get(), 0, 0);
     pango_cairo_show_layout(cr.get(), layout.get());
 }
