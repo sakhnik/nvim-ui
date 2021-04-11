@@ -40,6 +40,7 @@ int main(int argc, char* argv[])
         options.exit_cb = on_exit;
         options.file = nvim.data();
         options.args = args;
+        options.flags = UV_PROCESS_WINDOWS_HIDE | UV_PROCESS_WINDOWS_HIDE_CONSOLE;
 
         uv_pipe_t stdin_pipe, stdout_pipe;
         uv_pipe_init(loop, &stdin_pipe, 0);

@@ -10,6 +10,10 @@ pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pango)
 pkg_check_modules(PANGOCAIRO REQUIRED IMPORTED_TARGET pangocairo)
 
 add_definitions(-std=c++17 -Wall)
+if(${MINGW})
+    add_definitions(-mwindows)
+endif()
+
 add_executable(nvim-sdl2
     src/main.cpp
     src/MsgPackRpc.cpp
@@ -26,5 +30,4 @@ target_link_libraries(nvim-sdl2 PUBLIC
     PkgConfig::PANGO
     PkgConfig::PANGOCAIRO
     )
-add_definitions(-DSDL_MAIN_HANDLED)
 #target_precompile_headers(nvim-cur PRIVATE pch.hpp)
