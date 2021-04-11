@@ -63,6 +63,11 @@ PtrT<PangoAttrList> CreateAttrList(const HlAttr &attr)
 
     if ((attr.flags & HlAttr::F_UNDERLINE))
         add(pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
+    if ((attr.flags & HlAttr::F_UNDERCURL))
+    {
+        add(pango_attr_underline_new(PANGO_UNDERLINE_ERROR));
+        add(pango_attr_underline_color_new(65535, 0, 0));
+    }
 
     return al;
 }

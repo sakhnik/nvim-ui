@@ -190,8 +190,8 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
             attr.flags |= HlAttr::F_ITALIC;
         else if (key == "underline")
             attr.flags |= HlAttr::F_UNDERLINE;
-        //else if (key == "undercurl")
-        //    attr.flags |= Renderer::HF_UNDERCURL;
+        else if (key == "undercurl")
+            attr.flags |= HlAttr::F_UNDERCURL;
         else
             std::cerr << "Unknown rgb attribute: " << key << std::endl;
     }
