@@ -106,6 +106,14 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
         {
             // Just ignore for now
         }
+        else if (subtype == "busy_start")
+        {
+            _renderer->SetBusy(true);
+        }
+        else if (subtype == "busy_stop")
+        {
+            _renderer->SetBusy(false);
+        }
         else
         {
             std::cerr << "Ignoring redraw " << subtype << std::endl;

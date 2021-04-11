@@ -35,6 +35,7 @@ public:
     void GridScroll(int top, int bot, int left, int right, int rows);
     void GridResize(int width, int height);
     void ModeChange(std::string_view mode);
+    void SetBusy(bool is_busy);
 
 private:
     MsgPackRpc *_rpc;
@@ -71,6 +72,10 @@ private:
     };
 
     std::vector<_Line> _lines;
+
+    // Mouse pointers for the active/busy state
+    PtrT<SDL_Cursor> _active_cursor = NullPtr(SDL_FreeCursor);
+    PtrT<SDL_Cursor> _busy_cursor = NullPtr(SDL_FreeCursor);
 
     void _DrawCursor();
 };

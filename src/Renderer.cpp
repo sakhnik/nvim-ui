@@ -300,3 +300,19 @@ void Renderer::ModeChange(std::string_view mode)
 {
     _mode = mode;
 }
+
+void Renderer::SetBusy(bool is_busy)
+{
+    if (is_busy)
+    {
+        if (!_busy_cursor)
+            _busy_cursor.reset(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAITARROW));
+        SDL_SetCursor(_busy_cursor.get());
+    }
+    else
+    {
+        if (!_active_cursor)
+            _active_cursor.reset(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));
+        SDL_SetCursor(_active_cursor.get());
+    }
+}
