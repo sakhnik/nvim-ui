@@ -32,4 +32,5 @@ target_link_libraries(nvim-sdl2 PUBLIC
     PkgConfig::PANGO
     PkgConfig::PANGOCAIRO
     )
+target_sources(nvim-sdl2 PRIVATE res/windows.rc)
 #target_precompile_headers(nvim-cur PRIVATE pch.hpp)

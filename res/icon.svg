@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="32"
+   height="32"
+   viewBox="0 0 8.4666665 8.4666669"
+   version="1.1"
+   id="svg8"
+   inkscape:version="1.0.2 (e86c870879, 2021-01-15, custom)"
+   sodipodi:docname="icon.svg">
+  <title
+     id="title219">neovim-sdl2</title>
+  <defs
+     id="defs2">
+    <linearGradient
+       x1="167.95833"
+       y1="-0.46142398"
+       x2="167.95833"
+       y2="335.45523"
+       id="linearGradient-1"
+       gradientTransform="scale(0.46142398,2.1672042)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         stop-color="#16B0ED"
+         stop-opacity="0.800235524"
+         offset="0%"
+         id="stop112" />
+      <stop
+         stop-color="#0F59B2"
+         stop-opacity="0.83700023"
+         offset="100%"
+         id="stop114" />
+    </linearGradient>
+    <linearGradient
+       x1="1118.3426"
+       y1="-0.46586797"
+       x2="1118.3426"
+       y2="338.68602"
+       id="linearGradient-2"
+       gradientTransform="scale(0.46586797,2.1465309)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         stop-color="#7DB643"
+         offset="0%"
+         id="stop117" />
+      <stop
+         stop-color="#367533"
+         offset="100%"
+         id="stop119" />
+    </linearGradient>
+    <linearGradient
+       x1="356.33796"
+       y1="0"
+       x2="356.33796"
+       y2="612.9013"
+       id="linearGradient-3"
+       gradientTransform="scale(0.84189739,1.1877932)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         stop-color="#88C649"
+         stop-opacity="0.8"
+         offset="0%"
+         id="stop122" />
+      <stop
+         stop-color="#439240"
+         stop-opacity="0.84"
+         offset="100%"
+         id="stop124" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="14.651242"
+     inkscape:cx="24.788545"
+     inkscape:cy="15.733086"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     showgrid="true"
+     units="px"
+     inkscape:window-width="1600"
+     inkscape:window-height="873"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid10" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>neovim-sdl2</dc:title>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by/4.0/" />
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title>Neovim logo by Jason Long: https://neovim.io/</dc:title>
+          </cc:Agent>
+        </dc:contributor>
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by/4.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Шар 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#cccccc;stroke-width:0.264583"
+       id="rect208"
+       width="8.4666662"
+       height="7.1437502"
+       x="0"
+       y="1.3229166" />
+    <g
+       id="Page-1"
+       stroke="none"
+       stroke-width="1"
+       fill="none"
+       fill-rule="evenodd"
+       sketch:type="MSPage"
+       transform="matrix(0.00919351,0,0,0.00919109,1.4689961,1.6394877)">
+      <g
+         id="mark-copy"
+         sketch:type="MSLayerGroup"
+         transform="translate(2,3)">
+        <path
+           d="M 0,155.5704 155,-1 V 727 L 0,572.23792 Z"
+           id="Left---green"
+           fill="url(#linearGradient-1)"
+           sketch:type="MSShapeGroup"
+           style="fill:url(#linearGradient-1)" />
+        <path
+           d="M 443.0604,156.9824 600,-1 596.81879,727 442,572.21994 Z"
+           id="Right---blue"
+           fill="url(#linearGradient-2)"
+           sketch:type="MSShapeGroup"
+           transform="matrix(-1,0,0,1,1042,0)"
+           style="fill:url(#linearGradient-2)" />
+        <path
+           d="M 154.98629,0 558,615.1897 445.2246,728 42,114.17202 Z"
+           id="Cross---blue"
+           fill="url(#linearGradient-3)"
+           sketch:type="MSShapeGroup"
+           style="fill:url(#linearGradient-3)" />
+        <path
+           d="M 155,283.83232 154.78675,308 31,124.71061 42.461949,113 Z"
+           id="Shadow"
+           fill-opacity="0.13"
+           fill="#000000"
+           sketch:type="MSShapeGroup" />
+      </g>
+    </g>
+    <rect
+       style="fill:#008080;stroke-width:0.264583"
+       id="rect213"
+       width="8.4666662"
+       height="1.5875"
+       x="0"
+       y="0" />
+    <rect
+       style="fill:#000000;stroke-width:0.264583"
+       id="rect215"
+       width="1.8520833"
+       height="1.5875"
+       x="6.614583"
+       y="0" />
+  </g>
+</svg>
