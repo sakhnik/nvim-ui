@@ -18,10 +18,13 @@
     <projectSourceUrl>https://github.com/sakhnik/neovim-sdl2</projectSourceUrl>
     <tags>neovim-sdl2 neovim</tags>
     <summary>NeoVim GUI C++/SDL2/pango/cairo</summary>
-    <description>NeoVim GUI implemented in C++. SDL2 for hardware accelerated rendering. Pango for proper text layout.</description>
+    <description>NeoVim GUI implemented in C++. SDL2 for hardware accelerated rendering. Pango for proper text layout.
+      Requires nvim binary available in the executable search path.
+    </description>
 
     <dependencies>
       <dependency id="dejavufonts" />
+      <dependency id="neovim" />
     </dependencies>
 
   </metadata>
