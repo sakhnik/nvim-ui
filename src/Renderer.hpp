@@ -29,11 +29,12 @@ public:
     void OnResized();
 
     void GridLine(int row, int col, std::string_view chunk, unsigned hl_id, int repeat);
-    void HlAttrDefine(unsigned hl_id, HlAttr attr);
-    void DefaultColorSet(unsigned fg, unsigned bg);
     void GridCursorGoto(int row, int col);
     void GridScroll(int top, int bot, int left, int right, int rows);
     void GridResize(int width, int height);
+    void GridClear();
+    void HlAttrDefine(unsigned hl_id, HlAttr attr);
+    void DefaultColorSet(unsigned fg, unsigned bg);
     void ModeChange(std::string_view mode);
     void SetBusy(bool is_busy);
 

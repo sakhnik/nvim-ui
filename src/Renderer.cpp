@@ -202,23 +202,6 @@ void Renderer::GridLine(int row, int col, std::string_view chunk, unsigned hl_id
     }
 }
 
-void Renderer::HlAttrDefine(unsigned hl_id, HlAttr attr)
-{
-    _hl_attr[hl_id] = attr;
-}
-
-void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
-{
-    _def_attr.fg = fg;
-    _def_attr.bg = bg;
-
-    for (auto &line : _lines)
-    {
-        line.dirty = true;
-        line.texture_cache.clear();
-    }
-}
-
 void Renderer::GridCursorGoto(int row, int col)
 {
     _cursor_row = row;
@@ -251,6 +234,35 @@ void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
     else
     {
         throw std::runtime_error("Rows should not equal 0");
+    }
+}
+
+void Renderer::GridClear()
+{
+    for (auto &line : _lines)
+    {
+        line.dirty = true;
+        for (auto &t : line.text)
+            t = ' ';
+        for (auto &hl : line.hl_id)
+            hl = 0;
+    }
+}
+
+void Renderer::HlAttrDefine(unsigned hl_id, HlAttr attr)
+{
+    _hl_attr[hl_id] = attr;
+}
+
+void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
+{
+    _def_attr.fg = fg;
+    _def_attr.bg = bg;
+
+    for (auto &line : _lines)
+    {
+        line.dirty = true;
+        line.texture_cache.clear();
     }
 }
 

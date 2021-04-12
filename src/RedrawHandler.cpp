@@ -79,6 +79,10 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
         {
             for_each_event(event, [this](const auto &e) { _GridScroll(e); });
         }
+        else if (subtype == "grid_clear")
+        {
+            for_each_event(event, [this](const auto &e) { _GridClear(e); });
+        }
         else if (subtype == "hl_attr_define")
         {
             for_each_event(event, [this](const auto &e) { _HlAttrDefine(e); });
@@ -174,6 +178,14 @@ void RedrawHandler::_GridScroll(const msgpack::object_array &event)
         throw std::runtime_error("Column scrolling not expected");
 
     _renderer->GridScroll(top, bot, left, right, rows);
+}
+
+void RedrawHandler::_GridClear(const msgpack::object_array &event)
+{
+    int grid = event.ptr[0].as<int>();
+    if (grid != 1)
+        throw std::runtime_error("Multigrid not supported");
+    _renderer->GridClear();
 }
 
 void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
