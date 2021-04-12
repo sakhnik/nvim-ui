@@ -11,10 +11,10 @@ pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
 pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pango)
 pkg_check_modules(PANGOCAIRO REQUIRED IMPORTED_TARGET pangocairo)
 
-add_definitions(-std=c++17 -Wall -DVERSION=\"${VERSION}\")
-if(${MINGW})
-    add_definitions(-mwindows)
-endif()
+add_definitions(-DVERSION=\"${VERSION}\")
+#if(${MINGW})
+#    add_definitions(-mwindows)
+#endif()
 
 add_executable(nvim-sdl2
     src/main.cpp
@@ -24,6 +24,10 @@ add_executable(nvim-sdl2
     src/Painter.cpp
     src/Input.cpp
 )
+set_target_properties(nvim-sdl2 PROPERTIES
+    CXX_STANDARD 17
+    COMPILE_FLAGS -Wall
+    )
 target_link_libraries(nvim-sdl2 PUBLIC
     ${CMAKE_THREAD_LIBS_INIT}
     PkgConfig::LIBUV
