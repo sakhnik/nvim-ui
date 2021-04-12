@@ -11,7 +11,7 @@
     <title>neovim-sdl2 (Install)</title>
     <authors>Anatolii Sakhnik</authors>
     <projectUrl>https://github.com/sakhnik/neovim-sdl2</projectUrl>
-    <!--<iconUrl>http://cdn.rawgit.com/__REPLACE_YOUR_REPO__/master/icons/neovim-sdl2.png</iconUrl>-->
+    <iconUrl>https://raw.githubusercontent.com/sakhnik/neovim-sdl2/main/res/icon.svg</iconUrl>
     <copyright>2021</copyright>
     <licenseUrl>https://github.com/sakhnik/neovim-sdl2/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
