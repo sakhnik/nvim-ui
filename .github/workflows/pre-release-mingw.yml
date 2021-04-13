@@ -35,7 +35,7 @@ jobs:
       run: |
         git tag -d latest
         git tag latest
-        git push --tags
-        gh release create --prerelease latest dist/*.nupkg
+        git push --tags -f
+        gh release create --prerelease latest dist\*.nupkg
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
