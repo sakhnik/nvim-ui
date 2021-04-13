@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(nvim-sdl2)
 
-set(VERSION 0.0.1-rc1)
+set(VERSION 0.0.1-rc2)
 
 find_package(Threads)
 find_package(PkgConfig REQUIRED) 
