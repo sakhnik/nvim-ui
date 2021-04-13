@@ -164,6 +164,18 @@ void Input::_PollEvents()
             case SDLK_F12:
                 _RawInput("f12");
                 break;
+            case SDLK_LEFT:
+                _RawInput("left");
+                break;
+            case SDLK_RIGHT:
+                _RawInput("right");
+                break;
+            case SDLK_UP:
+                _RawInput("up");
+                break;
+            case SDLK_DOWN:
+                _RawInput("down");
+                break;
             default:
                 if (_control)
                 {
