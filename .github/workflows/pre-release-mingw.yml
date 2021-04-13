@@ -18,8 +18,8 @@ jobs:
         Add-Content -Path $env:GITHUB_ENV "WORKSPACE_MSYS2=/$($env:GITHUB_WORKSPACE -replace ':?\\','/')"
         Add-Content -Path $env:GITHUB_ENV "MSYSTEM=MINGW64"
         Add-Content -Path $env:GITHUB_ENV "MSYS2_PATH_TYPE=inherit"
-    - name: Install MSYS2
-      run: choco install msys2
+    - name: Install tools
+      run: choco install msys2 gh
     - name: Install tools and libraries
       run: |
         c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/install-mingw.sh"
@@ -33,7 +33,7 @@ jobs:
         choco pack
     - name: Prerelease
       run: |
-        choco install gh
+        git tag -d latest
         git tag latest
         git push --tags
         gh release create --prerelease latest dist/*.nupkg
