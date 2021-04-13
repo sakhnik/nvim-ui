@@ -18,7 +18,7 @@ version=$(grep -Po '(?<=set\(VERSION )[^) ]+' CMakeLists.txt)
 if git describe --tags 2>/dev/null | grep -F "$version" >/dev/null 2>&1; then
   echo "Release version is ${version}"
 else
-  version="${version}-dev${GITHUB_RUN_NUMBER}-${GITHUB_SHA:0:6}"
+  version="${version}-dev${GITHUB_RUN_NUMBER}-${GITHUB_SHA:0:7}"
   echo "Development version is ${version}"
 fi
 

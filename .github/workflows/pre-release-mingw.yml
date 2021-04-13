@@ -22,18 +22,18 @@ jobs:
       run: choco install msys2
     - name: Install tools and libraries
       run: |
-        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/install-mingw.sh"
+        .\scripts\run-sh.ps1 "install-mingw.sh"
     - name: Build
       run: |
-        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/build.sh"
+        .\scripts\run-sh.ps1 "build.sh"
     - name: Package
       run: |
-        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/package.sh"
+        .\scripts\run-sh.ps1 "package.sh"
         cd dist
         choco pack
         cd ..
     - name: Prerelease
       run: |
-        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/prerelease.sh"
+        .\scripts\run-sh.ps1 "prerelease.sh"
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
