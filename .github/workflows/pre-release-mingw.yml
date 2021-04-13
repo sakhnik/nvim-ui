@@ -1,0 +1,42 @@
+name: "pre-release"
+on:
+  push:
+    branches:
+      - "main"
+jobs:
+  pre-release:
+    name: "Pre release"
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Prepare environment
+      id: prep
+      run: |
+        Add-Content -Path $env:GITHUB_ENV "WORKSPACE_MSYS2=/$($env:GITHUB_WORKSPACE -replace ':?\\','/')"
+        Add-Content -Path $env:GITHUB_ENV "MSYSTEM=MINGW64"
+        Add-Content -Path $env:GITHUB_ENV "MSYS2_PATH_TYPE=inherit"
+    - name: Install MSYS2
+      run: choco install msys2
+    - name: Install tools and libraries
+      run: |
+        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/install-mingw.sh"
+    - name: Build
+      run: |
+        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/build.sh"
+    - name: Package
+      run: |
+        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/package.sh"
+        cd dist
+        choco pack
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        prerelease: true
+        title: "Development Build"
+        files: |
+          LICENSE
+          dist/*.nupkg
