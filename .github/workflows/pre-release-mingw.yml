@@ -18,8 +18,8 @@ jobs:
         Add-Content -Path $env:GITHUB_ENV "WORKSPACE_MSYS2=/$($env:GITHUB_WORKSPACE -replace ':?\\','/')"
         Add-Content -Path $env:GITHUB_ENV "MSYSTEM=MINGW64"
         Add-Content -Path $env:GITHUB_ENV "MSYS2_PATH_TYPE=inherit"
-    - name: Install tools
-      run: choco install msys2 gh
+    - name: Install msys2
+      run: choco install msys2
     - name: Install tools and libraries
       run: |
         c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/install-mingw.sh"
