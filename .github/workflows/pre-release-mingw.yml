@@ -34,9 +34,6 @@ jobs:
         cd ..
     - name: Prerelease
       run: |
-        git tag -d latest
-        git tag latest
-        git push --tags -f
-        gh release create --prerelease latest dist\*.nupkg
+        c:\tools\msys64\usr\bin\bash -l -c "${env:WORKSPACE_MSYS2}/scripts/prerelease.sh"
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
