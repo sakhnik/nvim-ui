@@ -2,6 +2,7 @@
 #include "MsgPackRpc.hpp"
 #include "Painter.hpp"
 #include <iostream>
+#include <chrono>
 
 
 Renderer::Renderer(MsgPackRpc *rpc)
@@ -70,6 +71,10 @@ inline SDL_Color GetColor(uint32_t val)
 
 void Renderer::Flush()
 {
+    std::cout << "Flush ";
+    using ClockT = std::chrono::high_resolution_clock;
+    auto start_time = ClockT::now();
+
     const SDL_Color bg0 = GetColor(_def_attr.bg.value());
     SDL_SetRenderDrawColor(_renderer.get(), bg0.r, bg0.g, bg0.b, 255);
     SDL_RenderClear(_renderer.get());
@@ -123,6 +128,11 @@ void Renderer::Flush()
                 // Create a possibly hardware accelerated texture from the surface
                 texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
                 tex_cache.Insert(tit, std::move(texture));
+                std::cout << "+";
+            }
+            else
+            {
+                std::cout << ".";
             }
 
             // Copy the texture (cached or new) to the renderer
@@ -151,6 +161,9 @@ void Renderer::Flush()
 
     _DrawCursor();
     SDL_RenderPresent(_renderer.get());
+
+    auto end_time = ClockT::now();
+    std::cout << " " << std::chrono::duration<double>(end_time - start_time).count() << std::endl;
 }
 
 void Renderer::_DrawCursor()
