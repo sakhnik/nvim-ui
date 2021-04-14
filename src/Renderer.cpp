@@ -23,6 +23,19 @@ Renderer::Renderer(MsgPackRpc *rpc)
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI));
     _renderer.reset(SDL_CreateRenderer(_window.get(), -1, SDL_RENDERER_ACCELERATED));
 
+    SDL_RendererInfo info;
+    SDL_GetRendererInfo(_renderer.get(), &info);
+    std::cout << "Using renderer " << info.name << ":";
+    if ((info.flags & SDL_RENDERER_SOFTWARE))
+        std::cout << " software";
+    if ((info.flags & SDL_RENDERER_ACCELERATED))
+        std::cout << " accelerated";
+    if ((info.flags & SDL_RENDERER_PRESENTVSYNC))
+        std::cout << " vsync";
+    if ((info.flags & SDL_RENDERER_TARGETTEXTURE))
+        std::cout << " target_texture";
+    std::cout << std::endl;
+
     // Get the window size in pixels to cope with HiDPI
     int wp{}, hp{};
     SDL_GetRendererOutputSize(_renderer.get(), &wp, &hp);
