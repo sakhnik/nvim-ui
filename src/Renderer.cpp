@@ -139,22 +139,35 @@ void Renderer::Flush()
             copy_texture(*tit++);
         };
 
-        for (int c = 0, colN = line.hl_id.size(); c != colN; ++c)
+        // Split the cells into chunks by the same hl_id
+        size_t chunks[line.hl_id.size()];
+        size_t n = 0;
+        chunks[n++] = 0;
+        chunks[n++] = 1;
+        while (chunks[n - 1] < line.hl_id.size())
         {
-            if (texture.hl_id != line.hl_id[c])
-            {
-                if (c != texture.col)
-                    print_group();
-                texture = {
-                    .col = c,
-                    .hl_id = line.hl_id[c],
-                };
-            }
-            texture.text += line.text[c];
-            ++texture.width;
+            size_t &back = chunks[n - 1];
+            if (line.hl_id[back] != line.hl_id[chunks[n - 2]])
+                chunks[n++] = back + 1;
+            else
+                ++back;
         }
-        print_group();
-        // Remove the unused rest of the cache
+
+        // Print and cache the chunks individually
+        for (size_t i = 1; i < n; ++i)
+        {
+            int col = chunks[i - 1];
+            int end = chunks[i];
+            texture = {
+                .col = col,
+                .hl_id = line.hl_id[col],
+            };
+            texture.width = end - col;
+            while (col < end)
+                texture.text += line.text[col++];
+            print_group();
+        }
+
         line.texture_cache.RemoveTheRest(tit);
     }
 
