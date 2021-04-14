@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(nvim-sdl2)
 
-set(VERSION 0.0.1-rc2)
+set(VERSION 0.0.1-rc3)
 
 find_package(Threads)
 find_package(PkgConfig REQUIRED) 
@@ -19,6 +19,7 @@ add_executable(nvim-sdl2
     src/RedrawHandler.cpp
     src/Renderer.cpp
     src/Painter.cpp
+    src/TextureCache.cpp
     src/Input.cpp
 )
 set_target_properties(nvim-sdl2 PROPERTIES

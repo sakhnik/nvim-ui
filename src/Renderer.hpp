@@ -3,6 +3,7 @@
 #include "Utils.hpp"
 #include "Painter.hpp"
 #include "HlAttr.hpp"
+#include "TextureCache.hpp"
 
 #include <vector>
 #include <list>
@@ -52,22 +53,12 @@ private:
     int _cursor_col = 0;
     std::string _mode;
 
-    struct _Texture
-    {
-        // Start column of the texture
-        int col = 0;
-        int width = 0; // count of cells
-        unsigned hl_id = 0;
-        std::string text;
-        PtrT<SDL_Texture> texture = NullPtr(SDL_DestroyTexture);
-    };
-
     struct _Line
     {
         std::vector<std::string> text;
         std::vector<unsigned> hl_id;
         // Remember the previously rendered textures, high chance they're reusable.
-        std::list<_Texture> texture_cache;
+        TextureCache texture_cache;
         // Is it necessary to redraw this line carefully or can just draw from the texture cache?
         bool dirty = true;
     };

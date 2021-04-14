@@ -69,7 +69,7 @@ void Renderer::Flush()
         auto &line = _lines[row];
         auto &tex_cache = line.texture_cache;
 
-        auto copy_texture = [&](const _Texture &tex) {
+        auto copy_texture = [&](const TextureCache::Texture &tex) {
             int texW = 0;
             int texH = 0;
             SDL_QueryTexture(tex.texture.get(), NULL, NULL, &texW, &texH);
@@ -80,8 +80,7 @@ void Renderer::Flush()
         // Check if it's possible to just copy the prepared textures first
         if (!line.dirty)
         {
-            for (const auto &tex : line.texture_cache)
-                copy_texture(tex);
+            line.texture_cache.ForEach(copy_texture);
             continue;
         }
         // Mark the line clear as we're going to redraw the necessary parts
@@ -89,22 +88,12 @@ void Renderer::Flush()
         line.dirty = false;
 
         // Group text chunks by hl_id
-        _Texture texture;
-
-        auto tit = tex_cache.begin();
+        TextureCache::Texture texture;
+        auto tit = tex_cache.Begin();
 
         auto print_group = [&]() {
-            // Remove potentially outdated cached textures
-            while (tit != tex_cache.end() && tit->col < texture.col)
-                tit = tex_cache.erase(tit);
-            while (tit != tex_cache.end() && tit->col == texture.col
-                && (tit->hl_id != texture.hl_id || tit->text != texture.text))
-                tit = tex_cache.erase(tit);
-
             // Test whether the texture should be rendered again
-            if (tit == tex_cache.end()
-                || tit->col != texture.col || tit->hl_id != texture.hl_id
-                || tit->text != texture.text || !tit->texture)
+            if (tex_cache.AdvanceFor(tit, texture))
             {
                 auto surface = PtrT<SDL_Surface>(SDL_CreateRGBSurface(0,
                     texture.width * cell_width, cell_height,
@@ -120,7 +109,7 @@ void Renderer::Flush()
 
                 // Create a possibly hardware accelerated texture from the surface
                 texture.texture.reset(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()));
-                tit = tex_cache.insert(tit, std::move(texture));
+                tex_cache.Insert(tit, std::move(texture));
             }
 
             // Copy the texture (cached or new) to the renderer
@@ -144,7 +133,7 @@ void Renderer::Flush()
         }
         print_group();
         // Remove the unused rest of the cache
-        line.texture_cache.erase(tit, line.texture_cache.end());
+        line.texture_cache.RemoveTheRest(tit);
     }
 
     _DrawCursor();
@@ -262,7 +251,7 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
     for (auto &line : _lines)
     {
         line.dirty = true;
-        line.texture_cache.clear();
+        line.texture_cache.Clear();
     }
 }
 
