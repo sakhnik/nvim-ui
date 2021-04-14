@@ -29,10 +29,14 @@ public:
     using IterT = std::list<Texture>::iterator;
     IterT Begin() { return _cache.begin(); }
     // True if there is no necessary texture
-    bool AdvanceFor(IterT &, const Texture &);
+    bool ClearUntil(IterT &, const Texture &);
     void Insert(IterT &, Texture &&);
     void RemoveTheRest(IterT);
     void Clear();
+
+    // Move textures from the other cache in the given column limits
+    // (used when scrolling)
+    void MoveFrom(TextureCache &o, int left, int right);
 
 private:
     std::list<Texture> _cache;

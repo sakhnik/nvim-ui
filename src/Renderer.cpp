@@ -93,7 +93,7 @@ void Renderer::Flush()
 
         auto print_group = [&]() {
             // Test whether the texture should be rendered again
-            if (tex_cache.AdvanceFor(tit, texture))
+            if (tex_cache.ClearUntil(tit, texture))
             {
                 auto surface = PtrT<SDL_Surface>(SDL_CreateRGBSurface(0,
                     texture.width * cell_width, cell_height,
@@ -200,14 +200,15 @@ void Renderer::GridCursorGoto(int row, int col)
 void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
 {
     auto copy = [&](int row, int row_from) {
-        const auto &line_from = _lines[row_from];
+        auto &line_from = _lines[row_from];
         auto &line_to = _lines[row];
         line_to.dirty = true;
         for (int col = left; col < right; ++col)
         {
-            line_to.text[col] = line_from.text[col];
-            line_to.hl_id[col] = line_from.hl_id[col];
+            line_to.text[col] = std::move(line_from.text[col]);
+            line_to.hl_id[col] = std::move(line_from.hl_id[col]);
         }
+        line_to.texture_cache.MoveFrom(line_from.texture_cache, left, right);
     };
 
     if (rows > 0)
