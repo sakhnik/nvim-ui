@@ -21,6 +21,7 @@ private:
     bool _shift = false;
     bool _control = false;
 
+    void _StartTimer();
     void _PollEvents();
     void _OnInput(std::string_view input);
     void _RawInput(const char *input);
