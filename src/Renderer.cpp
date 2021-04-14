@@ -145,11 +145,10 @@ void Renderer::Flush()
             {
                 if (c != texture.col)
                     print_group();
-                texture.hl_id = line.hl_id[c];
-                texture.col = c;
-                texture.width = 0;
-                texture.text.clear();
-                texture.texture.reset();
+                texture = {
+                    .col = c,
+                    .hl_id = line.hl_id[c],
+                };
             }
             texture.text += line.text[c];
             ++texture.width;
