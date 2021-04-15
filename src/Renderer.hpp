@@ -70,4 +70,5 @@ private:
     PtrT<SDL_Cursor> _busy_cursor = NullPtr(SDL_FreeCursor);
 
     void _DrawCursor();
+    static size_t _SplitChunks(const _Line &, size_t chunks[]);
 };

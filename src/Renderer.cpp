@@ -140,18 +140,8 @@ void Renderer::Flush()
         };
 
         // Split the cells into chunks by the same hl_id
-        size_t chunks[line.hl_id.size()];
-        size_t n = 0;
-        chunks[n++] = 0;
-        chunks[n++] = 1;
-        while (chunks[n - 1] < line.hl_id.size())
-        {
-            size_t &back = chunks[n - 1];
-            if (line.hl_id[back] != line.hl_id[chunks[n - 2]])
-                chunks[n++] = back + 1;
-            else
-                ++back;
-        }
+        size_t chunks[line.hl_id.size() + 1];
+        size_t n = _SplitChunks(line, chunks);
 
         // Print and cache the chunks individually
         for (size_t i = 1; i < n; ++i)
@@ -176,6 +166,22 @@ void Renderer::Flush()
 
     auto end_time = ClockT::now();
     std::cout << " " << std::chrono::duration<double>(end_time - start_time).count() << std::endl;
+}
+
+size_t Renderer::_SplitChunks(const _Line &line, size_t chunks[])
+{
+    size_t n = 0;
+    chunks[n++] = 0;
+    chunks[n++] = 1;
+    while (chunks[n - 1] < line.hl_id.size())
+    {
+        size_t &back = chunks[n - 1];
+        if (line.hl_id[back] != line.hl_id[chunks[n - 2]])
+            chunks[n++] = back + 1;
+        else
+            ++back;
+    }
+    return n;
 }
 
 void Renderer::_DrawCursor()

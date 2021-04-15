@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(nvim-sdl2)
+project(nvim-sdl2 CXX)
 
 set(VERSION 0.0.1-rc3)
 
@@ -12,9 +12,10 @@ pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pango)
 pkg_check_modules(PANGOCAIRO REQUIRED IMPORTED_TARGET pangocairo)
 
 add_definitions(-DVERSION=\"${VERSION}\")
+set_property(GLOBAL PROPERTY CXX_STANDARD 17)
+set_property(GLOBAL PROPERTY COMPILE_FLAGS -Wall)
 
-add_executable(nvim-sdl2
-    src/main.cpp
+add_library(nvim-sdl2-lib STATIC
     src/MsgPackRpc.cpp
     src/RedrawHandler.cpp
     src/Renderer.cpp
@@ -22,11 +23,8 @@ add_executable(nvim-sdl2
     src/TextureCache.cpp
     src/Input.cpp
 )
-set_target_properties(nvim-sdl2 PROPERTIES
-    CXX_STANDARD 17
-    COMPILE_FLAGS -Wall
-    )
-target_link_libraries(nvim-sdl2 PUBLIC
+target_include_directories(nvim-sdl2-lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(nvim-sdl2-lib PUBLIC
     ${CMAKE_THREAD_LIBS_INIT}
     PkgConfig::LIBUV
     PkgConfig::SDL2
@@ -34,5 +32,16 @@ target_link_libraries(nvim-sdl2 PUBLIC
     PkgConfig::PANGO
     PkgConfig::PANGOCAIRO
     )
+
+add_executable(nvim-sdl2
+    src/main.cpp
+)
+target_link_libraries(nvim-sdl2 PUBLIC
+    nvim-sdl2-lib
+    )
 target_sources(nvim-sdl2 PRIVATE res/windows.rc)
 #target_precompile_headers(nvim-cur PRIVATE pch.hpp)
+
+add_subdirectory(tests)
+enable_testing()
+add_test(tests tests/tests)
