@@ -170,14 +170,40 @@ void Renderer::Flush()
 
 size_t Renderer::_SplitChunks(const _Line &line, size_t chunks[])
 {
+    // Split the line into the chunks with contiguous highlighting.
+    // However, contiguous spaces should form their own chunk to avoid unnecessary text rerendering.
+    const auto &hl = line.hl_id;
+    const auto &text = line.text;
+
     size_t n = 0;
     chunks[n++] = 0;
     chunks[n++] = 1;
-    while (chunks[n - 1] < line.hl_id.size())
+    bool is_space = false;
+    while (chunks[n - 1] < hl.size())
     {
         size_t &back = chunks[n - 1];
-        if (line.hl_id[back] != line.hl_id[chunks[n - 2]])
+        if (hl[back] != hl[chunks[n - 2]])
+        {
             chunks[n++] = back + 1;
+            is_space = false;
+        }
+        else if (!is_space && back > 1 && text[back] == " " && text[back - 1] == " ")
+        {
+            // Make sure contiguous spaces form their own chunk
+            is_space = true;
+            // If the line started with spaces, no need to form a new chunk. Otherwise:
+            if (back > 2)
+            {
+                chunks[n - 1] = back - 1;
+                chunks[n++] = back + 1;
+            }
+        }
+        else if (is_space && text[back] != " ")
+        {
+            // End of space chunk
+            is_space = false;
+            chunks[n++] = back + 1;
+        }
         else
             ++back;
     }
