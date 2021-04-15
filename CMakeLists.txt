@@ -19,6 +19,7 @@ add_library(nvim-sdl2-lib STATIC
     src/MsgPackRpc.cpp
     src/RedrawHandler.cpp
     src/Renderer.cpp
+    src/Window.cpp
     src/Painter.cpp
     src/TextureCache.cpp
     src/Input.cpp

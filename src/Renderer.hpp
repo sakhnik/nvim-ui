@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Utils.hpp"
-#include "Painter.hpp"
 #include "HlAttr.hpp"
 #include "TextureCache.hpp"
 
@@ -10,14 +9,14 @@
 #include <unordered_map>
 #include <string_view>
 #include <string>
-#include <SDL2/SDL.h>
 
 class MsgPackRpc;
+class Window;
 
 class Renderer
 {
 public:
-    Renderer(MsgPackRpc *);
+    Renderer(MsgPackRpc *, Window *);
     ~Renderer();
 
     // Get current grid cell dimensions
@@ -41,12 +40,8 @@ public:
 
 private:
     MsgPackRpc *_rpc;
-    PtrT<SDL_Window> _window = NullPtr(SDL_DestroyWindow);
-    PtrT<SDL_Renderer> _renderer = NullPtr(SDL_DestroyRenderer);
-    std::unique_ptr<Painter> _painter;
+    Window *_window;
 
-    double _scale_x = 1.0;
-    double _scale_y = 1.0;
     std::unordered_map<unsigned, HlAttr> _hl_attr;
     HlAttr _def_attr;
     int _cursor_row = 0;
@@ -65,10 +60,5 @@ private:
 
     std::vector<_Line> _lines;
 
-    // Mouse pointers for the active/busy state
-    PtrT<SDL_Cursor> _active_cursor = NullPtr(SDL_FreeCursor);
-    PtrT<SDL_Cursor> _busy_cursor = NullPtr(SDL_FreeCursor);
-
-    void _DrawCursor();
     static size_t _SplitChunks(const _Line &, size_t chunks[]);
 };

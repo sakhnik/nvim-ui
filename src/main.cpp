@@ -1,6 +1,7 @@
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
 #include "RedrawHandler.hpp"
+#include "Window.hpp"
 #include "Input.hpp"
 
 #include <iostream>
@@ -64,7 +65,8 @@ int main(int argc, char* argv[])
         }
 
         MsgPackRpc rpc(&stdin_pipe, &stdout_pipe);
-        Renderer renderer(&rpc);
+        Window window;
+        Renderer renderer(&rpc, &window);
         RedrawHandler redraw_handler(&rpc, &renderer);
         redraw_handler.AttachUI();
 
