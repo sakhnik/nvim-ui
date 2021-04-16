@@ -1,13 +1,11 @@
 #include "Renderer.hpp"
 #include "MsgPackRpc.hpp"
-#include "Painter.hpp"
-#include "Window.hpp"
 #include "Timer.hpp"
+#include "IWindow.hpp"
 #include <iostream>
-#include <chrono>
 
 
-Renderer::Renderer(MsgPackRpc *rpc, Window *window, Timer *timer)
+Renderer::Renderer(MsgPackRpc *rpc, IWindow *window, Timer *timer)
     : _rpc{rpc}
     , _window{window}
     , _timer{timer}

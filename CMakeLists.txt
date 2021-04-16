@@ -19,27 +19,27 @@ add_library(nvim-sdl2-lib STATIC
     src/MsgPackRpc.cpp
     src/RedrawHandler.cpp
     src/Renderer.cpp
-    src/Window.cpp
-    src/Painter.cpp
     src/TextureCache.cpp
     src/Timer.cpp
-    src/Input.cpp
 )
 target_include_directories(nvim-sdl2-lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(nvim-sdl2-lib PUBLIC
     ${CMAKE_THREAD_LIBS_INIT}
     PkgConfig::LIBUV
-    PkgConfig::SDL2
-    PkgConfig::CAIRO
-    PkgConfig::PANGO
-    PkgConfig::PANGOCAIRO
     )
 
 add_executable(nvim-sdl2
     src/main.cpp
+    src/Window.cpp
+    src/Painter.cpp
+    src/Input.cpp
 )
 target_link_libraries(nvim-sdl2 PUBLIC
     nvim-sdl2-lib
+    PkgConfig::SDL2
+    PkgConfig::CAIRO
+    PkgConfig::PANGO
+    PkgConfig::PANGOCAIRO
     )
 target_sources(nvim-sdl2 PRIVATE res/windows.rc)
 #target_precompile_headers(nvim-cur PRIVATE pch.hpp)

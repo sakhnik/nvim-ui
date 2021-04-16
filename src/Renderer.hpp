@@ -11,13 +11,13 @@
 #include <chrono>
 
 class MsgPackRpc;
-class Window;
+struct IWindow;
 class Timer;
 
 class Renderer
 {
 public:
-    Renderer(MsgPackRpc *, Window *, Timer *);
+    Renderer(MsgPackRpc *, IWindow *, Timer *);
     ~Renderer();
 
     // Get current grid cell dimensions
@@ -41,7 +41,7 @@ public:
 
 private:
     MsgPackRpc *_rpc;
-    Window *_window;
+    IWindow *_window;
     Timer *_timer;
 
     std::unordered_map<unsigned, HlAttr> _hl_attr;
