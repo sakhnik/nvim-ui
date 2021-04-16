@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Utils.hpp"
 #include "HlAttr.hpp"
 #include "TextureCache.hpp"
 

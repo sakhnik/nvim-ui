@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Utils.hpp"
 #include "IWindow.hpp"
 #include <string>
 #include <list>

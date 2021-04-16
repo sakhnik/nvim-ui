@@ -1,7 +1,6 @@
 #include "RedrawHandler.hpp"
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
-#include "Utils.hpp"
 #include <iostream>
 
 
