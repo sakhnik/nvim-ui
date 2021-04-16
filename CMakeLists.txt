@@ -12,7 +12,7 @@ pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pango)
 pkg_check_modules(PANGOCAIRO REQUIRED IMPORTED_TARGET pangocairo)
 
 add_definitions(-DVERSION=\"${VERSION}\")
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 add_compile_options(-Wall)
 
 add_library(nvim-sdl2-lib STATIC

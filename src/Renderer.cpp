@@ -267,7 +267,9 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
 
 void Renderer::OnResized()
 {
-    auto [rows, cols] = _window->GetRowsCols();
+    auto rows_cols = _window->GetRowsCols();
+    auto rows = rows_cols.first;
+    auto cols = rows_cols.second;
 
     if (rows != static_cast<int>(_lines.size()) ||
         cols != static_cast<int>(_lines[0].text.size()))
