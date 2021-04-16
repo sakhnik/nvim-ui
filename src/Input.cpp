@@ -8,14 +8,13 @@
 Input::Input(uv_loop_t *loop, MsgPackRpc *rpc, Renderer *renderer)
     : _rpc{rpc}
     , _renderer{renderer}
+    , _timer{loop}
 {
-    ::uv_timer_init(loop, &_timer);
-    _timer.data = this;
 }
 
 Input::~Input()
 {
-    ::uv_timer_stop(&_timer);
+    _timer.Stop();
 }
 
 void Input::Start()
@@ -26,17 +25,14 @@ void Input::Start()
 
 void Input::_StartTimer()
 {
-    auto on_timeout = [](uv_timer_t *handle) {
-        Input *self = reinterpret_cast<Input*>(handle->data);
-        self->_PollEvents();
-    };
-
-    ::uv_timer_start(&_timer, on_timeout, 10, 10);
+    _timer.Start(10, 10, [this] {
+        _PollEvents();
+    });
 }
 
 void Input::_OnInput(std::string_view input)
 {
-    ::uv_timer_stop(&_timer);
+    _timer.Stop();
 
     size_t input_size = input.size();
     _rpc->Request(

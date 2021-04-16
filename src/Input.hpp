@@ -1,6 +1,7 @@
 #pragma once
 
-#include <string>
+#include "Timer.hpp"
+#include <string_view>
 #include <uv.h>
 
 class MsgPackRpc;
@@ -17,7 +18,7 @@ public:
 private:
     MsgPackRpc *_rpc;
     Renderer *_renderer;
-    uv_timer_t _timer;
+    Timer _timer;
     bool _shift = false;
     bool _control = false;
 

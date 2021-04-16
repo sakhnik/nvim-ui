@@ -22,6 +22,7 @@ add_library(nvim-sdl2-lib STATIC
     src/Window.cpp
     src/Painter.cpp
     src/TextureCache.cpp
+    src/Timer.cpp
     src/Input.cpp
 )
 target_include_directories(nvim-sdl2-lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
