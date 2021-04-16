@@ -41,12 +41,8 @@ choco install .\neovim-sdl2.0.0.1.nupkg
 
 ## TODO
 
-  - [x] Cursor shapes
-  - [x] Use pango and cairo for text rendering and drawing => digraphs, ligatures whatnot
-  - [x] Underline, undercurl
-  - [x] Change mouse pointer on busy_start/busy_stop notifications
-  - [ ] Pass command line arguments to neovim
-  - [ ] Publish to chocolatey.org
+  - [ ] Pass command line arguments to neovim (allow tcp, pipes)
+  - [ ] Automatic/unit testing
   - [ ] Add configuration file (property tree)
   - [ ] Log to a file instead of stdout
   - [ ] Properly close the editor when the window is about to be closed
@@ -55,7 +51,6 @@ choco install .\neovim-sdl2.0.0.1.nupkg
     - [ ] mouse_on, mouse_off
     - [ ] highlight URLs like in terminals
   - [ ] Fast zoom with mouse wheel
-  - [ ] Automatic testing
   - [ ] Handle special keys like arrows
   - [ ] Handle the rest of highlight attributes
   - [ ] Handle errors and failures, suggest restarting nvim on crash

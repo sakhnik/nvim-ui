@@ -5,14 +5,14 @@
   <metadata>
     <id>neovim-sdl2</id>
     <version>VERSION</version>
-    <packageSourceUrl>https://github.com/sakhnik/neovim-sdl2/chocolatey</packageSourceUrl>
+    <packageSourceUrl>PACKAGE_SOURCE_URL</packageSourceUrl>
     <owners>Anatolii Sakhnik</owners>
 
     <title>neovim-sdl2 (Install)</title>
     <authors>Anatolii Sakhnik</authors>
     <projectUrl>https://github.com/sakhnik/neovim-sdl2</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/sakhnik/neovim-sdl2/main/res/icon.svg</iconUrl>
-    <copyright>2021</copyright>
+    <copyright>Anatolii Sakhnik, 2021</copyright>
     <licenseUrl>https://github.com/sakhnik/neovim-sdl2/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/sakhnik/neovim-sdl2</projectSourceUrl>
@@ -21,10 +21,11 @@
     <description>NeoVim GUI implemented in C++. SDL2 for hardware accelerated rendering. Pango for proper text layout.
       Requires nvim binary available in the executable search path.
     </description>
+    <releaseNotes>https://github.com/sakhnik/neovim-sdl2/blob/main/CHANGELOG.md</releaseNotes>
 
     <dependencies>
-      <dependency id="dejavufonts" />
-      <dependency id="neovim" />
+      <dependency id="dejavufonts" version="2.35" />
+      <dependency id="neovim" version="0.4.4" />
     </dependencies>
 
   </metadata>
