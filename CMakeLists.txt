@@ -44,8 +44,6 @@ target_link_libraries(nvim-sdl2 PUBLIC
 target_sources(nvim-sdl2 PRIVATE res/windows.rc)
 #target_precompile_headers(nvim-cur PRIVATE pch.hpp)
 
-if(NOT MINGW)
-    add_subdirectory(tests)
-    enable_testing()
-    add_test(tests tests/tests)
-endif()
+add_subdirectory(tests)
+enable_testing()
+add_test(tests tests/tests)
