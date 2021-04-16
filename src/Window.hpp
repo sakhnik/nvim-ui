@@ -11,9 +11,6 @@ public:
     void Init();
     void Deinit();
 
-    int GetCellWidth() const;
-    int GetCellHeight() const;
-
     using RowsColsT = std::pair<int, int>;
     RowsColsT GetRowsCols() const;
 

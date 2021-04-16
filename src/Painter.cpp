@@ -37,8 +37,8 @@ void Painter::CalcCellInfo()
     pango_layout_set_text(layout.get(), RULER.data(), RULER.size());
     PangoRectangle rect;
     pango_layout_get_extents(layout.get(), nullptr, &rect);
-    _cell_width = 1.0 * rect.width / (PANGO_SCALE * RULER.size());
-    _cell_height = 1.0 * rect.height / PANGO_SCALE;
+    _cell_width = _scale_x * rect.width / (PANGO_SCALE * RULER.size());
+    _cell_height = _scale_y * rect.height / PANGO_SCALE;
 }
 
 namespace {

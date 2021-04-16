@@ -40,24 +40,14 @@ void Window::Deinit()
     SDL_Quit();
 }
 
-int Window::GetCellWidth() const
-{
-    return _painter->GetCellWidth() * _scale_x;
-}
-
-int Window::GetCellHeight() const
-{
-    return _painter->GetCellHeight() * _scale_y;
-}
-
 Window::RowsColsT
 Window::GetRowsCols() const
 {
     int wp{}, hp{};
     SDL_GetRendererOutputSize(_renderer.get(), &wp, &hp);
 
-    int cols = std::max(1, wp / GetCellWidth());
-    int rows = std::max(1, hp / GetCellHeight());
+    int cols = std::max(1, wp / _painter->GetCellWidth());
+    int rows = std::max(1, hp / _painter->GetCellHeight());
     return {rows, cols};
 }
 
@@ -82,14 +72,14 @@ void Window::CopyTexture(int row, int col, SDL_Texture *texture)
     int texW = 0;
     int texH = 0;
     SDL_QueryTexture(texture, NULL, NULL, &texW, &texH);
-    SDL_Rect dstrect = { col * GetCellWidth(), GetCellHeight() * row, texW, texH };
+    SDL_Rect dstrect = { col * _painter->GetCellWidth(), _painter->GetCellHeight() * row, texW, texH };
     SDL_RenderCopy(_renderer.get(), texture, NULL, &dstrect);
 }
 
 PtrT<SDL_Texture> Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
     auto surface = PtrT<SDL_Surface>(SDL_CreateRGBSurface(0,
-        width * GetCellWidth(), GetCellHeight(),
+        width * _painter->GetCellWidth(), _painter->GetCellHeight(),
         32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0),
         SDL_FreeSurface);
     _painter->Paint(surface.get(), text, attr, def_attr);
@@ -105,8 +95,8 @@ void Window::Present()
 
 void Window::DrawCursor(int row, int col, unsigned fg, std::string_view mode)
 {
-    int cell_width = GetCellWidth();
-    int cell_height = GetCellHeight();
+    int cell_width = _painter->GetCellWidth();
+    int cell_height = _painter->GetCellHeight();
 
     SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(_renderer.get(), fg >> 16, (fg >> 8) & 0xff, fg & 0xff, 127);
