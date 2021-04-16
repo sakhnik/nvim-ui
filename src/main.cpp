@@ -66,7 +66,8 @@ int main(int argc, char* argv[])
 
         MsgPackRpc rpc(&stdin_pipe, &stdout_pipe);
         Window window;
-        Renderer renderer(&rpc, &window);
+        Timer timer{loop};
+        Renderer renderer(&rpc, &window, &timer);
         RedrawHandler redraw_handler(&rpc, &renderer);
         redraw_handler.AttachUI();
 

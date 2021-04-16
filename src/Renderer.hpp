@@ -5,18 +5,19 @@
 #include "TextureCache.hpp"
 
 #include <vector>
-#include <list>
 #include <unordered_map>
 #include <string_view>
 #include <string>
+#include <chrono>
 
 class MsgPackRpc;
 class Window;
+class Timer;
 
 class Renderer
 {
 public:
-    Renderer(MsgPackRpc *, Window *);
+    Renderer(MsgPackRpc *, Window *, Timer *);
     ~Renderer();
 
     // Get current grid cell dimensions
@@ -41,6 +42,7 @@ public:
 private:
     MsgPackRpc *_rpc;
     Window *_window;
+    Timer *_timer;
 
     std::unordered_map<unsigned, HlAttr> _hl_attr;
     HlAttr _def_attr;
@@ -61,4 +63,12 @@ private:
     std::vector<_Line> _lines;
 
     static size_t _SplitChunks(const _Line &, size_t chunks[]);
+
+    // Make sure flush requests are executed not too frequently,
+    // but cleanly.
+    using ClockT = std::chrono::high_resolution_clock;
+    ClockT::time_point _last_flush_time;
+
+    void _DoFlush();
+    void _AnticipateFlush();
 };

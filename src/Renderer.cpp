@@ -2,13 +2,15 @@
 #include "MsgPackRpc.hpp"
 #include "Painter.hpp"
 #include "Window.hpp"
+#include "Timer.hpp"
 #include <iostream>
 #include <chrono>
 
 
-Renderer::Renderer(MsgPackRpc *rpc, Window *window)
+Renderer::Renderer(MsgPackRpc *rpc, Window *window, Timer *timer)
     : _rpc{rpc}
     , _window{window}
+    , _timer{timer}
 {
     // Default hightlight attributes
     _def_attr.fg = 0xffffff;
@@ -30,9 +32,38 @@ Renderer::~Renderer()
 
 void Renderer::Flush()
 {
+    // It's worth limiting flush rate, a user wouldn't necessarily need
+    // to observe the intermediate screen states. And the CPU consumption
+    // is improved dramatically when limiting the flush rate.
+
+    // 40 ms => 25 FPS (PAL). Perhaps worth making it configurable.
+    const int FLUSH_DURATION_MS = 40;
+
+    auto now = ClockT::now();
+    if (now - _last_flush_time > std::chrono::milliseconds(FLUSH_DURATION_MS))
+    {
+        // Do repaint the grid if enough time elapsed since last time.
+        // This is useful when fast scrolling.
+        _DoFlush();
+    }
+    else
+    {
+        // Make sure the final view will be presented if no more flush requests.
+        _timer->Start(FLUSH_DURATION_MS, 0, [&] { _DoFlush(); });
+    }
+}
+
+void Renderer::_AnticipateFlush()
+{
+    // The grid is being updated, cancel the last flush request. A new one is pending.
+    _timer->Stop();
+}
+
+void Renderer::_DoFlush()
+{
+    _AnticipateFlush();
     std::cout << "Flush ";
-    using ClockT = std::chrono::high_resolution_clock;
-    auto start_time = ClockT::now();
+    _last_flush_time = ClockT::now();
 
     _window->Clear(_def_attr.bg.value());
 
@@ -107,7 +138,7 @@ void Renderer::Flush()
     _window->Present();
 
     auto end_time = ClockT::now();
-    std::cout << " " << std::chrono::duration<double>(end_time - start_time).count() << std::endl;
+    std::cout << " " << std::chrono::duration<double>(end_time - _last_flush_time).count() << std::endl;
 }
 
 size_t Renderer::_SplitChunks(const _Line &line, size_t chunks[])
@@ -154,6 +185,8 @@ size_t Renderer::_SplitChunks(const _Line &line, size_t chunks[])
 
 void Renderer::GridLine(int row, int col, std::string_view chunk, unsigned hl_id, int repeat)
 {
+    _AnticipateFlush();
+
     _Line &line = _lines[row];
     line.dirty = true;
 
@@ -166,12 +199,14 @@ void Renderer::GridLine(int row, int col, std::string_view chunk, unsigned hl_id
 
 void Renderer::GridCursorGoto(int row, int col)
 {
+    _AnticipateFlush();
     _cursor_row = row;
     _cursor_col = col;
 }
 
 void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
 {
+    _AnticipateFlush();
     auto copy = [&](int row, int row_from) {
         auto &line_from = _lines[row_from];
         auto &line_to = _lines[row];
@@ -202,6 +237,7 @@ void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
 
 void Renderer::GridClear()
 {
+    _AnticipateFlush();
     for (auto &line : _lines)
     {
         line.dirty = true;
