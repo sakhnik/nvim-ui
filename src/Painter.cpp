@@ -83,19 +83,23 @@ void Painter::Paint(SDL_Surface *surface, std::string_view text, const HlAttr &a
     cairo_surface_set_device_scale(cr_surface.get(), _scale_x, _scale_y);
     auto cr = PtrT<cairo_t>(cairo_create(cr_surface.get()), cairo_destroy);
 
-    pango_font_description_set_weight(_font_desc.get(),
-            (attr.flags & HlAttr::F_BOLD) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL);
-    pango_font_description_set_style(_font_desc.get(),
-            (attr.flags & HlAttr::F_ITALIC) ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL);
+    auto draw_text = [&]() {
+        pango_font_description_set_weight(_font_desc.get(),
+                (attr.flags & HlAttr::F_BOLD) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL);
+        pango_font_description_set_style(_font_desc.get(),
+                (attr.flags & HlAttr::F_ITALIC) ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL);
 
-    auto layout = PtrT<PangoLayout>(pango_cairo_create_layout(cr.get()),
-            [](PangoLayout *l) { g_object_unref(l); });
-    pango_layout_set_font_description(layout.get(), _font_desc.get());
-    pango_layout_set_text(layout.get(), text.data(), text.size());
+        auto layout = PtrT<PangoLayout>(pango_cairo_create_layout(cr.get()),
+                [](PangoLayout *l) { g_object_unref(l); });
+        pango_layout_set_font_description(layout.get(), _font_desc.get());
+        pango_layout_set_text(layout.get(), text.data(), text.size());
 
-    auto al = CreateAttrList(attr);
-    if (al)
-        pango_layout_set_attributes(layout.get(), al.get());
+        auto al = CreateAttrList(attr);
+        if (al)
+            pango_layout_set_attributes(layout.get(), al.get());
+
+        pango_cairo_show_layout(cr.get(), layout.get());
+    };
 
     unsigned bg = attr.bg.has_value() ? attr.bg.value() : def_attr.bg.value();
     unsigned fg = attr.fg.has_value() ? attr.fg.value() : def_attr.fg.value();
@@ -107,7 +111,10 @@ void Painter::Paint(SDL_Surface *surface, std::string_view text, const HlAttr &a
     cairo_paint(cr.get());
 
     // Print the foreground text
-    SetSource(cr.get(), fg);
-    cairo_move_to(cr.get(), 0, 0);
-    pango_cairo_show_layout(cr.get(), layout.get());
+    if (text.rfind("  ", 0))  // not starts with "  "
+    {
+        SetSource(cr.get(), fg);
+        cairo_move_to(cr.get(), 0, 0);
+        draw_text();
+    }
 }
