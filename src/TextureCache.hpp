@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Utils.hpp"
+#include "IWindow.hpp"
 #include <string>
 #include <list>
 #include <functional>
-#include <SDL2/SDL_render.h>
 
 class TextureCache
 {
@@ -16,12 +16,7 @@ public:
         int width = 0; // count of cells
         unsigned hl_id = 0;
         std::string text;
-        PtrT<SDL_Texture> texture = NullPtr(SDL_DestroyTexture);
-
-        bool Matches(const Texture &o) const
-        {
-            return col == o.col && hl_id == o.hl_id && text == o.text;
-        }
+        IWindow::ITexture::PtrT texture;
     };
 
     void ForEach(std::function<void(const Texture &)> action);

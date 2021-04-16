@@ -67,16 +67,32 @@ void Window::Clear(unsigned bg)
     SDL_RenderClear(_renderer.get());
 }
 
-void Window::CopyTexture(int row, int col, SDL_Texture *texture)
+namespace {
+
+struct Texture : Window::ITexture
 {
+    Texture(SDL_Texture *t)
+        : texture{t, SDL_DestroyTexture}
+    {
+    }
+    ::PtrT<SDL_Texture> texture;
+};
+
+} //namespace;
+
+void Window::CopyTexture(int row, int col, ITexture *texture)
+{
+    SDL_Texture *t = static_cast<Texture *>(texture)->texture.get();
+
     int texW = 0;
     int texH = 0;
-    SDL_QueryTexture(texture, NULL, NULL, &texW, &texH);
+    SDL_QueryTexture(t, NULL, NULL, &texW, &texH);
     SDL_Rect dstrect = { col * _painter->GetCellWidth(), _painter->GetCellHeight() * row, texW, texH };
-    SDL_RenderCopy(_renderer.get(), texture, NULL, &dstrect);
+    SDL_RenderCopy(_renderer.get(), t, NULL, &dstrect);
 }
 
-PtrT<SDL_Texture> Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
+Window::ITexture::PtrT
+Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
     auto surface = PtrT<SDL_Surface>(SDL_CreateRGBSurface(0,
         width * _painter->GetCellWidth(), _painter->GetCellHeight(),
@@ -85,7 +101,7 @@ PtrT<SDL_Texture> Window::CreateTexture(int width, std::string_view text, const 
     _painter->Paint(surface.get(), text, attr, def_attr);
 
     // Create a possibly hardware accelerated texture from the surface
-    return PtrT<SDL_Texture>(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()), SDL_DestroyTexture);
+    return Texture::PtrT(new Texture(SDL_CreateTextureFromSurface(_renderer.get(), surface.get())));
 }
 
 void Window::Present()

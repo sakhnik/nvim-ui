@@ -1,25 +1,26 @@
 #pragma once
 
+#include "IWindow.hpp"
 #include "Utils.hpp"
 #include "Painter.hpp"
 #include "TextureCache.hpp"
 #include <SDL2/SDL.h>
 
 class Window
+    : public IWindow
 {
 public:
-    void Init();
-    void Deinit();
+    void Init() override;
+    void Deinit() override;
 
-    using RowsColsT = std::pair<int, int>;
-    RowsColsT GetRowsCols() const;
+    RowsColsT GetRowsCols() const override;
 
-    void Clear(unsigned bg);
-    void CopyTexture(int row, int col, SDL_Texture *);
-    PtrT<SDL_Texture> CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr);
-    void Present();
-    void DrawCursor(int row, int col, unsigned fg, std::string_view mode);
-    void SetBusy(bool is_busy);
+    void Clear(unsigned bg) override;
+    void CopyTexture(int row, int col, ITexture *) override;
+    ITexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) override;
+    void Present() override;
+    void DrawCursor(int row, int col, unsigned fg, std::string_view mode) override;
+    void SetBusy(bool is_busy) override;
 
 private:
     PtrT<SDL_Window> _window = NullPtr(SDL_DestroyWindow);
