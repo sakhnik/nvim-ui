@@ -38,23 +38,3 @@ choco install neovim --pre
 choco install dejavufonts
 choco install .\neovim-sdl2.0.0.1.nupkg
 ```
-
-## TODO
-
-  - [ ] Pass command line arguments to neovim (allow tcp, pipes)
-  - [ ] Automatic/unit testing
-  - [ ] Add configuration file (property tree)
-  - [ ] Log to a file instead of stdout
-  - [ ] Properly close the editor when the window is about to be closed
-  - [ ] Allow selecting GUI font
-  - [ ] Mouse support (+ mouse_on, mouse_off)
-    - [ ] mouse_on, mouse_off
-    - [ ] highlight URLs like in terminals
-  - [ ] Fast zoom with mouse wheel
-  - [ ] Handle special keys like arrows
-  - [ ] Handle the rest of highlight attributes
-  - [ ] Handle errors and failures, suggest restarting nvim on crash
-  - [ ] Consider externalizing popup menus to add scrollbars
-  - [ ] Configuration of fonts and behaviour tweaking (consider using lua)
-  - [ ] Setup automatic releases (win32, appimage)
-  - [ ] Track mode_info
