@@ -84,50 +84,41 @@ void Renderer::_DoFlush()
         // and update the texture cache.
         line.dirty = false;
 
-        // Group text chunks by hl_id
-        TextureCache::Texture texture;
-        auto texture_cache_scanner = tex_cache.GetScanner();
-
-        auto print_group = [&]() {
-            // Test whether the texture should be rendered again
-            if (texture_cache_scanner.EnsureNext(texture))
-            {
-                // Paint the text on the surface carefully
-                auto hlit = _hl_attr.find(texture.hl_id);
-
-                texture.texture = _window->CreateTexture(texture.width, texture.text,
-                        hlit != _hl_attr.end() ? hlit->second : _def_attr,
-                        _def_attr);
-                texture_cache_scanner.Insert(std::move(texture));
-                std::cout << "+";
-            }
-            else
-            {
-                std::cout << ".";
-            }
-
-            // Copy the texture (cached or new) to the renderer
-            copy_texture(texture_cache_scanner.Get());
-            texture_cache_scanner.Advance();
-        };
-
         // Split the cells into chunks by the same hl_id
         size_t chunks[line.hl_id.size() + 1];
-        size_t n = _SplitChunks(line, chunks);
+        size_t chunks_size = _SplitChunks(line, chunks);
+
+        auto texture_generator = [&](const TextureCache::Texture &tex) {
+                // Paint the text on the surface carefully
+            auto hlit = _hl_attr.find(tex.hl_id);
+            return _window->CreateTexture(tex.width, tex.text,
+                    hlit != _hl_attr.end() ? hlit->second : _def_attr,
+                    _def_attr);
+        };
+
+        auto texture_cache_scanner = tex_cache.GetScanner();
 
         // Print and cache the chunks individually
-        for (size_t i = 1; i < n; ++i)
+        for (size_t i = 1; i < chunks_size; ++i)
         {
             int col = chunks[i - 1];
             int end = chunks[i];
-            texture = {
+            TextureCache::Texture texture = {
                 .col = col,
                 .hl_id = line.hl_id[col],
             };
             texture.width = end - col;
             while (col < end)
                 texture.text += line.text[col++];
-            print_group();
+
+            // Test whether the texture should be rendered again
+            if (texture_cache_scanner.EnsureNext(std::move(texture), texture_generator))
+                std::cout << "+";
+            else
+                std::cout << ".";
+
+            // Copy the texture (cached or new) to the renderer
+            copy_texture(texture_cache_scanner.Get());
         }
     }
 

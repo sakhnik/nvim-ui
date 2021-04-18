@@ -6,73 +6,65 @@ namespace {
 using namespace boost::ut;
 using namespace std::string_literals;
 
+struct Tex : IWindow::ITexture
+{
+    std::string s;
+    Tex(const std::string &s): s{s} {}
+    static PtrT n(const std::string &s) { return PtrT{new Tex(s)}; }
+};
+
 suite s = [] {
-    "TextureCache"_test = [] {
-        "foreach"_test = [] {
+    auto generator = [](const auto &t) { return Tex::n(t.text); };
+
+    auto dump = [](TextureCache &tc) {
+        std::string buf;
+        auto action = [&](const TextureCache::Texture &t) {
+            buf += t.text;
+        };
+        tc.ForEach(action);
+        return buf;
+    };
+
+    auto dump2 = [](TextureCache &tc) {
+        std::string buf;
+        auto action = [&](const TextureCache::Texture &t) {
+            buf += static_cast<Tex*>(t.texture.get())->s;
+        };
+        tc.ForEach(action);
+        return buf;
+    };
+
+    "TextureCache"_test = [&] {
+        "foreach"_test = [&] {
             TextureCache c;
             auto s = c.GetScanner();
-            s.Insert(TextureCache::Texture{
-                .col = 0,
-                .width = 2,
-                .text = "He",
-            });
-            s.Advance();
-            s.Insert(TextureCache::Texture{
-                .col = 2,
-                .width = 3,
-                .text = "llo",
-            });
-            s.Advance();
-            s.Insert(TextureCache::Texture{
-                .col = 3,
-                .width = 2,
-                .text = " world",
-            });
 
-            std::string buf;
-            auto action = [&](const TextureCache::Texture &t) {
-                buf += t.text;
-            };
-            c.ForEach(action);
+            expect(s.EnsureNext(TextureCache::Texture{.col = 0, .text = "He"}, generator));
+            expect(s.EnsureNext(TextureCache::Texture{.col = 2, .text = "llo"}, generator));
+            expect(s.EnsureNext(TextureCache::Texture{.col = 3, .text = " world"}, generator));
 
-            expect(eq("Hello world"s, buf));
+            expect(eq("Hello world"s, dump(c)));
+            expect(eq("Hello world"s, dump2(c)));
         };
-        "scan"_test = [] {
-            struct Tex : IWindow::ITexture
-            {
-                static PtrT n() { return PtrT{new Tex}; }
-            };
+
+        "scan"_test = [&] {
 
             TextureCache c;
             {
                 auto s = c.GetScanner();
-                s.Insert(TextureCache::Texture{.col = 0, .text = "He", .texture = Tex::n()});
-                s.Advance();
-                s.Insert(TextureCache::Texture{.col = 2, .text = "llo", .texture = Tex::n()});
-                s.Advance();
-                s.Insert(TextureCache::Texture{.col = 3, .text = " world", .texture = Tex::n()});
+                expect(s.EnsureNext(TextureCache::Texture{.col = 0, .text = "He"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 2, .text = "llo"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 3, .text = " world"}, generator));
             }
 
-            auto s = c.GetScanner();
-            bool missing = s.EnsureNext(TextureCache::Texture{.col = 0, .text = "He"});
-            expect(!missing);
-            s.Advance();
-            missing = s.EnsureNext(TextureCache::Texture{.col = 2, .text = "llo "});
-            expect(missing);
-            s.Insert(TextureCache::Texture{.col = 2, .text = "llo "});
-            s.Advance();
-            missing = s.EnsureNext(TextureCache::Texture{.col = 3, .text = "again"});
-            expect(missing);
-            s.Insert(TextureCache::Texture{.col = 3, .text = "again"});
-            s.Advance();
-
-            std::string buf;
-            auto action = [&](const TextureCache::Texture &t) {
-                buf += t.text;
-            };
-            c.ForEach(action);
-
-            expect(eq("Hello again"s, buf));
+            {
+                auto s = c.GetScanner();
+                expect(!s.EnsureNext(TextureCache::Texture{.col = 0, .text = "He"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 2, .text = "llo "}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 3, .text = "again"}, generator));
+            }
+            expect(eq("Hello again"s, dump(c)));
+            expect(eq("Hello again"s, dump2(c)));
         };
     };
 };

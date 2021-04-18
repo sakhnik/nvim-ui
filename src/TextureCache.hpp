@@ -19,6 +19,7 @@ public:
     };
 
 private:
+    // Sorted list
     using _TextureListT = std::list<Texture>;
     _TextureListT _cache;
 
@@ -31,35 +32,32 @@ public:
     {
         _TextureListT &_cache;
         using IterT = std::list<Texture>::iterator;
-        IterT _iter;
+        IterT _iter = _cache.begin();
+        bool _started = false;
 
     public:
         Scanner(_TextureListT &cache)
             : _cache{cache}
-            , _iter(_cache.begin())
         {
         }
 
-        ~Scanner()
-        {
-            // The unscanned entries are considered outdated
-            _cache.erase(_iter, _cache.end());
-        }
+        ~Scanner();
 
         Scanner(const Scanner &) = delete;
         Scanner& operator=(const Scanner &) = delete;
 
+        // Access the current texture
         Texture& Get() const { return *_iter; }
-        void Advance() { ++_iter; }
+
+        // Generator function to create texture to be stored in the cache.
+        using GeneratorT = std::function<IWindow::ITexture::PtrT(const Texture &)>;
 
         // Ensure the subsequent texture is the given one.
-        // True if there is no necessary texture in the cache.
-        bool EnsureNext(const Texture &);
-
-        void Insert(Texture &&texture)
-        {
-            _iter = _cache.insert(_iter, std::move(texture));
-        }
+        // If there is no suitable texture in the cache, the generator functor will be invoked
+        // to create one and insert into the cache.
+        // The scanner cursor will point at either the newly created or the cached texture.
+        // Return true if the generator was invoked.
+        bool EnsureNext(Texture &&, GeneratorT);
     };
 
     Scanner GetScanner()

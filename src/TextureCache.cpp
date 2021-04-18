@@ -6,8 +6,21 @@ void TextureCache::ForEach(std::function<void(const Texture &)> action)
         action(texture);
 }
 
-bool TextureCache::Scanner::EnsureNext(const Texture &texture)
+TextureCache::Scanner::~Scanner()
 {
+    if (_started)
+        ++_iter;
+    // The unscanned entries are considered outdated
+    _cache.erase(_iter, _cache.end());
+}
+
+bool TextureCache::Scanner::EnsureNext(Texture &&texture, GeneratorT generator)
+{
+    if (_started)
+        ++_iter;
+    else
+        _started = true;
+
     // Remove potentially outdated cached textures
     while (_iter != _cache.end() && _iter->col < texture.col)
         _iter = _cache.erase(_iter);
@@ -15,9 +28,16 @@ bool TextureCache::Scanner::EnsureNext(const Texture &texture)
         && (_iter->hl_id != texture.hl_id || _iter->text != texture.text))
         _iter = _cache.erase(_iter);
 
-    return _iter == _cache.end()
+    if (_iter == _cache.end()
         || _iter->col != texture.col || _iter->hl_id != texture.hl_id
-        || _iter->text != texture.text || !_iter->texture;
+        || _iter->text != texture.text || !_iter->texture)
+    {
+        texture.texture = generator(texture);
+        _iter = _cache.insert(_iter, std::move(texture));
+        return true;
+    }
+
+    return false;
 }
 
 void TextureCache::Clear()
