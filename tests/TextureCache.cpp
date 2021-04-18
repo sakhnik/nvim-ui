@@ -48,7 +48,6 @@ suite s = [] {
         };
 
         "scan"_test = [&] {
-
             TextureCache c;
             {
                 auto s = c.GetScanner();
@@ -65,6 +64,26 @@ suite s = [] {
             }
             expect(eq("Hello again"s, dump(c)));
             expect(eq("Hello again"s, dump2(c)));
+        };
+
+        "update"_test = [&] {
+            TextureCache c;
+            {
+                auto s = c.GetScanner();
+                expect(s.EnsureNext(TextureCache::Texture{.col = 0, .text = "T"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 1, .text = "e"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 2, .text = "s"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 3, .text = "t"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 4, .text = "2"}, generator));
+            }
+            {
+                auto s = c.GetScanner();
+                expect(s.EnsureNext(TextureCache::Texture{.col = 0, .text = "B"}, generator));
+                expect(!s.EnsureNext(TextureCache::Texture{.col = 1, .text = "e"}, generator));
+                expect(!s.EnsureNext(TextureCache::Texture{.col = 3, .text = "t"}, generator));
+            }
+            expect(eq("Bet"s, dump(c)));
+            expect(eq("Bet"s, dump2(c)));
         };
     };
 };
