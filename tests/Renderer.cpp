@@ -71,6 +71,19 @@ suite s = [] {
             expect(3_u == chunks[1]);
             expect(5_u == chunks[2]);
         };
+
+        "two_space_start"_test = [] {
+            Renderer::_Line line{
+                .text = {" "s, " "s, "a"s, "b"s},
+                .hl_id = {0, 0, 0, 0},
+            };
+            size_t chunks[line.hl_id.size() + 1];
+            size_t n = Renderer::_SplitChunks(line, chunks);
+            expect(3_u == n);
+            expect(0_u == chunks[0]);
+            expect(2_u == chunks[1]);
+            expect(4_u == chunks[2]);
+        };
     };
 };
 

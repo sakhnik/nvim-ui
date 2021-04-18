@@ -158,7 +158,7 @@ size_t Renderer::_SplitChunks(const _Line &line, size_t chunks[])
             chunks[n++] = back + 1;
             is_space = false;
         }
-        else if (!is_space && back > 1 && text[back] == " " && text[back - 1] == " ")
+        else if (!is_space && back > 0 && text[back] == " " && text[back - 1] == " ")
         {
             // Make sure contiguous spaces form their own chunk
             is_space = true;
