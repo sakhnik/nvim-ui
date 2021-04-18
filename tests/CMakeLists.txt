@@ -8,5 +8,9 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(ut)
 
 include_directories(${ut_SOURCE_DIR}/include)
-add_executable(tests test.cpp Renderer.cpp)
+add_executable(tests
+    test.cpp
+    Renderer.cpp
+    TextureCache.cpp
+)
 target_link_libraries(tests nvim-sdl2-lib)

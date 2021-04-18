@@ -4,6 +4,8 @@
 #undef private
 #include <string>
 
+namespace {
+
 using namespace boost::ut;
 using namespace std::string_literals;
 
@@ -71,3 +73,5 @@ suite s = [] {
         };
     };
 };
+
+} //namespace;
