@@ -86,11 +86,11 @@ void Renderer::_DoFlush()
 
         // Group text chunks by hl_id
         TextureCache::Texture texture;
-        auto tit = tex_cache.Begin();
+        auto texture_cache_scanner = tex_cache.GetScanner();
 
         auto print_group = [&]() {
             // Test whether the texture should be rendered again
-            if (tex_cache.ClearUntil(tit, texture))
+            if (texture_cache_scanner.EnsureNext(texture))
             {
                 // Paint the text on the surface carefully
                 auto hlit = _hl_attr.find(texture.hl_id);
@@ -98,7 +98,7 @@ void Renderer::_DoFlush()
                 texture.texture = _window->CreateTexture(texture.width, texture.text,
                         hlit != _hl_attr.end() ? hlit->second : _def_attr,
                         _def_attr);
-                tex_cache.Insert(tit, std::move(texture));
+                texture_cache_scanner.Insert(std::move(texture));
                 std::cout << "+";
             }
             else
@@ -107,7 +107,8 @@ void Renderer::_DoFlush()
             }
 
             // Copy the texture (cached or new) to the renderer
-            copy_texture(*tit++);
+            copy_texture(texture_cache_scanner.Get());
+            texture_cache_scanner.Advance();
         };
 
         // Split the cells into chunks by the same hl_id
@@ -128,8 +129,6 @@ void Renderer::_DoFlush()
                 texture.text += line.text[col++];
             print_group();
         }
-
-        line.texture_cache.RemoveTheRest(tit);
     }
 
     _window->DrawCursor(_cursor_row, _cursor_col, _def_attr.fg.value(), _mode);
