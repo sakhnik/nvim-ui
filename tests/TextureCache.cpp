@@ -85,6 +85,32 @@ suite s = [] {
             expect(eq("Bet"s, dump(c)));
             expect(eq("Bet"s, dump2(c)));
         };
+
+        "move"_test = [&] {
+            TextureCache c1;
+            {
+                auto s = c1.GetScanner();
+                expect(s.EnsureNext(TextureCache::Texture{.col = 0, .text = "T"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 2, .text = "e"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 4, .text = "s"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 6, .text = "t"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 8, .text = "2"}, generator));
+            }
+            TextureCache c2;
+            {
+                auto s = c2.GetScanner();
+                expect(s.EnsureNext(TextureCache::Texture{.col = 1, .text = "Q"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 3, .text = "W"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 5, .text = "E"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture{.col = 7, .text = "R"}, generator));
+            }
+
+            c1.MoveFrom(c2, 2, 7);
+            expect(eq("TeWsEt2"s, dump(c1)));
+            expect(eq("TeWsEt2"s, dump2(c1)));
+            expect(eq("QR"s, dump(c2)));
+            expect(eq("QR"s, dump2(c2)));
+        };
     };
 };
 
