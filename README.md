@@ -1,4 +1,4 @@
-# neovim-sdl2
+# nvim-ui
 
 NeoVim UI implemented in C++ using SDL2, pango/cairo.
 
@@ -36,5 +36,5 @@ In Windows, the required font could be installed with [chocolatey](https://commu
 ```
 choco install neovim --pre
 choco install dejavufonts
-choco install .\neovim-sdl2.0.0.1.nupkg
+choco install .\nvim-ui.0.0.1.nupkg
 ```

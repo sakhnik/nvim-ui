@@ -25,8 +25,8 @@ index 6a85203..aa9280c 100644
  pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
  pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
  pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pango)
-@@ -29,6 +30,7 @@ set_target_properties(nvim-sdl2 PROPERTIES
- target_link_libraries(nvim-sdl2 PUBLIC
+@@ -29,6 +30,7 @@ set_target_properties(nvim-ui PROPERTIES
+ target_link_libraries(nvim-ui PUBLIC
      ${CMAKE_THREAD_LIBS_INIT}
      PkgConfig::LIBUV
 +    PkgConfig::MSGPACK

@@ -3,25 +3,25 @@
 <!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
-    <id>neovim-sdl2</id>
+    <id>nvim-ui</id>
     <version>VERSION</version>
     <packageSourceUrl>PACKAGE_SOURCE_URL</packageSourceUrl>
     <owners>Anatolii Sakhnik</owners>
 
-    <title>neovim-sdl2 (Install)</title>
+    <title>nvim-ui (Install)</title>
     <authors>Anatolii Sakhnik</authors>
-    <projectUrl>https://github.com/sakhnik/neovim-sdl2</projectUrl>
-    <iconUrl>https://raw.githubusercontent.com/sakhnik/neovim-sdl2/main/res/icon.svg</iconUrl>
+    <projectUrl>https://github.com/sakhnik/nvim-ui</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/sakhnik/nvim-ui/main/res/icon.svg</iconUrl>
     <copyright>Anatolii Sakhnik, 2021</copyright>
-    <licenseUrl>https://github.com/sakhnik/neovim-sdl2/blob/main/LICENSE</licenseUrl>
+    <licenseUrl>https://github.com/sakhnik/nvim-ui/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <projectSourceUrl>https://github.com/sakhnik/neovim-sdl2</projectSourceUrl>
-    <tags>neovim-sdl2 neovim</tags>
+    <projectSourceUrl>https://github.com/sakhnik/nvim-ui</projectSourceUrl>
+    <tags>nvim-ui neovim</tags>
     <summary>NeoVim GUI C++/SDL2/pango/cairo</summary>
     <description>NeoVim GUI implemented in C++. SDL2 for hardware accelerated rendering. Pango for proper text layout.
       Requires nvim binary available in the executable search path.
     </description>
-    <releaseNotes>https://github.com/sakhnik/neovim-sdl2/blob/main/CHANGELOG.md</releaseNotes>
+    <releaseNotes>https://github.com/sakhnik/nvim-ui/blob/main/CHANGELOG.md</releaseNotes>
 
     <dependencies>
       <dependency id="dejavufonts" version="2.35" />

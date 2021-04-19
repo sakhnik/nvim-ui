@@ -2,4 +2,4 @@
 Verification is intended to assist the Chocolatey moderators and community
 in verifying that this package's contents are trustworthy.
  
-This package is published by the neovim-sdl2 project itself.
+This package is published by the nvim-ui project itself.

@@ -25,5 +25,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change mouse pointer on busy_start/busy_stop notifications
 - Publish to chocolatey.org
 
-[unreleased]: https://github.com/sakhnik/neovim-sdl2/compare/v1.1.0...HEAD
-[0.0.1]: https://github.com/sakhnik/neovim-sdl2/releases/tag/v0.0.1
+[unreleased]: https://github.com/sakhnik/nvim-ui/compare/v1.1.0...HEAD
+[0.0.1]: https://github.com/sakhnik/nvim-ui/releases/tag/v0.0.1

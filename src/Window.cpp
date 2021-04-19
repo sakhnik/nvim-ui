@@ -8,7 +8,7 @@ void Window::Init()
     const int WIN_W = 1024;
     const int WIN_H = 768;
 
-    _window.reset(SDL_CreateWindow("NeoVim",
+    _window.reset(SDL_CreateWindow("nvim-ui",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         WIN_W, WIN_H,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI));

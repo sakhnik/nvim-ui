@@ -18,4 +18,4 @@ add_executable(tests
     Renderer.cpp
     TextureCache.cpp
 )
-target_link_libraries(tests nvim-sdl2-lib)
+target_link_libraries(tests nvim-ui-lib)

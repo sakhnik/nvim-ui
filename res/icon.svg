@@ -16,7 +16,7 @@
    inkscape:version="1.0.2 (e86c870879, 2021-01-15, custom)"
    sodipodi:docname="icon.svg">
   <title
-     id="title219">neovim-sdl2</title>
+     id="title219">nvim-ui</title>
   <defs
      id="defs2">
     <linearGradient
@@ -107,7 +107,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title>neovim-sdl2</dc:title>
+        <dc:title>nvim-ui</dc:title>
         <cc:license
            rdf:resource="http://creativecommons.org/licenses/by/4.0/" />
         <dc:contributor>
