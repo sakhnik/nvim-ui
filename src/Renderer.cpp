@@ -122,7 +122,8 @@ void Renderer::_DoFlush()
         }
     }
 
-    _window->DrawCursor(_cursor_row, _cursor_col, _def_attr.fg.value(), _mode);
+    if (!_is_busy)
+        _window->DrawCursor(_cursor_row, _cursor_col, _def_attr.fg.value(), _mode);
     _window->Present();
 
     auto end_time = ClockT::now();
@@ -298,5 +299,6 @@ void Renderer::ModeChange(std::string_view mode)
 
 void Renderer::SetBusy(bool is_busy)
 {
+    _is_busy = is_busy;
     _window->SetBusy(is_busy);
 }

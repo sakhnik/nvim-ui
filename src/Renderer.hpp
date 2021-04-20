@@ -48,6 +48,7 @@ private:
     int _cursor_row = 0;
     int _cursor_col = 0;
     std::string _mode;
+    bool _is_busy = false;
 
     struct _Line
     {

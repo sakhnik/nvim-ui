@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Hide cursor when neovim is busy (fixes duplicate cursor in terminal)
 - External command output isn't displayed if starts with two spaces (boost::ut test failure, for instance)
 
 ## [0.0.1] - 2021-04-17
