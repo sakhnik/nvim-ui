@@ -15,6 +15,25 @@ add_definitions(-DVERSION=\"${VERSION}\")
 set(CMAKE_CXX_STANDARD 20)
 add_compile_options(-Wall)
 
+##################################################
+# spdlog
+
+include(FetchContent)
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY "https://github.com/gabime/spdlog"
+    GIT_TAG "v1.8.5"
+)
+# FetchContent_MakeAvailable(spdlog)   # can't do that because ut is being installed with "make install"
+FetchContent_GetProperties(spdlog)
+if(NOT spdlog_POPULATED)
+  FetchContent_Populate(spdlog)
+  add_subdirectory(${spdlog_SOURCE_DIR} ${spdlog_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+include_directories(${spdlog_SOURCE_DIR}/include)
+
+##################################################
+#
 add_library(nvim-ui-lib STATIC
     src/MsgPackRpc.cpp
     src/RedrawHandler.cpp
@@ -26,6 +45,7 @@ target_include_directories(nvim-ui-lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(nvim-ui-lib PUBLIC
     ${CMAKE_THREAD_LIBS_INIT}
     PkgConfig::LIBUV
+    spdlog::spdlog
     )
 
 add_executable(nvim-ui

@@ -3,6 +3,7 @@
 #include "RedrawHandler.hpp"
 #include "Window.hpp"
 #include "Input.hpp"
+#include <spdlog/spdlog.h>
 
 #include <iostream>
 #include <uv.h>
@@ -11,6 +12,7 @@
 int main(int argc, char* argv[])
 {
     setlocale(LC_CTYPE, "");
+    spdlog::info("nvim-ui v{}", VERSION);
     std::cout << "nvim-ui v" << VERSION << std::endl;
     try
     {
