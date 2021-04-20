@@ -1,7 +1,7 @@
 #include "Input.hpp"
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
-#include <iostream>
+#include "Logger.hpp"
 #include <SDL2/SDL.h>
 
 
@@ -51,9 +51,7 @@ void Input::_OnInput(std::string_view input)
             _StartTimer();
             size_t consumed = resp.as<size_t>();
             if (consumed < input_size)
-            {
-                std::cerr << "[input] Consumed " << consumed << "/" << input_size << " bytes" << std::endl;
-            }
+                Logger::I().warn("[input] Consumed {}/{} bytes", consumed, input_size);
         }
     );
 }
@@ -186,7 +184,7 @@ void Input::_PollEvents()
                     if (1 == strlen(keyname))
                         _RawInput(keyname);
                     else
-                        std::cerr << "Key " << keyname << " not handled" << std::endl;
+                        Logger::I().warn("Key {} not handled", keyname);
                 }
                 break;
             }

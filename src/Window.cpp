@@ -1,5 +1,6 @@
 #include "Window.hpp"
-#include <iostream>
+#include "Logger.hpp"
+#include <sstream>
 
 void Window::Init()
 {
@@ -16,16 +17,16 @@ void Window::Init()
 
     SDL_RendererInfo info;
     SDL_GetRendererInfo(_renderer.get(), &info);
-    std::cout << "Using renderer " << info.name << ":";
+    std::ostringstream oss;
     if ((info.flags & SDL_RENDERER_SOFTWARE))
-        std::cout << " software";
+        oss << " software";
     if ((info.flags & SDL_RENDERER_ACCELERATED))
-        std::cout << " accelerated";
+        oss << " accelerated";
     if ((info.flags & SDL_RENDERER_PRESENTVSYNC))
-        std::cout << " vsync";
+        oss << " vsync";
     if ((info.flags & SDL_RENDERER_TARGETTEXTURE))
-        std::cout << " target_texture";
-    std::cout << std::endl;
+        oss << " target_texture";
+    Logger::I().info("Using renderer {}:{}", info.name, oss.str());
 
     // Get the window size in pixels to cope with HiDPI
     int wp{}, hp{};

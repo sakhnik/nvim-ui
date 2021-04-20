@@ -1,7 +1,7 @@
 #include "RedrawHandler.hpp"
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
-#include <iostream>
+#include "Logger.hpp"
 
 
 RedrawHandler::RedrawHandler(MsgPackRpc *rpc, Renderer *renderer)
@@ -45,7 +45,7 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
 {
     if (method != "redraw")
     {
-        std::cerr << "Unexpected notification " << method << std::endl;
+        Logger::I().warn("Unexpected notification {}", method);
         return;
     }
 
@@ -119,7 +119,7 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
         }
         else
         {
-            std::cerr << "Ignoring redraw " << subtype << std::endl;
+            Logger::I().warn("Ignoring redraw {}", subtype);
         }
     }
 }
@@ -212,7 +212,7 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
         else if (key == "undercurl")
             attr.flags |= HlAttr::F_UNDERCURL;
         else
-            std::cerr << "Unknown rgb attribute: " << key << std::endl;
+            Logger::I().warn("Unknown rgb attribute: {}", key);
     }
     // info = inst[3]
     _renderer->HlAttrDefine(hl_id, attr);

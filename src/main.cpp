@@ -3,17 +3,18 @@
 #include "RedrawHandler.hpp"
 #include "Window.hpp"
 #include "Input.hpp"
-#include <spdlog/spdlog.h>
+#include "Logger.hpp"
+#include <spdlog/cfg/env.h>
 
-#include <iostream>
 #include <uv.h>
 
 
 int main(int argc, char* argv[])
 {
     setlocale(LC_CTYPE, "");
-    spdlog::info("nvim-ui v{}", VERSION);
-    std::cout << "nvim-ui v" << VERSION << std::endl;
+    spdlog::cfg::load_env_levels();
+
+    Logger::I().info("nvim-ui v{}", VERSION);
     try
     {
         auto loop = uv_default_loop();
@@ -62,7 +63,7 @@ int main(int argc, char* argv[])
         uv_process_t child_req;
         if (int r = ::uv_spawn(loop, &child_req, &options))
         {
-            std::cerr << uv_strerror(r) << std::endl;
+            Logger::I().error("Failed to spawn: {}", uv_strerror(r));
             return 1;
         }
 
@@ -80,7 +81,7 @@ int main(int argc, char* argv[])
     }
     catch (std::exception& e)
     {
-        std::cout << "Exception: " << e.what() << std::endl;
+        Logger::I().error("Exception: {}", e.what());
     }
 
     return 0;
