@@ -26,6 +26,7 @@ APP_DIR="$APP.AppDir"
 
 cmake -B $APP_BUILD_DIR -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${APP_DIR}/usr
 make -C $APP_BUILD_DIR VERBOSE=1 install
+make -C $APP_BUILD_DIR VERBOSE=1 install
 
 ########################################################################
 # Get helper functions and move to AppDir
@@ -49,7 +50,7 @@ fi
 chmod +x "$APP_BUILD_DIR"/linuxdeploy-x86_64.AppImage
 
 # metainfo is not packaged automatically by linuxdeploy
-mkdir "$APP_DIR/usr/share/metainfo/"
+mkdir -p "$APP_DIR/usr/share/metainfo/"
 # TODO
 #cp "$ROOT_DIR/res/nvim-ui.appdata.xml" "$APP_DIR/usr/share/metainfo/"
 
