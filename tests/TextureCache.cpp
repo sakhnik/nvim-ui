@@ -39,9 +39,9 @@ suite s = [] {
             TextureCache c;
             auto s = c.GetScanner();
 
-            expect(s.EnsureNext(TextureCache::Texture{.col = 0, .text = "He"}, generator));
-            expect(s.EnsureNext(TextureCache::Texture{.col = 2, .text = "llo"}, generator));
-            expect(s.EnsureNext(TextureCache::Texture{.col = 3, .text = " world"}, generator));
+            expect(s.EnsureNext(TextureCache::Texture(0, 1, 0, "He"), generator));
+            expect(s.EnsureNext(TextureCache::Texture(2, 1, 0, "llo"), generator));
+            expect(s.EnsureNext(TextureCache::Texture(3, 1, 0, " world"), generator));
 
             expect(eq("Hello world"s, dump(c)));
             expect(eq("Hello world"s, dump2(c)));
@@ -51,16 +51,16 @@ suite s = [] {
             TextureCache c;
             {
                 auto s = c.GetScanner();
-                expect(s.EnsureNext(TextureCache::Texture{.col = 0, .text = "He"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 2, .text = "llo"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 3, .text = " world"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture(0, 1, 0, "He"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(2, 1, 0, "llo"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(3, 1, 0, " world"), generator));
             }
 
             {
                 auto s = c.GetScanner();
-                expect(!s.EnsureNext(TextureCache::Texture{.col = 0, .text = "He"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 2, .text = "llo "}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 3, .text = "again"}, generator));
+                expect(!s.EnsureNext(TextureCache::Texture(0, 1, 0, "He"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(2, 1, 0, "llo "), generator));
+                expect(s.EnsureNext(TextureCache::Texture(3, 1, 0, "again"), generator));
             }
             expect(eq("Hello again"s, dump(c)));
             expect(eq("Hello again"s, dump2(c)));
@@ -70,17 +70,17 @@ suite s = [] {
             TextureCache c;
             {
                 auto s = c.GetScanner();
-                expect(s.EnsureNext(TextureCache::Texture{.col = 0, .text = "T"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 1, .text = "e"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 2, .text = "s"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 3, .text = "t"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 4, .text = "2"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture(0, 1, 0, "T"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(1, 1, 0, "e"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(2, 1, 0, "s"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(3, 1, 0, "t"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(4, 1, 0, "2"), generator));
             }
             {
                 auto s = c.GetScanner();
-                expect(s.EnsureNext(TextureCache::Texture{.col = 0, .text = "B"}, generator));
-                expect(!s.EnsureNext(TextureCache::Texture{.col = 1, .text = "e"}, generator));
-                expect(!s.EnsureNext(TextureCache::Texture{.col = 3, .text = "t"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture(0, 1, 0, "B"), generator));
+                expect(!s.EnsureNext(TextureCache::Texture(1, 1, 0, "e"), generator));
+                expect(!s.EnsureNext(TextureCache::Texture(3, 1, 0, "t"), generator));
             }
             expect(eq("Bet"s, dump(c)));
             expect(eq("Bet"s, dump2(c)));
@@ -90,19 +90,19 @@ suite s = [] {
             TextureCache c1;
             {
                 auto s = c1.GetScanner();
-                expect(s.EnsureNext(TextureCache::Texture{.col = 0, .text = "T"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 2, .text = "e"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 4, .text = "s"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 6, .text = "t"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 8, .text = "2"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture(0, 1, 0, "T"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(2, 1, 0, "e"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(4, 1, 0, "s"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(6, 1, 0, "t"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(8, 1, 0, "2"), generator));
             }
             TextureCache c2;
             {
                 auto s = c2.GetScanner();
-                expect(s.EnsureNext(TextureCache::Texture{.col = 1, .text = "Q"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 3, .text = "W"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 5, .text = "E"}, generator));
-                expect(s.EnsureNext(TextureCache::Texture{.col = 7, .text = "R"}, generator));
+                expect(s.EnsureNext(TextureCache::Texture(1, 1, 0, "Q"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(3, 1, 0, "W"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(5, 1, 0, "E"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(7, 1, 0, "R"), generator));
             }
 
             c1.MoveFrom(c2, 2, 7);

@@ -16,6 +16,14 @@ public:
         unsigned hl_id = 0;
         std::string text;
         IWindow::ITexture::PtrT texture;
+
+        Texture(int col, int width, unsigned hl_id, std::string_view text)
+            : col{col}
+            , width{width}
+            , hl_id{hl_id}
+            , text{text}
+        {
+        }
     };
 
 private:

@@ -104,10 +104,7 @@ void Renderer::_DoFlush()
         {
             int col = chunks[i - 1];
             int end = chunks[i];
-            TextureCache::Texture texture;
-            texture.col = col;
-            texture.hl_id = line.hl_id[col];
-            texture.width = end - col;
+            TextureCache::Texture texture(col, end - col, line.hl_id[col], "");
             while (col < end)
                 texture.text += line.text[col++];
 
