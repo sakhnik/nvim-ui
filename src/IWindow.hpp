@@ -3,6 +3,7 @@
 #include "HlAttr.hpp"
 #include <utility>
 #include <memory>
+#include <string_view>
 
 struct IWindow
 {

@@ -12,9 +12,11 @@
 
 int main(int argc, char *argv[])
 {
-    bool is_tty = ISATTY(FILENO(stdout));
-
     using namespace boost::ut;
+
+#if defined(__GNUC__) && (__GNUC___ > 5)
+    bool is_tty = ISATTY(FILENO(stdout));
+    // Ubuntu 18.04 complains
     cfg<override> = {
         .filter = argc > 1 ? argv[1] : "",
         .colors = {
@@ -24,6 +26,8 @@ int main(int argc, char *argv[])
         },
         .dry_run = false,
     };
+#endif
+
     expect(1_i == 1);
     return 0;
 }

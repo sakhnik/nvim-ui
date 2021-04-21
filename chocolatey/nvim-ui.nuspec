@@ -11,7 +11,7 @@
     <title>nvim-ui (Install)</title>
     <authors>Anatolii Sakhnik</authors>
     <projectUrl>https://github.com/sakhnik/nvim-ui</projectUrl>
-    <iconUrl>https://raw.githubusercontent.com/sakhnik/nvim-ui/main/res/icon.svg</iconUrl>
+    <iconUrl>https://raw.githubusercontent.com/sakhnik/nvim-ui/main/res/nvim-ui.svg</iconUrl>
     <copyright>Anatolii Sakhnik, 2021</copyright>
     <licenseUrl>https://github.com/sakhnik/nvim-ui/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
