@@ -26,7 +26,7 @@ void Window::Init()
         oss << " vsync";
     if ((info.flags & SDL_RENDERER_TARGETTEXTURE))
         oss << " target_texture";
-    Logger::I().info("Using renderer {}:{}", info.name, oss.str());
+    Logger().info("Using renderer {}:{}", info.name, oss.str());
 
     // Get the window size in pixels to cope with HiDPI
     int wp{}, hp{};

@@ -130,7 +130,7 @@ void Renderer::_DoFlush()
 
     auto end_time = ClockT::now();
     oss << " " << std::chrono::duration<double>(end_time - _last_flush_time).count();
-    Logger::I().debug("Flush {}", oss.str());
+    Logger().debug("Flush {}", oss.str());
 }
 
 size_t Renderer::_SplitChunks(const _Line &line, size_t chunks[])
@@ -177,7 +177,7 @@ size_t Renderer::_SplitChunks(const _Line &line, size_t chunks[])
 
 void Renderer::GridLine(int row, int col, std::string_view chunk, unsigned hl_id, int repeat)
 {
-    Logger::I().debug("Line row={} col={} text={} hl_id={} repeat={}", row, col, chunk, hl_id, repeat);
+    Logger().debug("Line row={} col={} text={} hl_id={} repeat={}", row, col, chunk, hl_id, repeat);
     _AnticipateFlush();
 
     _Line &line = _lines[row];
@@ -192,7 +192,7 @@ void Renderer::GridLine(int row, int col, std::string_view chunk, unsigned hl_id
 
 void Renderer::GridCursorGoto(int row, int col)
 {
-    Logger::I().debug("CursorGoto row={} col={}", row, col);
+    Logger().debug("CursorGoto row={} col={}", row, col);
     _AnticipateFlush();
     _cursor_row = row;
     _cursor_col = col;
@@ -200,7 +200,7 @@ void Renderer::GridCursorGoto(int row, int col)
 
 void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
 {
-    Logger::I().debug("Scroll top={} bot={} left={} right={} rows={}", top, bot, left, right, rows);
+    Logger().debug("Scroll top={} bot={} left={} right={} rows={}", top, bot, left, right, rows);
     _AnticipateFlush();
     auto copy = [&](int row, int row_from) {
         auto &line_from = _lines[row_from];
@@ -232,7 +232,7 @@ void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
 
 void Renderer::GridClear()
 {
-    Logger::I().debug("Clear");
+    Logger().debug("Clear");
     _AnticipateFlush();
     for (auto &line : _lines)
     {
@@ -246,13 +246,13 @@ void Renderer::GridClear()
 
 void Renderer::HlAttrDefine(unsigned hl_id, HlAttr attr)
 {
-    Logger::I().debug("HlAttrDefine {}", hl_id);
+    Logger().debug("HlAttrDefine {}", hl_id);
     _hl_attr[hl_id] = attr;
 }
 
 void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
 {
-    Logger::I().debug("DefaultColorSet fg={} bg={}", fg, bg);
+    Logger().debug("DefaultColorSet fg={} bg={}", fg, bg);
     _def_attr.fg = fg;
     _def_attr.bg = bg;
 
@@ -293,7 +293,7 @@ void Renderer::OnResized()
 
 void Renderer::GridResize(int width, int height)
 {
-    Logger::I().debug("GridResize width={} height={}", width, height);
+    Logger().debug("GridResize width={} height={}", width, height);
     _lines.resize(height);
     for (auto &line : _lines)
     {
@@ -304,13 +304,13 @@ void Renderer::GridResize(int width, int height)
 
 void Renderer::ModeChange(std::string_view mode)
 {
-    Logger::I().debug("ModeChange {}", mode);
+    Logger().debug("ModeChange {}", mode);
     _mode = mode;
 }
 
 void Renderer::SetBusy(bool is_busy)
 {
-    Logger::I().debug("SetBusy {}", is_busy);
+    Logger().debug("SetBusy {}", is_busy);
     _is_busy = is_busy;
     _window->SetBusy(is_busy);
 }

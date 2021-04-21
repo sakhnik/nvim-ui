@@ -40,6 +40,7 @@ add_library(nvim-ui-lib STATIC
     src/Renderer.cpp
     src/TextureCache.cpp
     src/Timer.cpp
+    src/Logger.cpp
 )
 target_include_directories(nvim-ui-lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(nvim-ui-lib PUBLIC

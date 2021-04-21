@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
     setlocale(LC_CTYPE, "");
     spdlog::cfg::load_env_levels();
 
-    Logger::I().info("nvim-ui v{}", VERSION);
+    Logger().info("nvim-ui v{}", VERSION);
     try
     {
         auto loop = uv_default_loop();
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
         uv_process_t child_req;
         if (int r = ::uv_spawn(loop, &child_req, &options))
         {
-            Logger::I().error("Failed to spawn: {}", uv_strerror(r));
+            Logger().error("Failed to spawn: {}", uv_strerror(r));
             return 1;
         }
 
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
     }
     catch (std::exception& e)
     {
-        Logger::I().error("Exception: {}", e.what());
+        Logger().error("Exception: {}", e.what());
     }
 
     return 0;

@@ -45,7 +45,7 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
 {
     if (method != "redraw")
     {
-        Logger::I().warn("Unexpected notification {}", method);
+        Logger().warn("Unexpected notification {}", method);
         return;
     }
 
@@ -119,7 +119,7 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
         }
         else
         {
-            Logger::I().warn("Ignoring redraw {}", subtype);
+            Logger().warn("Ignoring redraw {}", subtype);
         }
     }
 }
@@ -212,7 +212,7 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
         else if (key == "undercurl")
             attr.flags |= HlAttr::F_UNDERCURL;
         else
-            Logger::I().warn("Unknown rgb attribute: {}", key);
+            Logger().warn("Unknown rgb attribute: {}", key);
     }
     // info = inst[3]
     _renderer->HlAttrDefine(hl_id, attr);

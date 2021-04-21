@@ -51,7 +51,7 @@ void Input::_OnInput(std::string_view input)
             _StartTimer();
             size_t consumed = resp.as<size_t>();
             if (consumed < input_size)
-                Logger::I().warn("[input] Consumed {}/{} bytes", consumed, input_size);
+                Logger().warn("[input] Consumed {}/{} bytes", consumed, input_size);
         }
     );
 }
@@ -184,7 +184,7 @@ void Input::_PollEvents()
                     if (1 == strlen(keyname))
                         _RawInput(keyname);
                     else
-                        Logger::I().warn("Key {} not handled", keyname);
+                        Logger().warn("Key {} not handled", keyname);
                 }
                 break;
             }
