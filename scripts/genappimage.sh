@@ -24,9 +24,10 @@ APP_DIR="$APP.AppDir"
 # Compile nvim-ui and install it into AppDir
 ########################################################################
 
-cmake -B $APP_BUILD_DIR -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${APP_DIR}/usr
-make -C $APP_BUILD_DIR VERBOSE=1 install
-make -C $APP_BUILD_DIR VERBOSE=1 install
+cmake -B $APP_BUILD_DIR -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+make -C $APP_BUILD_DIR VERBOSE=1
+make -C $APP_BUILD_DIR VERBOSE=1 test
+make -C $APP_BUILD_DIR DESTDIR=${APP_DIR} VERBOSE=1 install
 
 ########################################################################
 # Get helper functions and move to AppDir
