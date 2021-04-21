@@ -3,8 +3,8 @@ on:
   push:
     tags:
       - "v*"
-    branches:
-      - "main"
+  workflow_dispatch:
+
 jobs:
   prep:
     runs-on: ubuntu-latest
@@ -58,46 +58,45 @@ jobs:
         path: dist/nvim-ui*.nupkg
         retention-days: 1
 
-#  publish:
-#    needs: [prep, windows]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/download-artifact@v2
-#      - if: github.event_name == 'workflow_dispatch'
-#        run: echo "TAG_NAME=${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
-#      - if: github.event_name == 'schedule'
-#        run: echo 'TAG_NAME=nightly' >> $GITHUB_ENV
-#      - if: github.event_name == 'push'
-#        run: |
-#          TAG_NAME=${{ github.ref }}
-#          echo "TAG_NAME=${TAG_NAME#refs/tags/}" >> $GITHUB_ENV
-#      - if: env.TAG_NAME == 'latest'
-#        run: echo 'SUBJECT=nvim-ui development (prerelease) build' >> $GITHUB_ENV
-#      - if: env.TAG_NAME != 'latest'
-#        run: echo 'SUBJECT=nvim-ui release build' >> $GITHUB_ENV
-#      - if: env.TAG_NAME == 'latest'
-#        uses: dev-drprasad/delete-tag-and-release@v0.1.2
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          delete_release: true
-#          tag_name: latest
-#      - uses: meeDamian/github-release@2.0
-#        with:
-#          token: ${{ secrets.GITHUB_TOKEN }}
-#          tag: ${{ env.TAG_NAME }}
-#          name: ${{ needs.prep.outputs.release }}
-#          prerelease: ${{ env.TAG_NAME == 'latest' }}
-#          commitish: ${{ github.sha }}
-#          gzip: false
-#          allow_override: ${{ env.TAG_NAME == 'latest' }}
-#          files: |
-#            nvim-ui-nupkg.nupkg:./windows/nvim-win64.zip
-#          body: |
-#            ${{ env.SUBJECT }}
-#            ```
-#            ${{ needs.prep.outputs.release }}```
-#            ## Install
-#            ### Windows
-#            1. Install with chocolatey `choco install nvim-ui -s .`
-#            2. Run `nvim-ui.exe`
+  publish:
+    needs: [prep, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+      - if: github.event_name == 'workflow_dispatch'
+        run: echo "TAG_NAME=latest" >> $GITHUB_ENV
+      - if: github.event_name == 'push'
+        run: |
+          TAG_NAME=${{ github.ref }}
+          echo "TAG_NAME=${TAG_NAME#refs/tags/}" >> $GITHUB_ENV
+      - if: env.TAG_NAME == 'latest'
+        run: echo 'SUBJECT=nvim-ui development (prerelease) build' >> $GITHUB_ENV
+      - if: env.TAG_NAME != 'latest'
+        run: echo 'SUBJECT=nvim-ui release build' >> $GITHUB_ENV
+      - if: env.TAG_NAME == 'latest'
+        uses: dev-drprasad/delete-tag-and-release@v0.1.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          delete_release: true
+          tag_name: latest
+      - uses: meeDamian/github-release@2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.TAG_NAME }}
+          name: ${{ needs.prep.outputs.release }}
+          prerelease: ${{ env.TAG_NAME == 'latest' }}
+          commitish: ${{ github.sha }}
+          gzip: false
+          allow_override: ${{ env.TAG_NAME == 'latest' }}
+          files: |
+            nvim-ui.${{ needs.prep.outputs.release }}.nupkg:nvim-ui-nupkg/nvim-ui.${{ needs.prep.outputs.release }}.nupkg
+          body: |
+            ${{ env.SUBJECT }}
+            ```
+            ${{ needs.prep.outputs.release }}
+            ```
+            ## Install
+            ### Windows
+            1. Install with chocolatey `choco install nvim-ui -s .`
+            2. Run `nvim-ui.exe`
