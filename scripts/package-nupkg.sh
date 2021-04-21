@@ -14,14 +14,10 @@ for dll in $dlls; do
 done
 
 cp -r chocolatey/* dist/
-version=$(grep -Po '(?<=set\(VERSION )[^) ]+' CMakeLists.txt)
-if git describe --tags 2>/dev/null | grep -F "$version" >/dev/null 2>&1; then
-  sed -i "s|PACKAGE_SOURCE_URL|https://github.com/sakhnik/nvim-ui/tree/v${version}/chocolatey|" dist/*.nuspec
-  echo "Release version is ${version}"
+if [[ "$NVIM_UI_RELEASE" == "$NVIM_UI_VERSION" ]]; then
+  sed -i "s|PACKAGE_SOURCE_URL|https://github.com/sakhnik/nvim-ui/tree/v${NVIM_UI_VERSION}/chocolatey|" dist/*.nuspec
 else
   sed -i "s|PACKAGE_SOURCE_URL|https://github.com/sakhnik/nvim-ui/tree/${GITHUB_SHA}/chocolatey|" dist/*.nuspec
-  version="${version}-dev${GITHUB_RUN_NUMBER}-${GITHUB_SHA:0:7}"
-  echo "Development version is ${version}"
 fi
 
-sed -i "s|VERSION|${version}|" dist/*.nuspec
+sed -i "s|VERSION|${NVIM_UI_RELEASE}|" dist/*.nuspec
