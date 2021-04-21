@@ -87,8 +87,7 @@ void Renderer::_DoFlush()
         line.dirty = false;
 
         // Split the cells into chunks by the same hl_id
-        size_t chunks[line.hl_id.size() + 1];
-        size_t chunks_size = _SplitChunks(line, chunks);
+        auto chunks = _SplitChunks(line);
 
         auto texture_generator = [&](const TextureCache::Texture &tex) {
                 // Paint the text on the surface carefully
@@ -101,7 +100,7 @@ void Renderer::_DoFlush()
         auto texture_cache_scanner = tex_cache.GetScanner();
 
         // Print and cache the chunks individually
-        for (size_t i = 1; i < chunks_size; ++i)
+        for (size_t i = 1; i < chunks.size(); ++i)
         {
             int col = chunks[i - 1];
             int end = chunks[i];
@@ -132,23 +131,23 @@ void Renderer::_DoFlush()
     Logger().debug("Flush {}", oss.str());
 }
 
-size_t Renderer::_SplitChunks(const _Line &line, size_t chunks[])
+std::vector<size_t> Renderer::_SplitChunks(const _Line &line)
 {
     // Split the line into the chunks with contiguous highlighting.
     // However, contiguous spaces should form their own chunk to avoid unnecessary text rerendering.
     const auto &hl = line.hl_id;
     const auto &text = line.text;
 
-    size_t n = 0;
-    chunks[n++] = 0;
-    chunks[n++] = 1;
+    std::vector<size_t> chunks;
+    chunks.push_back(0);
+    chunks.push_back(1);
     bool is_space = false;
-    while (chunks[n - 1] < hl.size())
+    while (chunks.back() < hl.size())
     {
-        size_t &back = chunks[n - 1];
-        if (hl[back] != hl[chunks[n - 2]])
+        size_t back = chunks.back();
+        if (hl[back] != hl[chunks[chunks.size() - 2]])
         {
-            chunks[n++] = back + 1;
+            chunks.push_back(back + 1);
             is_space = false;
         }
         else if (!is_space && back > 0 && text[back] == " " && text[back - 1] == " ")
@@ -158,20 +157,20 @@ size_t Renderer::_SplitChunks(const _Line &line, size_t chunks[])
             // If the line started with spaces, no need to form a new chunk. Otherwise:
             if (back > 2)
             {
-                chunks[n - 1] = back - 1;
-                chunks[n++] = back + 1;
+                chunks.back() = back - 1;
+                chunks.push_back(back + 1);
             }
         }
         else if (is_space && text[back] != " ")
         {
             // End of space chunk
             is_space = false;
-            chunks[n++] = back + 1;
+            chunks.push_back(back + 1);
         }
         else
-            ++back;
+            ++chunks.back();
     }
-    return n;
+    return chunks;
 }
 
 void Renderer::GridLine(int row, int col, std::string_view chunk, unsigned hl_id, int repeat)

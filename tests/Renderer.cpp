@@ -13,9 +13,8 @@ suite s = [] {
     "SplitChunks"_test = [] {
         "empty"_test = [] {
             Renderer::_Line line;
-            size_t chunks[line.hl_id.size() + 1];
-            size_t n = Renderer::_SplitChunks(line, chunks);
-            expect(2_u == n);
+            auto chunks = Renderer::_SplitChunks(line);
+            expect(2_u == chunks.size());
             expect(0_u == chunks[0]);
             expect(0_u == chunks[0]);
         };
@@ -25,9 +24,8 @@ suite s = [] {
                 .text = {"H"s, "e"s, "l"s, "l"s, "o"s},
                 .hl_id = {0, 0, 0, 0, 0},
             };
-            size_t chunks[line.hl_id.size() + 1];
-            size_t n = Renderer::_SplitChunks(line, chunks);
-            expect(2_u == n);
+            auto chunks = Renderer::_SplitChunks(line);
+            expect(2_u == chunks.size());
             expect(0_u == chunks[0]);
             expect(5_u == chunks[1]);
         };
@@ -37,9 +35,8 @@ suite s = [] {
                 .text = {"a"s, "b"s, "c"s, "d"s},
                 .hl_id = {0, 0, 1, 1},
             };
-            size_t chunks[line.hl_id.size() + 1];
-            size_t n = Renderer::_SplitChunks(line, chunks);
-            expect(3_u == n);
+            auto chunks = Renderer::_SplitChunks(line);
+            expect(3_u == chunks.size());
             expect(0_u == chunks[0]);
             expect(2_u == chunks[1]);
             expect(4_u == chunks[2]);
@@ -50,9 +47,8 @@ suite s = [] {
                 .text = {"a"s, "b"s, " "s, " "s, "c"s},
                 .hl_id = {0, 0, 0, 0, 0},
             };
-            size_t chunks[line.hl_id.size() + 1];
-            size_t n = Renderer::_SplitChunks(line, chunks);
-            expect(4_u == n);
+            auto chunks = Renderer::_SplitChunks(line);
+            expect(4_u == chunks.size());
             expect(0_u == chunks[0]);
             expect(2_u == chunks[1]);
             expect(4_u == chunks[2]);
@@ -64,9 +60,8 @@ suite s = [] {
                 .text = {" "s, " "s, " "s, "a"s, "b"s},
                 .hl_id = {0, 0, 0, 0, 0},
             };
-            size_t chunks[line.hl_id.size() + 1];
-            size_t n = Renderer::_SplitChunks(line, chunks);
-            expect(3_u == n);
+            auto chunks = Renderer::_SplitChunks(line);
+            expect(3_u == chunks.size());
             expect(0_u == chunks[0]);
             expect(3_u == chunks[1]);
             expect(5_u == chunks[2]);
@@ -77,9 +72,8 @@ suite s = [] {
                 .text = {" "s, " "s, "a"s, "b"s},
                 .hl_id = {0, 0, 0, 0},
             };
-            size_t chunks[line.hl_id.size() + 1];
-            size_t n = Renderer::_SplitChunks(line, chunks);
-            expect(3_u == n);
+            auto chunks = Renderer::_SplitChunks(line);
+            expect(3_u == chunks.size());
             expect(0_u == chunks[0]);
             expect(2_u == chunks[1]);
             expect(4_u == chunks[2]);

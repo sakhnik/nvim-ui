@@ -62,7 +62,7 @@ private:
 
     std::vector<_Line> _lines;
 
-    static size_t _SplitChunks(const _Line &, size_t chunks[]);
+    static std::vector<size_t> _SplitChunks(const _Line &);
 
     // Make sure flush requests are executed not too frequently,
     // but cleanly.
