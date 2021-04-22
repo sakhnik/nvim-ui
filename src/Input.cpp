@@ -32,8 +32,6 @@ void Input::_StartTimer()
 
 void Input::_OnInput(std::string_view input)
 {
-    _timer.Stop();
-
     size_t input_size = input.size();
     _rpc->Request(
         [&](MsgPackRpc::PackerT &pk) {
@@ -41,14 +39,13 @@ void Input::_OnInput(std::string_view input)
             pk.pack_array(1);
             pk.pack(input);
         },
-        [this, input_size](const msgpack::object &err, const msgpack::object &resp) {
+        [input_size](const msgpack::object &err, const msgpack::object &resp) {
             if (!err.is_nil())
             {
                 std::ostringstream oss;
                 oss << "Input error: " << err;
                 throw std::runtime_error(oss.str());
             }
-            _StartTimer();
             size_t consumed = resp.as<size_t>();
             if (consumed < input_size)
                 Logger().warn("[input] Consumed {}/{} bytes", consumed, input_size);
