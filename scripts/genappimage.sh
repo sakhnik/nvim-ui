@@ -90,9 +90,4 @@ fi
 ./linuxdeploy-x86_64.AppImage --appdir $APP.AppDir -d $ROOT_DIR/res/nvim-ui.desktop -i \
 "$ROOT_DIR/res/nvim-ui.svg" --output appimage
 
-# Moving the final executable to a different folder so it isn't in the
-# way for a subsequent build.
-
-#mv "$ROOT_DIR"/build/nvim.appimage* "$ROOT_DIR"/build/bin
-
 echo 'genappimage.sh: finished'

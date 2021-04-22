@@ -114,7 +114,7 @@ jobs:
         allow_override: ${{ env.TAG_NAME == 'latest' }}
         files: |
           nvim-ui.${{ needs.prep.outputs.release }}.nupkg:nvim-ui-nupkg/nvim-ui.${{ needs.prep.outputs.release }}.nupkg
-          nvim-ui.appimage:nvim-ui-appimage/nvim-ui.appimage
+          nvim-ui-${{ needs.prep.outputs.release }}.appimage:nvim-ui-appimage/nvim-ui.appimage
         body: |
           ${{ env.SUBJECT }}
           ```
@@ -130,10 +130,10 @@ jobs:
 
           ### Linux (x64)
 
-          1. Download **nvim-ui.appimage**
-          2. Run `chmod u+x nvim-ui.appimage && ./nvim-ui.appimage`
+          1. Download **nvim-ui-${{ needs.prep.outputs.release }}.appimage**
+          2. Run `chmod u+x nvim-ui-${{ needs.prep.outputs.release }}.appimage && ./nvim-ui-${{ needs.prep.outputs.release }}.appimage`
              - If your system does not have FUSE you can [extract the appimage](https://github.com/AppImage/AppImageKit/wiki/FUSE#type-2-appimage):
              ```
-             ./nvim-ui.appimage --appimage-extract
+             ./nvim-ui-${{ needs.prep.outputs.release }}.appimage --appimage-extract
              ./squashfs-root/usr/bin/nvim-ui
              ```
