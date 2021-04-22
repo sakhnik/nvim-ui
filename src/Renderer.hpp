@@ -38,6 +38,9 @@ public:
     void ModeChange(std::string_view mode);
     void SetBusy(bool is_busy);
 
+    // Feed input keys
+    void Input(std::string_view input);
+
 private:
     MsgPackRpc *_rpc;
     IWindow *_window;

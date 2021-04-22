@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
         RedrawHandler redraw_handler(&rpc, &renderer);
         redraw_handler.AttachUI();
 
-        SdlLoop sdl_loop{loop, &rpc, &renderer};
+        SdlLoop sdl_loop{loop, &renderer};
         sdl_loop.Start();
 
         ::uv_run(loop, UV_RUN_DEFAULT);

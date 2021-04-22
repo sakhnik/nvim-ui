@@ -1,13 +1,12 @@
 #include "SdlLoop.hpp"
-#include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
 #include "Logger.hpp"
+#include <string_view>
 #include <SDL2/SDL.h>
 
 
-SdlLoop::SdlLoop(uv_loop_t *loop, MsgPackRpc *rpc, Renderer *renderer)
-    : _rpc{rpc}
-    , _renderer{renderer}
+SdlLoop::SdlLoop(uv_loop_t *loop, Renderer *renderer)
+    : _renderer{renderer}
     , _timer{loop}
 {
 }
@@ -30,29 +29,6 @@ void SdlLoop::_StartTimer()
     });
 }
 
-void SdlLoop::_OnInput(std::string_view input)
-{
-    size_t input_size = input.size();
-    _rpc->Request(
-        [&](MsgPackRpc::PackerT &pk) {
-            pk.pack("nvim_input");
-            pk.pack_array(1);
-            pk.pack(input);
-        },
-        [input_size](const msgpack::object &err, const msgpack::object &resp) {
-            if (!err.is_nil())
-            {
-                std::ostringstream oss;
-                oss << "SdlLoop error: " << err;
-                throw std::runtime_error(oss.str());
-            }
-            size_t consumed = resp.as<size_t>();
-            if (consumed < input_size)
-                Logger().warn("[input] Consumed {}/{} bytes", consumed, input_size);
-        }
-    );
-}
-
 void SdlLoop::_RawInput(const char *key)
 {
     std::string input("<");
@@ -62,7 +38,7 @@ void SdlLoop::_RawInput(const char *key)
         input += "c-";
     input += key;
     input += ">";
-    _OnInput(input);
+    _renderer->Input(input);
 }
 
 void SdlLoop::_PollEvents()
@@ -85,9 +61,9 @@ void SdlLoop::_PollEvents()
             {
                 std::string_view lt("<");
                 if (lt == event.text.text)
-                    _OnInput("<lt>");
+                    _renderer->Input("<lt>");
                 else
-                    _OnInput(event.text.text);
+                    _renderer->Input(event.text.text);
             }
             break;
         case SDL_KEYUP:
