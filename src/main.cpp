@@ -2,7 +2,7 @@
 #include "Renderer.hpp"
 #include "RedrawHandler.hpp"
 #include "Window.hpp"
-#include "Input.hpp"
+#include "SdlLoop.hpp"
 #include "Logger.hpp"
 #include <spdlog/cfg/env.h>
 
@@ -77,8 +77,8 @@ int main(int argc, char* argv[])
         RedrawHandler redraw_handler(&rpc, &renderer);
         redraw_handler.AttachUI();
 
-        Input input{loop, &rpc, &renderer};
-        input.Start();
+        SdlLoop sdl_loop{loop, &rpc, &renderer};
+        sdl_loop.Start();
 
         ::uv_run(loop, UV_RUN_DEFAULT);
     }

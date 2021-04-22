@@ -7,11 +7,11 @@
 class MsgPackRpc;
 class Renderer;
 
-class Input
+class SdlLoop
 {
 public:
-    Input(uv_loop_t *, MsgPackRpc *, Renderer *);
-    ~Input();
+    SdlLoop(uv_loop_t *, MsgPackRpc *, Renderer *);
+    ~SdlLoop();
 
     void Start();
 

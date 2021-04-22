@@ -1,36 +1,36 @@
-#include "Input.hpp"
+#include "SdlLoop.hpp"
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
 #include "Logger.hpp"
 #include <SDL2/SDL.h>
 
 
-Input::Input(uv_loop_t *loop, MsgPackRpc *rpc, Renderer *renderer)
+SdlLoop::SdlLoop(uv_loop_t *loop, MsgPackRpc *rpc, Renderer *renderer)
     : _rpc{rpc}
     , _renderer{renderer}
     , _timer{loop}
 {
 }
 
-Input::~Input()
+SdlLoop::~SdlLoop()
 {
     _timer.Stop();
 }
 
-void Input::Start()
+void SdlLoop::Start()
 {
     SDL_StartTextInput();
     _StartTimer();
 }
 
-void Input::_StartTimer()
+void SdlLoop::_StartTimer()
 {
     _timer.Start(10, 10, [this] {
         _PollEvents();
     });
 }
 
-void Input::_OnInput(std::string_view input)
+void SdlLoop::_OnInput(std::string_view input)
 {
     size_t input_size = input.size();
     _rpc->Request(
@@ -43,7 +43,7 @@ void Input::_OnInput(std::string_view input)
             if (!err.is_nil())
             {
                 std::ostringstream oss;
-                oss << "Input error: " << err;
+                oss << "SdlLoop error: " << err;
                 throw std::runtime_error(oss.str());
             }
             size_t consumed = resp.as<size_t>();
@@ -53,7 +53,7 @@ void Input::_OnInput(std::string_view input)
     );
 }
 
-void Input::_RawInput(const char *key)
+void SdlLoop::_RawInput(const char *key)
 {
     std::string input("<");
     if (_shift)
@@ -65,7 +65,7 @@ void Input::_RawInput(const char *key)
     _OnInput(input);
 }
 
-void Input::_PollEvents()
+void SdlLoop::_PollEvents()
 {
     SDL_Event event;
     while (SDL_PollEvent(&event))
