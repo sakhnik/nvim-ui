@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added 
 
+- Passing command line options to neovim
 - Structured logging to stderr in POSIX and debug output in Windows
 - Automatic generation of appimage for Linux
 

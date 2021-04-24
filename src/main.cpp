@@ -30,11 +30,12 @@ int main(int argc, char* argv[])
         std::string nvim("nvim");
         std::string embed("--embed");
 
-        char *args[] = {
-            nvim.data(),
-            embed.data(),
-            nullptr,
-        };
+        std::vector<char *> args;
+        args.push_back(nvim.data());
+        args.push_back(embed.data());
+        for (int i = 1; i < argc; ++i)
+            args.push_back(argv[i]);
+        args.push_back(nullptr);
 
         auto on_exit = [](uv_process_t *, int64_t exit_status, int signal) {
             exit(exit_status);
@@ -43,7 +44,7 @@ int main(int argc, char* argv[])
         uv_process_options_t options{};
         options.exit_cb = on_exit;
         options.file = nvim.data();
-        options.args = args;
+        options.args = args.data();
 #ifdef _WIN32
         // May be undefined in older versions of Ubuntu
         options.flags = UV_PROCESS_WINDOWS_HIDE | UV_PROCESS_WINDOWS_HIDE_CONSOLE;
