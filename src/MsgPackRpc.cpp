@@ -1,4 +1,5 @@
 #include "MsgPackRpc.hpp"
+#include "Logger.hpp"
 
 
 MsgPackRpc::MsgPackRpc(uv_pipe_t *stdin_pipe, uv_pipe_t *stdout_pipe)
@@ -15,7 +16,6 @@ MsgPackRpc::MsgPackRpc(uv_pipe_t *stdin_pipe, uv_pipe_t *stdout_pipe)
     };
 
     auto read_apipe = [](uv_stream_t* stream, ssize_t nread, const uv_buf_t *buf) {
-        //printf("read %li bytes in a %lu byte buffer\n", nread, buf.len);
         if (nread > 0)
         {
             MsgPackRpc *self = reinterpret_cast<MsgPackRpc*>(stream->data);
@@ -58,6 +58,13 @@ void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
 
 void MsgPackRpc::_handle_data(const char *data, size_t length)
 {
+    if (!_activated)
+    {
+        _dirty = true;
+        Logger().info("Neovim prints:\n{}", std::string_view(data, length));
+        return;
+    }
+
     _unp.buffer_consumed(length);
 
     msgpack::unpacked result;
@@ -78,4 +85,11 @@ void MsgPackRpc::_handle_data(const char *data, size_t length)
             _on_notification(arr.ptr[1].as<std::string_view>(), arr.ptr[2]);
         }
     }
+}
+
+bool MsgPackRpc::Activate()
+{
+    if (_dirty)
+        return false;
+    return _activated = true;
 }

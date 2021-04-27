@@ -23,11 +23,15 @@ public:
     using OnResponseT = std::function<void(const msgpack::object &err, const msgpack::object &resp)>;
 
     void Request(PackRequestT pack_request, OnResponseT on_response);
+    bool Activate();
 
 private:
     OnNotificationT _on_notification;
     uv_pipe_t *_stdin_pipe;
     uv_pipe_t *_stdout_pipe;
+    // If any output is captured before activation, prevent activation.
+    bool _dirty = false;
+    bool _activated = false;
     msgpack::unpacker _unp;
     uint32_t _seq = 0;
     std::map<uint32_t, OnResponseT> _requests;

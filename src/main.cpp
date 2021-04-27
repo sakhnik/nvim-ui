@@ -5,9 +5,35 @@
 #include "SdlLoop.hpp"
 #include "Logger.hpp"
 #include <spdlog/cfg/env.h>
+#include <iostream>
 
 #include <uv.h>
 
+class App
+{
+public:
+    App(uv_loop_t *loop, MsgPackRpc &rpc)
+        : _rpc{rpc}
+        , _timer{loop}
+        , _renderer(&_rpc, &_window, &_timer)
+        , _redraw_handler(&_rpc, &_renderer)
+        , _sdl_loop{loop, &_renderer}
+    {
+        if (!_rpc.Activate())
+            return;
+        _redraw_handler.AttachUI();
+        _sdl_loop.Start();
+    }
+
+private:
+    MsgPackRpc &_rpc;
+    Window _window;
+    Timer _timer;
+    Renderer _renderer;
+    RedrawHandler _redraw_handler;
+
+    SdlLoop _sdl_loop;
+};
 
 int main(int argc, char* argv[])
 {
@@ -38,6 +64,7 @@ int main(int argc, char* argv[])
         args.push_back(nullptr);
 
         auto on_exit = [](uv_process_t *, int64_t exit_status, int signal) {
+            Logger().info("Exit: status={} signal={}", exit_status, signal);
             exit(exit_status);
         };
 
@@ -72,14 +99,14 @@ int main(int argc, char* argv[])
         }
 
         MsgPackRpc rpc(&stdin_pipe, &stdout_pipe);
-        Window window;
-        Timer timer{loop};
-        Renderer renderer(&rpc, &window, &timer);
-        RedrawHandler redraw_handler(&rpc, &renderer);
-        redraw_handler.AttachUI();
 
-        SdlLoop sdl_loop{loop, &renderer};
-        sdl_loop.Start();
+        std::unique_ptr<App> app;
+        Timer delay(loop);
+        // This is a race technically. If neovim doesn't start in time,
+        // the UI will begin attaching. This may break handling of `--help`.
+        delay.Start(100, 0, [&] {
+            app.reset(new App(loop, rpc));
+        });
 
         ::uv_run(loop, UV_RUN_DEFAULT);
     }
