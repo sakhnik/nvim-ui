@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added 
 
+- TBD
+
+### Fixed
+
+- TBD
+
+## [0.0.2] - 2021-04-27
+
+### Added 
+
 - Passing command line options to neovim
 - Structured logging to stderr in POSIX and debug output in Windows
 - Automatic generation of appimage for Linux
@@ -28,5 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change mouse pointer on busy_start/busy_stop notifications
 - Publish to chocolatey.org
 
-[unreleased]: https://github.com/sakhnik/nvim-ui/compare/v0.0.1...HEAD
+[unreleased]: https://github.com/sakhnik/nvim-ui/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/sakhnik/nvim-ui/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/sakhnik/nvim-ui/releases/tag/v0.0.1
