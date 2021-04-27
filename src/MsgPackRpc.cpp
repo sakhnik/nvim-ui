@@ -1,5 +1,5 @@
 #include "MsgPackRpc.hpp"
-#include "Logger.hpp"
+#include <iostream>
 
 
 MsgPackRpc::MsgPackRpc(uv_pipe_t *stdin_pipe, uv_pipe_t *stdout_pipe)
@@ -61,7 +61,7 @@ void MsgPackRpc::_handle_data(const char *data, size_t length)
     if (!_activated)
     {
         _dirty = true;
-        Logger().info("Neovim prints:\n{}", std::string_view(data, length));
+        std::cout << std::string_view(data, length) << std::flush;
         return;
     }
 
