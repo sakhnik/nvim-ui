@@ -152,7 +152,7 @@ std::vector<size_t> Renderer::_SplitChunks(const _Line &line)
             // Make sure contiguous spaces form their own chunk
             is_space = true;
             // If the line started with spaces, no need to form a new chunk. Otherwise:
-            if (back > 2)
+            if (back > 1)
             {
                 chunks.back() = back - 1;
                 chunks.push_back(back + 1);

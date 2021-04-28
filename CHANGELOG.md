@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- TBD
+- Incorrect texture preparation when there are spaces at the end
 
 ## [0.0.2] - 2021-04-27
 
