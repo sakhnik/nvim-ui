@@ -104,9 +104,20 @@ void Renderer::_DoFlush()
         {
             int col = chunks[i - 1];
             int end = chunks[i];
-            TextureCache::Texture texture(col, end - col, line.hl_id[col], "");
+            int hl_id = line.hl_id[col];
+            TextureCache::Texture texture(col, end - col, hl_id, "");
             while (col < end)
                 texture.text += line.text[col++];
+
+            const auto hlit = _hl_attr.find(hl_id);
+            unsigned def_bg = _def_attr.bg.value();
+
+            if (texture.IsSpace()
+                && (hlit == _hl_attr.end() || hlit->second.bg.value_or(def_bg) == def_bg))
+            {
+                // No need to create empty textures coinciding with the background color
+                continue;
+            }
 
             // Test whether the texture should be rendered again
             if (texture_cache_scanner.EnsureNext(std::move(texture), texture_generator))

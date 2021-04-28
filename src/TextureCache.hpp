@@ -24,6 +24,11 @@ public:
             , text{text}
         {
         }
+
+        bool IsSpace() const
+        {
+            return text.rfind("  ", 0) == 0;
+        }
     };
 
 private:

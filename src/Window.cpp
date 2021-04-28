@@ -52,19 +52,10 @@ Window::GetRowsCols() const
     return {rows, cols};
 }
 
-namespace {
-
-inline SDL_Color GetColor(uint32_t val)
-{
-    return SDL_Color{ Uint8(val >> 16), Uint8((val >> 8) & 0xff), Uint8(val & 0xff) };
-}
-
-} //namespace
-
 void Window::Clear(unsigned bg)
 {
-    const SDL_Color bg0 = GetColor(bg);
-    SDL_SetRenderDrawColor(_renderer.get(), bg0.r, bg0.g, bg0.b, 255);
+    SDL_SetRenderDrawColor(_renderer.get(), bg >> 16, (bg >> 8) & 0xff, bg & 0xff, SDL_ALPHA_OPAQUE);
+    SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_NONE);
     SDL_RenderClear(_renderer.get());
 }
 
@@ -99,10 +90,25 @@ Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, cons
         width * _painter->GetCellWidth(), _painter->GetCellHeight(),
         32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0),
         SDL_FreeSurface);
-    _painter->Paint(surface.get(), text, attr, def_attr);
+
+    // Paint the background color
+    unsigned fg = attr.fg.value_or(def_attr.fg.value());
+    unsigned bg = attr.bg.value_or(def_attr.bg.value());
+    if ((attr.flags & HlAttr::F_REVERSE))
+        std::swap(bg, fg);
+    auto color = SDL_MapRGB(surface->format, bg >> 16, (bg >> 8) & 0xff, bg & 0xff);
+    SDL_FillRect(surface.get(), nullptr, color);
+
+    // not starts with "  "
+    if (text.rfind("  ", 0))
+    {
+        _painter->Paint(surface.get(), text, attr, def_attr);
+    }
 
     // Create a possibly hardware accelerated texture from the surface
-    return Texture::PtrT(new Texture(SDL_CreateTextureFromSurface(_renderer.get(), surface.get())));
+    std::unique_ptr<Texture> texture{new Texture(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()))};
+    SDL_SetTextureBlendMode(texture->texture.get(), SDL_BLENDMODE_NONE);
+    return Texture::PtrT(texture.release());
 }
 
 void Window::Present()
