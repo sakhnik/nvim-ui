@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(nvim-ui CXX)
 
-set(VERSION 0.0.2)
+set(VERSION 0.0.3)
 
 find_package(Threads)
 find_package(PkgConfig REQUIRED) 
