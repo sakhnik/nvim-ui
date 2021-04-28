@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 {
     using namespace boost::ut;
 
-#if defined(__GNUC__) && (__GNUC__ > 5)
+#if defined(__GNUC__) && (__GNUC__ > 9)
     bool is_tty = ISATTY(FILENO(stdout));
     // Ubuntu 18.04 complains
     cfg<override> = {
