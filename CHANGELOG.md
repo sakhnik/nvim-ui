@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Incorrect texture preparation when there are spaces at the end
 - Improved text rendering for fancy fonts like Fira Code where glyphs may be wider than one cell
+- Icon URL in chocolatey nuspec should point to a CDN
 
 ## [0.0.2] - 2021-04-27
 
