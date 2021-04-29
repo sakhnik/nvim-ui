@@ -74,7 +74,7 @@ PtrT<PangoAttrList> CreateAttrList(const HlAttr &attr)
 
 } //namespace;
 
-void Painter::Paint(SDL_Surface *surface, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
+int Painter::Paint(SDL_Surface *surface, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
     auto cr_surface = PtrT<cairo_surface_t>(
         cairo_image_surface_create_for_data(static_cast<unsigned char *>(surface->pixels),
@@ -105,5 +105,9 @@ void Painter::Paint(SDL_Surface *surface, std::string_view text, const HlAttr &a
     if (al)
         pango_layout_set_attributes(layout.get(), al.get());
 
+    PangoRectangle rect;
+    pango_layout_get_extents(layout.get(), nullptr, &rect);
+    int width = _scale_x * rect.width / PANGO_SCALE;
     pango_cairo_show_layout(cr.get(), layout.get());
+    return width;
 }

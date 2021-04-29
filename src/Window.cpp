@@ -64,24 +64,26 @@ namespace {
 
 struct Texture : Window::ITexture
 {
-    Texture(SDL_Texture *t)
+    Texture(SDL_Texture *t, int width, int height)
         : texture{t, SDL_DestroyTexture}
+        , width{width}
+        , height{height}
     {
     }
     ::PtrT<SDL_Texture> texture;
+    int width;
+    int height;
 };
 
 } //namespace;
 
 void Window::CopyTexture(int row, int col, ITexture *texture)
 {
-    SDL_Texture *t = static_cast<Texture *>(texture)->texture.get();
+    Texture *t = static_cast<Texture *>(texture);
 
-    int texW = 0;
-    int texH = 0;
-    SDL_QueryTexture(t, NULL, NULL, &texW, &texH);
-    SDL_Rect dstrect = { col * _painter->GetCellWidth(), _painter->GetCellHeight() * row, texW, texH };
-    SDL_RenderCopy(_renderer.get(), t, NULL, &dstrect);
+    SDL_Rect srcrect = { 0, 0, t->width, t->height };
+    SDL_Rect dstrect = { col * _painter->GetCellWidth(), _painter->GetCellHeight() * row, t->width, t->height };
+    SDL_RenderCopy(_renderer.get(), t->texture.get(), &srcrect, &dstrect);
 }
 
 void Window::_DumpSurface(SDL_Surface *surface, const char *fname)
@@ -121,8 +123,13 @@ void Window::_DumpTexture(SDL_Texture *texture, const char *fname)
 Window::ITexture::PtrT
 Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
+    bool has_text = 0 != text.rfind("  ", 0);
+    int pixel_width = (width + (has_text ? 1 : 0)) * _painter->GetCellWidth();
+    int pixel_height = _painter->GetCellHeight();
+
+    // Allocate a surface slightly wider than necessary
     auto surface = PtrT<SDL_Surface>(SDL_CreateRGBSurface(0,
-        width * _painter->GetCellWidth(), _painter->GetCellHeight(),
+        pixel_width, pixel_height,
         32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0),
         SDL_FreeSurface);
 
@@ -135,15 +142,16 @@ Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, cons
     SDL_FillRect(surface.get(), nullptr, color);
 
     // not starts with "  "
-    if (text.rfind("  ", 0))
+    if (has_text)
     {
-        _painter->Paint(surface.get(), text, attr, def_attr);
+        pixel_width = _painter->Paint(surface.get(), text, attr, def_attr);
         //if (text == "Hello, world!")
         //    _DumpSurface(surface.get(), "/tmp/hello.ppm");
     }
 
     // Create a possibly hardware accelerated texture from the surface
-    std::unique_ptr<Texture> texture{new Texture(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()))};
+    std::unique_ptr<Texture> texture{new Texture(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()),
+                                                 pixel_width, pixel_height)};
     SDL_SetTextureBlendMode(texture->texture.get(), SDL_BLENDMODE_NONE);
     //if (text == "Hello, world!")
     //    _DumpTexture(texture->texture.get(), "/tmp/hello2.ppm");

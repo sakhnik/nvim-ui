@@ -15,7 +15,9 @@ public:
     void CalcCellInfo();
     int GetCellWidth() const { return _cell_width; }
     int GetCellHeight() const { return _cell_height; }
-    void Paint(SDL_Surface *, std::string_view text, const HlAttr &, const HlAttr &def);
+
+    // Returns actual width
+    int Paint(SDL_Surface *, std::string_view text, const HlAttr &, const HlAttr &def);
 
 private:
     double _scale_x = 1.0;
