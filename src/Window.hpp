@@ -32,4 +32,7 @@ private:
 
     double _scale_x = 1.0;
     double _scale_y = 1.0;
+
+    void _DumpSurface(SDL_Surface *, const char *fname);
+    void _DumpTexture(SDL_Texture *, const char *fname);
 };

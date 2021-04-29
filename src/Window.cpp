@@ -1,6 +1,7 @@
 #include "Window.hpp"
 #include "Logger.hpp"
 #include <sstream>
+#include <fstream>
 
 void Window::Init()
 {
@@ -83,6 +84,40 @@ void Window::CopyTexture(int row, int col, ITexture *texture)
     SDL_RenderCopy(_renderer.get(), t, NULL, &dstrect);
 }
 
+void Window::_DumpSurface(SDL_Surface *surface, const char *fname)
+{
+    std::ofstream ofs(fname);
+    ofs << "P3 " << surface->w << " " << surface->h << " 255\n";
+    for (int y = 0; y < surface->h; ++y)
+    {
+        for (int x = 0; x < surface->w; ++x)
+        {
+            uint8_t *c = static_cast<uint8_t*>(surface->pixels) + y * surface->pitch + 4 * x;
+            ofs << (unsigned)c[2];
+            ofs << " " << (unsigned)c[1];
+            ofs << " " << (unsigned)c[0] << "\n";
+        }
+    }
+}
+
+void Window::_DumpTexture(SDL_Texture *texture, const char *fname)
+{
+    int width, height;
+    SDL_QueryTexture(texture, nullptr, nullptr, &width, &height);
+    ::PtrT<SDL_Texture> target_texture(SDL_CreateTexture(_renderer.get(), SDL_PIXELFORMAT_RGBA32,
+                                                         SDL_TEXTUREACCESS_TARGET, width, height),
+                                       SDL_DestroyTexture);
+    SDL_Texture *target = SDL_GetRenderTarget(_renderer.get());
+    SDL_SetRenderTarget(_renderer.get(), target_texture.get());
+    SDL_SetRenderDrawColor(_renderer.get(), 0x00, 0x00, 0x00, 0x00);
+    SDL_RenderClear(_renderer.get());
+    SDL_RenderCopy(_renderer.get(), texture, NULL, NULL);
+    ::PtrT<SDL_Surface> surface(SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0), SDL_FreeSurface);
+    SDL_RenderReadPixels(_renderer.get(), nullptr, surface->format->format, surface->pixels, surface->pitch);
+    _DumpSurface(surface.get(), fname);
+    SDL_SetRenderTarget(_renderer.get(), target);
+}
+
 Window::ITexture::PtrT
 Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
@@ -103,11 +138,15 @@ Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, cons
     if (text.rfind("  ", 0))
     {
         _painter->Paint(surface.get(), text, attr, def_attr);
+        //if (text == "Hello, world!")
+        //    _DumpSurface(surface.get(), "/tmp/hello.ppm");
     }
 
     // Create a possibly hardware accelerated texture from the surface
     std::unique_ptr<Texture> texture{new Texture(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()))};
     SDL_SetTextureBlendMode(texture->texture.get(), SDL_BLENDMODE_NONE);
+    //if (text == "Hello, world!")
+    //    _DumpTexture(texture->texture.get(), "/tmp/hello2.ppm");
     return Texture::PtrT(texture.release());
 }
 
