@@ -1,7 +1,6 @@
 #include "Painter.hpp"
 #include "Utils.hpp"
 #include "HlAttr.hpp"
-#include <cairo/cairo.h>
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 #include <iostream>
@@ -11,7 +10,7 @@ Painter::Painter(double scale_x, double scale_y)
     , _scale_y{scale_y}
     , _font_desc(pango_font_description_new(), pango_font_description_free)
 {
-    pango_font_description_set_family(_font_desc.get(), "monospace");
+    pango_font_description_set_family(_font_desc.get(), "Fira Code");
     pango_font_description_set_absolute_size(_font_desc.get(), 20 * PANGO_SCALE);
 
     CalcCellInfo();
@@ -37,19 +36,19 @@ void Painter::CalcCellInfo()
     pango_layout_set_text(layout.get(), RULER.data(), RULER.size());
     PangoRectangle rect;
     pango_layout_get_extents(layout.get(), nullptr, &rect);
-    _cell_width = _scale_x * rect.width / (PANGO_SCALE * RULER.size());
-    _cell_height = _scale_y * rect.height / PANGO_SCALE;
+    _cell_width = rect.width / (PANGO_SCALE * RULER.size());
+    _cell_height = rect.height / PANGO_SCALE;
 }
 
-namespace {
-
-void SetSource(cairo_t *cr, unsigned rgb)
+void Painter::SetSource(cairo_t *cr, unsigned rgb)
 {
     cairo_set_source_rgb(cr,
         static_cast<double>(rgb >> 16) / 255,
         static_cast<double>((rgb >> 8) & 0xff) / 255,
         static_cast<double>(rgb & 0xff) / 255);
 }
+
+namespace {
 
 PtrT<PangoAttrList> CreateAttrList(const HlAttr &attr)
 {
@@ -74,14 +73,10 @@ PtrT<PangoAttrList> CreateAttrList(const HlAttr &attr)
 
 } //namespace;
 
-int Painter::Paint(SDL_Surface *surface, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
+int Painter::Paint(cairo_surface_t *surface, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
-    auto cr_surface = PtrT<cairo_surface_t>(
-        cairo_image_surface_create_for_data(static_cast<unsigned char *>(surface->pixels),
-            CAIRO_FORMAT_RGB24, surface->w, surface->h, surface->pitch),
-        cairo_surface_destroy);
-    cairo_surface_set_device_scale(cr_surface.get(), _scale_x, _scale_y);
-    auto cr = PtrT<cairo_t>(cairo_create(cr_surface.get()), cairo_destroy);
+    //cairo_surface_set_device_scale(surface, _scale_x, _scale_y);
+    auto cr = PtrT<cairo_t>(cairo_create(surface), cairo_destroy);
 
     unsigned bg = attr.bg.value_or(def_attr.bg.value());
     unsigned fg = attr.fg.value_or(def_attr.fg.value());

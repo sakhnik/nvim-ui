@@ -2,7 +2,7 @@
 
 #include "Utils.hpp"
 #include <string>
-#include <SDL2/SDL_surface.h>
+#include <cairo/cairo.h>
 #include <pango/pango-font.h>
 
 struct HlAttr;
@@ -17,7 +17,9 @@ public:
     int GetCellHeight() const { return _cell_height; }
 
     // Returns actual width
-    int Paint(SDL_Surface *, std::string_view text, const HlAttr &, const HlAttr &def);
+    int Paint(cairo_surface_t *, std::string_view text, const HlAttr &, const HlAttr &def);
+
+    static void SetSource(cairo_t *, unsigned rgb);
 
 private:
     double _scale_x = 1.0;

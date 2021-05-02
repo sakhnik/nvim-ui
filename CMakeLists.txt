@@ -12,6 +12,7 @@ pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
 pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pango)
 pkg_check_modules(PANGOCAIRO REQUIRED IMPORTED_TARGET pangocairo)
 pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
+pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk4)
 
 add_definitions(-DVERSION=\"${VERSION}\")
 set(CMAKE_CXX_STANDARD 17)
@@ -65,6 +66,7 @@ target_link_libraries(nvim-ui PUBLIC
     PkgConfig::PANGO
     PkgConfig::PANGOCAIRO
     PkgConfig::GLIB
+    PkgConfig::GTK
     )
 target_sources(nvim-ui PRIVATE res/windows.rc)
 install(TARGETS nvim-ui DESTINATION bin)

@@ -8,8 +8,6 @@
 struct IWindow
 {
     virtual ~IWindow() = default;
-    virtual void Init() = 0;
-    virtual void Deinit() = 0;
 
     using RowsColsT = std::pair<int, int>;
     virtual RowsColsT GetRowsCols() const = 0;

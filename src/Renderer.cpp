@@ -15,8 +15,6 @@ Renderer::Renderer(MsgPackRpc *rpc, IWindow *window, Timer *timer)
     _def_attr.fg = 0xffffff;
     _def_attr.bg = 0;
 
-    // Create a window
-    _window->Init();
     auto [rows, cols] = _window->GetRowsCols();
 
     // Prepare the initial cell grid to fill the whole window.
@@ -26,7 +24,6 @@ Renderer::Renderer(MsgPackRpc *rpc, IWindow *window, Timer *timer)
 
 Renderer::~Renderer()
 {
-    _window->Deinit();
 }
 
 void Renderer::Flush()

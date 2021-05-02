@@ -3,15 +3,16 @@
 #include "IWindow.hpp"
 #include "Utils.hpp"
 #include "Painter.hpp"
-#include "TextureCache.hpp"
-#include <SDL2/SDL.h>
+#include <mutex>
+#include <gtk/gtk.h>
+
 
 class Window
     : public IWindow
 {
 public:
-    void Init() override;
-    void Deinit() override;
+    Window();
+    ~Window();
 
     RowsColsT GetRowsCols() const override;
 
@@ -23,16 +24,15 @@ public:
     void SetBusy(bool is_busy) override;
 
 private:
-    PtrT<SDL_Window> _window = NullPtr(SDL_DestroyWindow);
-    PtrT<SDL_Renderer> _renderer = NullPtr(SDL_DestroyRenderer);
+    GtkWidget *_window;
+    GtkWidget *_grid;
     std::unique_ptr<Painter> _painter;
-    // Mouse pointers for the active/busy state
-    PtrT<SDL_Cursor> _active_cursor = NullPtr(SDL_FreeCursor);
-    PtrT<SDL_Cursor> _busy_cursor = NullPtr(SDL_FreeCursor);
+    PtrT<cairo_surface_t> _surface = NullPtr(cairo_surface_destroy);
+    PtrT<cairo_t> _cairo = NullPtr(cairo_destroy);
+    std::mutex _mut;
 
-    double _scale_x = 1.0;
-    double _scale_y = 1.0;
-
-    void _DumpSurface(SDL_Surface *, const char *fname);
-    void _DumpTexture(SDL_Texture *, const char *fname);
+    static void _OnDraw(GtkDrawingArea *, cairo_t *cr, int width, int height, gpointer data);
+    void _OnDraw2(cairo_t *cr, int width, int height);
+    static void _OnResize(GtkDrawingArea *, int width, int height, gpointer data);
+    void _OnResize2(int width, int height);
 };

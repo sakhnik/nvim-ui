@@ -1,76 +1,96 @@
 #include "Window.hpp"
 #include "Logger.hpp"
-#include <sstream>
-#include <fstream>
 
-void Window::Init()
+
+Window::Window()
 {
-    SDL_Init(SDL_INIT_VIDEO);
+    gtk_init();
 
-    const int WIN_W = 1024;
-    const int WIN_H = 768;
+    _window = gtk_window_new ();
+    gtk_window_set_title (GTK_WINDOW (_window), "nvim-ui");
+    gtk_window_set_default_size (GTK_WINDOW (_window), 1024, 768);
 
-    _window.reset(SDL_CreateWindow("nvim-ui",
-        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        WIN_W, WIN_H,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI));
-    _renderer.reset(SDL_CreateRenderer(_window.get(), -1, SDL_RENDERER_ACCELERATED));
+    _grid = gtk_drawing_area_new ();
+    gtk_drawing_area_set_content_width (GTK_DRAWING_AREA (_grid), 1024);
+    gtk_drawing_area_set_content_height (GTK_DRAWING_AREA (_grid), 768);
+    gtk_drawing_area_set_draw_func (GTK_DRAWING_AREA (_grid), _OnDraw, this, nullptr);
 
-    SDL_RendererInfo info;
-    SDL_GetRendererInfo(_renderer.get(), &info);
-    std::ostringstream oss;
-    if ((info.flags & SDL_RENDERER_SOFTWARE))
-        oss << " software";
-    if ((info.flags & SDL_RENDERER_ACCELERATED))
-        oss << " accelerated";
-    if ((info.flags & SDL_RENDERER_PRESENTVSYNC))
-        oss << " vsync";
-    if ((info.flags & SDL_RENDERER_TARGETTEXTURE))
-        oss << " target_texture";
-    Logger().info("Using renderer {}:{}", info.name, oss.str());
+    gtk_window_set_child (GTK_WINDOW (_window), _grid);
 
-    // Get the window size in pixels to cope with HiDPI
-    int wp{}, hp{};
-    SDL_GetRendererOutputSize(_renderer.get(), &wp, &hp);
-    _scale_x = static_cast<double>(wp) / WIN_W;
-    _scale_y = static_cast<double>(hp) / WIN_H;
-    _painter.reset(new Painter(_scale_x, _scale_y));
+    g_signal_connect (G_OBJECT (_grid), "resize", G_CALLBACK(_OnResize), this);
+
+    gtk_widget_show (_window);
+
+    int scale = gtk_widget_get_scale_factor (_window);
+    _painter.reset(new Painter(scale, scale));
 }
 
-void Window::Deinit()
+Window::~Window()
 {
-    SDL_Quit();
+    gtk_window_destroy(GTK_WINDOW(_window));
+}
+
+void Window::_OnResize(GtkDrawingArea *, int width, int height, gpointer data)
+{
+    reinterpret_cast<Window *>(data)->_OnResize2(width, height);
+}
+
+void Window::_OnResize2(int width, int height)
+{
+    Logger().info("Resized {}x{}", width, height);
+    std::lock_guard<std::mutex> guard{_mut};
+    GdkSurface *s = gtk_native_get_surface(gtk_widget_get_native(_grid));
+    _surface.reset(gdk_surface_create_similar_surface(s, CAIRO_CONTENT_COLOR, width, height));
+    _cairo.reset(cairo_create(_surface.get()));
 }
 
 Window::RowsColsT
 Window::GetRowsCols() const
 {
-    int wp{}, hp{};
-    SDL_GetRendererOutputSize(_renderer.get(), &wp, &hp);
+    GtkAllocation allocation;
+    gtk_widget_get_allocation (_grid, &allocation);
 
-    int cols = std::max(1, wp / _painter->GetCellWidth());
-    int rows = std::max(1, hp / _painter->GetCellHeight());
+    int cols = std::max(1, allocation.width / _painter->GetCellWidth());
+    int rows = std::max(1, allocation.height / _painter->GetCellHeight());
     return {rows, cols};
+}
+
+void Window::_OnDraw(GtkDrawingArea *, cairo_t *cr, int width, int height, gpointer data)
+{
+    Logger().info("Draw {}x{}", width, height);
+    reinterpret_cast<Window*>(data)->_OnDraw2(cr, width, height);
+}
+
+void Window::_OnDraw2(cairo_t *cr, int width, int height)
+{
+    std::lock_guard<std::mutex> guard{_mut};
+    cairo_set_source_surface(cr, _surface.get(), 0, 0);
+    cairo_rectangle(cr, 0, 0, width, height);
+    cairo_fill(cr);
 }
 
 void Window::Clear(unsigned bg)
 {
-    SDL_SetRenderDrawColor(_renderer.get(), bg >> 16, (bg >> 8) & 0xff, bg & 0xff, SDL_ALPHA_OPAQUE);
-    SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_NONE);
-    SDL_RenderClear(_renderer.get());
+    std::lock_guard<std::mutex> guard{_mut};
+    if (_cairo)
+    {
+        Logger().info("Clear {:x}", bg);
+        Painter::SetSource(_cairo.get(), bg);
+        cairo_paint(_cairo.get());
+    }
 }
 
 namespace {
 
-struct Texture : Window::ITexture
+struct Texture : IWindow::ITexture
 {
-    Texture(SDL_Texture *t, int width, int height)
-        : texture{t, SDL_DestroyTexture}
+    Texture(cairo_surface_t *t, int width, int height)
+        : texture{t, cairo_surface_destroy}
         , width{width}
         , height{height}
     {
     }
-    ::PtrT<SDL_Texture> texture;
+    ::PtrT<cairo_surface_t> texture;
     int width;
     int height;
 };
@@ -79,48 +99,22 @@ struct Texture : Window::ITexture
 
 void Window::CopyTexture(int row, int col, ITexture *texture)
 {
+    std::lock_guard<std::mutex> guard{_mut};
+
+    if (!_cairo)
+        return;
+
     Texture *t = static_cast<Texture *>(texture);
+    Logger().info("Copy texture {} {}", row, col);
 
-    SDL_Rect srcrect = { 0, 0, t->width, t->height };
-    SDL_Rect dstrect = { col * _painter->GetCellWidth(), _painter->GetCellHeight() * row, t->width, t->height };
-    SDL_RenderCopy(_renderer.get(), t->texture.get(), &srcrect, &dstrect);
+    int x = col * _painter->GetCellWidth();
+    int y = row * _painter->GetCellHeight();
+    cairo_set_source_surface(_cairo.get(), t->texture.get(), x, y);
+    cairo_rectangle(_cairo.get(), x, y, t->width, t->height);
+    cairo_paint(_cairo.get());
 }
 
-void Window::_DumpSurface(SDL_Surface *surface, const char *fname)
-{
-    std::ofstream ofs(fname);
-    ofs << "P3 " << surface->w << " " << surface->h << " 255\n";
-    for (int y = 0; y < surface->h; ++y)
-    {
-        for (int x = 0; x < surface->w; ++x)
-        {
-            uint8_t *c = static_cast<uint8_t*>(surface->pixels) + y * surface->pitch + 4 * x;
-            ofs << (unsigned)c[2];
-            ofs << " " << (unsigned)c[1];
-            ofs << " " << (unsigned)c[0] << "\n";
-        }
-    }
-}
-
-void Window::_DumpTexture(SDL_Texture *texture, const char *fname)
-{
-    int width, height;
-    SDL_QueryTexture(texture, nullptr, nullptr, &width, &height);
-    ::PtrT<SDL_Texture> target_texture(SDL_CreateTexture(_renderer.get(), SDL_PIXELFORMAT_RGBA32,
-                                                         SDL_TEXTUREACCESS_TARGET, width, height),
-                                       SDL_DestroyTexture);
-    SDL_Texture *target = SDL_GetRenderTarget(_renderer.get());
-    SDL_SetRenderTarget(_renderer.get(), target_texture.get());
-    SDL_SetRenderDrawColor(_renderer.get(), 0x00, 0x00, 0x00, 0x00);
-    SDL_RenderClear(_renderer.get());
-    SDL_RenderCopy(_renderer.get(), texture, NULL, NULL);
-    ::PtrT<SDL_Surface> surface(SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0), SDL_FreeSurface);
-    SDL_RenderReadPixels(_renderer.get(), nullptr, surface->format->format, surface->pixels, surface->pitch);
-    _DumpSurface(surface.get(), fname);
-    SDL_SetRenderTarget(_renderer.get(), target);
-}
-
-Window::ITexture::PtrT
+IWindow::ITexture::PtrT
 Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
     bool has_text = 0 != text.rfind("  ", 0);
@@ -128,18 +122,22 @@ Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, cons
     int pixel_height = _painter->GetCellHeight();
 
     // Allocate a surface slightly wider than necessary
-    auto surface = PtrT<SDL_Surface>(SDL_CreateRGBSurface(0,
-        pixel_width, pixel_height,
-        32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0),
-        SDL_FreeSurface);
+    GdkSurface *s = gtk_native_get_surface(gtk_widget_get_native(_grid));
+    auto surface = PtrT<cairo_surface_t>(
+        gdk_surface_create_similar_surface(s, CAIRO_CONTENT_COLOR, pixel_width, pixel_height),
+        cairo_surface_destroy);
 
     // Paint the background color
     unsigned fg = attr.fg.value_or(def_attr.fg.value());
     unsigned bg = attr.bg.value_or(def_attr.bg.value());
     if ((attr.flags & HlAttr::F_REVERSE))
         std::swap(bg, fg);
-    auto color = SDL_MapRGB(surface->format, bg >> 16, (bg >> 8) & 0xff, bg & 0xff);
-    SDL_FillRect(surface.get(), nullptr, color);
+
+    {
+        auto cr = PtrT<cairo_t>(cairo_create(surface.get()), cairo_destroy);
+        Painter::SetSource(cr.get(), bg);
+        cairo_paint(cr.get());
+    }
 
     // not starts with "  "
     if (has_text)
@@ -150,9 +148,7 @@ Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, cons
     }
 
     // Create a possibly hardware accelerated texture from the surface
-    std::unique_ptr<Texture> texture{new Texture(SDL_CreateTextureFromSurface(_renderer.get(), surface.get()),
-                                                 pixel_width, pixel_height)};
-    SDL_SetTextureBlendMode(texture->texture.get(), SDL_BLENDMODE_NONE);
+    std::unique_ptr<Texture> texture{new Texture(surface.release(), pixel_width, pixel_height)};
     //if (text == "Hello, world!")
     //    _DumpTexture(texture->texture.get(), "/tmp/hello2.ppm");
     return Texture::PtrT(texture.release());
@@ -160,59 +156,59 @@ Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, cons
 
 void Window::Present()
 {
-    SDL_RenderPresent(_renderer.get());
+    gtk_widget_queue_draw(_grid);
 }
 
 void Window::DrawCursor(int row, int col, unsigned fg, std::string_view mode)
 {
-    int cell_width = _painter->GetCellWidth();
-    int cell_height = _painter->GetCellHeight();
+    //int cell_width = _painter->GetCellWidth();
+    //int cell_height = _painter->GetCellHeight();
 
-    SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(_renderer.get(), fg >> 16, (fg >> 8) & 0xff, fg & 0xff, 127);
-    SDL_Rect rect;
-    if (mode == "insert")
-    {
-        rect = {
-            col * cell_width,
-            cell_height * row,
-            cell_width / 4,
-            cell_height
-        };
-    }
-    else if (mode == "replace" || mode == "operator")
-    {
-        rect = {
-            col * cell_width,
-            cell_height * row + cell_height * 3 / 4,
-            cell_width,
-            cell_height / 4
-        };
-    }
-    else
-    {
-        rect = {
-            col * cell_width,
-            cell_height * row,
-            cell_width,
-            cell_height
-        };
-    }
-    SDL_RenderFillRect(_renderer.get(), &rect);
+    //SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
+    //SDL_SetRenderDrawColor(_renderer.get(), fg >> 16, (fg >> 8) & 0xff, fg & 0xff, 127);
+    //SDL_Rect rect;
+    //if (mode == "insert")
+    //{
+    //    rect = {
+    //        col * cell_width,
+    //        cell_height * row,
+    //        cell_width / 4,
+    //        cell_height
+    //    };
+    //}
+    //else if (mode == "replace" || mode == "operator")
+    //{
+    //    rect = {
+    //        col * cell_width,
+    //        cell_height * row + cell_height * 3 / 4,
+    //        cell_width,
+    //        cell_height / 4
+    //    };
+    //}
+    //else
+    //{
+    //    rect = {
+    //        col * cell_width,
+    //        cell_height * row,
+    //        cell_width,
+    //        cell_height
+    //    };
+    //}
+    //SDL_RenderFillRect(_renderer.get(), &rect);
 }
 
 void Window::SetBusy(bool is_busy)
 {
-    if (is_busy)
-    {
-        if (!_busy_cursor)
-            _busy_cursor.reset(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAITARROW));
-        SDL_SetCursor(_busy_cursor.get());
-    }
-    else
-    {
-        if (!_active_cursor)
-            _active_cursor.reset(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));
-        SDL_SetCursor(_active_cursor.get());
-    }
+    //if (is_busy)
+    //{
+    //    if (!_busy_cursor)
+    //        _busy_cursor.reset(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAITARROW));
+    //    SDL_SetCursor(_busy_cursor.get());
+    //}
+    //else
+    //{
+    //    if (!_active_cursor)
+    //        _active_cursor.reset(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));
+    //    SDL_SetCursor(_active_cursor.get());
+    //}
 }
