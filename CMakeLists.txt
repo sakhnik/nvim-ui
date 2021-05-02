@@ -11,6 +11,7 @@ pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
 pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pango)
 pkg_check_modules(PANGOCAIRO REQUIRED IMPORTED_TARGET pangocairo)
+pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
 
 add_definitions(-DVERSION=\"${VERSION}\")
 set(CMAKE_CXX_STANDARD 17)
@@ -55,6 +56,7 @@ add_executable(nvim-ui
     src/Window.cpp
     src/Painter.cpp
     src/SdlLoop.cpp
+    src/GlibLoop.cpp
 )
 target_link_libraries(nvim-ui PUBLIC
     nvim-ui-lib
@@ -62,6 +64,7 @@ target_link_libraries(nvim-ui PUBLIC
     PkgConfig::CAIRO
     PkgConfig::PANGO
     PkgConfig::PANGOCAIRO
+    PkgConfig::GLIB
     )
 target_sources(nvim-ui PRIVATE res/windows.rc)
 install(TARGETS nvim-ui DESTINATION bin)

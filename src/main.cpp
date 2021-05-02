@@ -4,6 +4,7 @@
 #include "Window.hpp"
 #include "SdlLoop.hpp"
 #include "Logger.hpp"
+#include "GlibLoop.hpp"
 #include <spdlog/cfg/env.h>
 #include <iostream>
 
@@ -97,6 +98,9 @@ int main(int argc, char* argv[])
             Logger().error("Failed to spawn: {}", uv_strerror(r));
             return 1;
         }
+
+        GlibLoop glib_loop(loop);
+        glib_loop.Prepare();
 
         MsgPackRpc rpc(&stdin_pipe, &stdout_pipe);
 
