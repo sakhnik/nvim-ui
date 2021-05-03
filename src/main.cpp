@@ -2,9 +2,9 @@
 #include "Renderer.hpp"
 #include "RedrawHandler.hpp"
 #include "Window.hpp"
-#include "SdlLoop.hpp"
 #include "Logger.hpp"
-#include "GlibLoop.hpp"
+#include "Timer.hpp"
+#include "Input.hpp"
 #include <spdlog/cfg/env.h>
 #include <iostream>
 #include <thread>
@@ -19,12 +19,10 @@ public:
         , _timer{loop}
         , _renderer(&_rpc, &window, &_timer)
         , _redraw_handler(&_rpc, &_renderer)
-        //, _sdl_loop{loop, &_renderer}
     {
         if (!_rpc.Activate())
             return;
         _redraw_handler.AttachUI();
-        //_sdl_loop.Start();
     }
 
 private:
@@ -32,8 +30,6 @@ private:
     Timer _timer;
     Renderer _renderer;
     RedrawHandler _redraw_handler;
-
-    //SdlLoop _sdl_loop;
 };
 
 int main(int argc, char* argv[])
@@ -59,7 +55,8 @@ int main(int argc, char* argv[])
             std::atomic<bool> nvim_exited = false;
         } ctx;
 
-        Window window;
+        Input *input{};
+        Window window{input};
 
         std::thread t([&] {
             try
@@ -112,6 +109,8 @@ int main(int argc, char* argv[])
                 }
 
                 MsgPackRpc rpc(&stdin_pipe, &stdout_pipe);
+                // TODO: fix the race, memory leak
+                input = new Input(loop, &rpc);
 
                 std::unique_ptr<App> app;
                 Timer delay(loop);

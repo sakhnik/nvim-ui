@@ -7,7 +7,6 @@ find_package(Threads)
 find_package(PkgConfig REQUIRED) 
 pkg_check_modules(MSGPACK REQUIRED IMPORTED_TARGET msgpack)
 pkg_check_modules(LIBUV REQUIRED IMPORTED_TARGET libuv)
-pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
 pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pango)
 pkg_check_modules(PANGOCAIRO REQUIRED IMPORTED_TARGET pangocairo)
@@ -44,6 +43,7 @@ add_library(nvim-ui-lib STATIC
     src/TextureCache.cpp
     src/Timer.cpp
     src/Logger.cpp
+    src/Input.cpp
 )
 target_include_directories(nvim-ui-lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(nvim-ui-lib PUBLIC
@@ -56,12 +56,9 @@ add_executable(nvim-ui
     src/main.cpp
     src/Window.cpp
     src/Painter.cpp
-    src/SdlLoop.cpp
-    src/GlibLoop.cpp
 )
 target_link_libraries(nvim-ui PUBLIC
     nvim-ui-lib
-    PkgConfig::SDL2
     PkgConfig::CAIRO
     PkgConfig::PANGO
     PkgConfig::PANGOCAIRO

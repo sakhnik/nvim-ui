@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <string_view>
 #include <string>
+#include <mutex>
 #include <chrono>
 
 class MsgPackRpc;
@@ -37,9 +38,6 @@ public:
     void DefaultColorSet(unsigned fg, unsigned bg);
     void ModeChange(std::string_view mode);
     void SetBusy(bool is_busy);
-
-    // Feed input keys
-    void Input(std::string_view input);
 
 private:
     MsgPackRpc *_rpc;

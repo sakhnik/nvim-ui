@@ -6,12 +6,13 @@
 #include <mutex>
 #include <gtk/gtk.h>
 
+class Input;
 
 class Window
     : public IWindow
 {
 public:
-    Window();
+    Window(Input *&);
     ~Window();
 
     RowsColsT GetRowsCols() const override;
@@ -24,6 +25,7 @@ public:
     void SetBusy(bool is_busy) override;
 
 private:
+    Input *& _input;
     GtkWidget *_window;
     GtkWidget *_grid;
     std::unique_ptr<Painter> _painter;
@@ -35,4 +37,11 @@ private:
     void _OnDraw2(cairo_t *cr, int width, int height);
     static void _OnResize(GtkDrawingArea *, int width, int height, gpointer data);
     void _OnResize2(int width, int height);
+    static gboolean _OnKeyPressed(GtkEventControllerKey *,
+                                  guint                  keyval,
+                                  guint                  keycode,
+                                  GdkModifierType        state,
+                                  gpointer               data);
+    gboolean _OnKeyPressed2(guint keyval, guint keycode, GdkModifierType state);
+
 };
