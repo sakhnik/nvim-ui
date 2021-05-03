@@ -167,9 +167,11 @@ void Window::DrawCursor(int row, int col, unsigned fg, std::string_view mode)
 
     std::lock_guard<std::mutex> guard{_mut};
 
-    cairo_save(_cairo.get());
-    cairo_translate(_cairo.get(), col * cell_width, row * cell_height);
-    cairo_set_source_rgba(_cairo.get(),
+    PtrT<cairo_t> cr(cairo_create(_surface.get()), cairo_destroy);
+
+    cairo_save(cr.get());
+    cairo_translate(cr.get(), col * cell_width, row * cell_height);
+    cairo_set_source_rgba(cr.get(),
         static_cast<double>(fg >> 16) / 255,
         static_cast<double>((fg >> 8) & 0xff) / 255,
         static_cast<double>(fg & 0xff) / 255,
@@ -177,18 +179,18 @@ void Window::DrawCursor(int row, int col, unsigned fg, std::string_view mode)
 
     if (mode == "insert")
     {
-        cairo_rectangle(_cairo.get(), 0, 0, 0.2 * cell_width, cell_height);
+        cairo_rectangle(cr.get(), 0, 0, 0.2 * cell_width, cell_height);
     }
     else if (mode == "replace" || mode == "operator")
     {
-        cairo_rectangle(_cairo.get(), 0, 0.75 * cell_height, cell_width, 0.25 * cell_height);
+        cairo_rectangle(cr.get(), 0, 0.75 * cell_height, cell_width, 0.25 * cell_height);
     }
     else
     {
-        cairo_rectangle(_cairo.get(), 0, 0, cell_width, cell_height);
+        cairo_rectangle(cr.get(), 0, 0, cell_width, cell_height);
     }
-    cairo_fill(_cairo.get());
-    cairo_restore(_cairo.get());
+    cairo_fill(cr.get());
+    cairo_restore(cr.get());
 }
 
 void Window::SetBusy(bool is_busy)
