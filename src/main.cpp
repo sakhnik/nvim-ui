@@ -75,6 +75,7 @@ int main(int argc, char* argv[])
                     Context *ctx = reinterpret_cast<Context *>(proc->data);
                     Logger().info("Exit: status={} signal={}", exit_status, signal);
                     ctx->nvim_exited.store(true, std::memory_order_relaxed);
+                    uv_stop(uv_default_loop());
                 };
 
                 uv_process_options_t options{};
@@ -138,6 +139,7 @@ int main(int argc, char* argv[])
         }
 
         t.join();
+        Logger().info("After join");
     }
     catch (std::exception& e)
     {
