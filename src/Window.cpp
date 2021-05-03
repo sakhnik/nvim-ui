@@ -112,16 +112,18 @@ void Window::CopyTexture(int row, int col, ITexture *texture)
 
     Texture *t = static_cast<Texture *>(texture);
 
-    int x = col * _painter->GetCellWidth();
-    int y = row * _painter->GetCellHeight();
-    cairo_set_source_surface(_cairo.get(), t->texture.get(), x, y);
-    cairo_rectangle(_cairo.get(), x, y, t->width, t->height);
+    cairo_save(_cairo.get());
+    cairo_translate(_cairo.get(), col * _painter->GetCellWidth(), row * _painter->GetCellHeight());
+    cairo_set_source_surface(_cairo.get(), t->texture.get(), 0, 0);
+    cairo_rectangle(_cairo.get(), 0, 0, t->width, t->height);
     cairo_paint(_cairo.get());
+    cairo_restore(_cairo.get());
 }
 
 IWindow::ITexture::PtrT
 Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
+    // not starts with "  "
     bool has_text = 0 != text.rfind("  ", 0);
     int pixel_width = (width + (has_text ? 1 : 0)) * _painter->GetCellWidth();
     int pixel_height = _painter->GetCellHeight();
@@ -144,18 +146,12 @@ Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, cons
         cairo_paint(cr.get());
     }
 
-    // not starts with "  "
     if (has_text)
     {
         pixel_width = _painter->Paint(surface.get(), text, attr, def_attr);
-        //if (text == "Hello, world!")
-        //    _DumpSurface(surface.get(), "/tmp/hello.ppm");
     }
 
-    // Create a possibly hardware accelerated texture from the surface
     std::unique_ptr<Texture> texture{new Texture(surface.release(), pixel_width, pixel_height)};
-    //if (text == "Hello, world!")
-    //    _DumpTexture(texture->texture.get(), "/tmp/hello2.ppm");
     return Texture::PtrT(texture.release());
 }
 
@@ -166,40 +162,33 @@ void Window::Present()
 
 void Window::DrawCursor(int row, int col, unsigned fg, std::string_view mode)
 {
-    //int cell_width = _painter->GetCellWidth();
-    //int cell_height = _painter->GetCellHeight();
+    int cell_width = _painter->GetCellWidth();
+    int cell_height = _painter->GetCellHeight();
 
-    //SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
-    //SDL_SetRenderDrawColor(_renderer.get(), fg >> 16, (fg >> 8) & 0xff, fg & 0xff, 127);
-    //SDL_Rect rect;
-    //if (mode == "insert")
-    //{
-    //    rect = {
-    //        col * cell_width,
-    //        cell_height * row,
-    //        cell_width / 4,
-    //        cell_height
-    //    };
-    //}
-    //else if (mode == "replace" || mode == "operator")
-    //{
-    //    rect = {
-    //        col * cell_width,
-    //        cell_height * row + cell_height * 3 / 4,
-    //        cell_width,
-    //        cell_height / 4
-    //    };
-    //}
-    //else
-    //{
-    //    rect = {
-    //        col * cell_width,
-    //        cell_height * row,
-    //        cell_width,
-    //        cell_height
-    //    };
-    //}
-    //SDL_RenderFillRect(_renderer.get(), &rect);
+    std::lock_guard<std::mutex> guard{_mut};
+
+    cairo_save(_cairo.get());
+    cairo_translate(_cairo.get(), col * cell_width, row * cell_height);
+    cairo_set_source_rgba(_cairo.get(),
+        static_cast<double>(fg >> 16) / 255,
+        static_cast<double>((fg >> 8) & 0xff) / 255,
+        static_cast<double>(fg & 0xff) / 255,
+        0.5);
+
+    if (mode == "insert")
+    {
+        cairo_rectangle(_cairo.get(), 0, 0, 0.2 * cell_width, cell_height);
+    }
+    else if (mode == "replace" || mode == "operator")
+    {
+        cairo_rectangle(_cairo.get(), 0, 0.75 * cell_height, cell_width, 0.25 * cell_height);
+    }
+    else
+    {
+        cairo_rectangle(_cairo.get(), 0, 0, cell_width, cell_height);
+    }
+    cairo_fill(_cairo.get());
+    cairo_restore(_cairo.get());
 }
 
 void Window::SetBusy(bool is_busy)

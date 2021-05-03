@@ -75,13 +75,15 @@ PtrT<PangoAttrList> CreateAttrList(const HlAttr &attr)
 
 int Painter::Paint(cairo_surface_t *surface, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
-    //cairo_surface_set_device_scale(surface, _scale_x, _scale_y);
     auto cr = PtrT<cairo_t>(cairo_create(surface), cairo_destroy);
 
     unsigned bg = attr.bg.value_or(def_attr.bg.value());
     unsigned fg = attr.fg.value_or(def_attr.fg.value());
     if ((attr.flags & HlAttr::F_REVERSE))
         std::swap(bg, fg);
+
+    SetSource(cr.get(), bg);
+    cairo_paint(cr.get());
 
     // Print the foreground text
     SetSource(cr.get(), fg);
@@ -102,7 +104,7 @@ int Painter::Paint(cairo_surface_t *surface, std::string_view text, const HlAttr
 
     PangoRectangle rect;
     pango_layout_get_extents(layout.get(), nullptr, &rect);
-    int width = _scale_x * rect.width / PANGO_SCALE;
+    int width = rect.width / PANGO_SCALE;
     pango_cairo_show_layout(cr.get(), layout.get());
     return width;
 }
