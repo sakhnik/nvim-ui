@@ -41,6 +41,23 @@ public:
     void ModeChange(std::string_view mode);
     void SetBusy(bool is_busy);
 
+    using GridLineT = std::vector<TextureCache::Texture>;
+    using GridLinesT = std::vector<GridLineT>;
+    const GridLinesT& GetGridLines() const { return _grid_lines; }
+
+    std::lock_guard<std::mutex> Lock()
+    {
+        return std::lock_guard<std::mutex>{_mutex};
+    }
+
+    unsigned GetBg() const { return _def_attr.bg.value(); }
+    unsigned GetFg() const { return _def_attr.fg.value(); }
+
+    bool IsBusy() const { return _is_busy; }
+    int GetCursorRow() const { return _cursor_row; }
+    int GetCursorCol() const { return _cursor_col; }
+    const std::string& GetMode() const { return _mode; }
+
 private:
     MsgPackRpc *_rpc;
     Timer *_timer;
@@ -64,6 +81,9 @@ private:
     };
 
     std::vector<_Line> _lines;
+
+    GridLinesT _grid_lines;
+    std::mutex _mutex;
 
     static std::vector<size_t> _SplitChunks(const _Line &);
 

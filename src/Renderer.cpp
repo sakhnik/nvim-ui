@@ -65,23 +65,17 @@ void Renderer::_DoFlush()
     oss << "Flush ";
     _last_flush_time = ClockT::now();
 
-    _window->Clear(_def_attr.bg.value());
+    auto guard = Lock();
 
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
         auto &line = _lines[row];
         auto &tex_cache = line.texture_cache;
 
-        auto copy_texture = [&](const TextureCache::Texture &tex) {
-            _window->CopyTexture(row, tex.col, tex.texture.get());
-        };
-
         // Check if it's possible to just copy the prepared textures first
         if (!line.dirty)
-        {
-            line.texture_cache.ForEach(copy_texture);
             continue;
-        }
+
         // Mark the line clear as we're going to redraw the necessary parts
         // and update the texture cache.
         line.dirty = false;
@@ -97,41 +91,40 @@ void Renderer::_DoFlush()
                     _def_attr);
         };
 
-        auto texture_cache_scanner = tex_cache.GetScanner();
-
-        // Print and cache the chunks individually
-        for (size_t i = 1; i < chunks.size(); ++i)
         {
-            int col = chunks[i - 1];
-            int end = chunks[i];
-            int hl_id = line.hl_id[col];
-            TextureCache::Texture texture(col, end - col, hl_id, "");
-            while (col < end)
-                texture.text += line.text[col++];
+            auto texture_cache_scanner = tex_cache.GetScanner();
 
-            const auto hlit = _hl_attr.find(hl_id);
-            unsigned def_bg = _def_attr.bg.value();
-
-            if (texture.IsSpace()
-                && (hlit == _hl_attr.end() || hlit->second.bg.value_or(def_bg) == def_bg))
+            // Print and cache the chunks individually
+            for (size_t i = 1; i < chunks.size(); ++i)
             {
-                // No need to create empty textures coinciding with the background color
-                continue;
+                int col = chunks[i - 1];
+                int end = chunks[i];
+                int hl_id = line.hl_id[col];
+                TextureCache::Texture texture(col, end - col, hl_id, "");
+                while (col < end)
+                    texture.text += line.text[col++];
+
+                const auto hlit = _hl_attr.find(hl_id);
+                unsigned def_bg = _def_attr.bg.value();
+
+                if (texture.IsSpace()
+                    && (hlit == _hl_attr.end() || hlit->second.bg.value_or(def_bg) == def_bg))
+                {
+                    // No need to create empty textures coinciding with the background color
+                    continue;
+                }
+
+                // Test whether the texture should be rendered again
+                if (texture_cache_scanner.EnsureNext(std::move(texture), texture_generator))
+                    oss << "+";
+                else
+                    oss << ".";
             }
-
-            // Test whether the texture should be rendered again
-            if (texture_cache_scanner.EnsureNext(std::move(texture), texture_generator))
-                oss << "+";
-            else
-                oss << ".";
-
-            // Copy the texture (cached or new) to the renderer
-            copy_texture(texture_cache_scanner.Get());
         }
+
+        tex_cache.CopyTo(_grid_lines[row]);
     }
 
-    if (!_is_busy)
-        _window->DrawCursor(_cursor_row, _cursor_col, _def_attr.fg.value(), _mode);
     _window->Present();
 
     auto end_time = ClockT::now();
@@ -200,6 +193,7 @@ void Renderer::GridCursorGoto(int row, int col)
 {
     Logger().debug("CursorGoto row={} col={}", row, col);
     _AnticipateFlush();
+    auto lock = Lock();
     _cursor_row = row;
     _cursor_col = col;
 }
@@ -259,14 +253,16 @@ void Renderer::HlAttrDefine(unsigned hl_id, HlAttr attr)
 void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
 {
     Logger().debug("DefaultColorSet fg={} bg={}", fg, bg);
-    _def_attr.fg = fg;
-    _def_attr.bg = bg;
 
     for (auto &line : _lines)
     {
         line.dirty = true;
         line.texture_cache.Clear();
     }
+
+    auto lock = Lock();
+    _def_attr.fg = fg;
+    _def_attr.bg = bg;
 }
 
 void Renderer::OnResized()
@@ -306,6 +302,9 @@ void Renderer::GridResize(int width, int height)
         line.hl_id.resize(width, 0);
         line.text.resize(width, " ");
     }
+
+    auto lock = Lock();
+    _grid_lines.resize(height);
 }
 
 void Renderer::ModeChange(std::string_view mode)
@@ -317,7 +316,7 @@ void Renderer::ModeChange(std::string_view mode)
 void Renderer::SetBusy(bool is_busy)
 {
     Logger().debug("SetBusy {}", is_busy);
+    auto lock = Lock();
     _is_busy = is_busy;
     _window->SetBusy(is_busy);
 }
-

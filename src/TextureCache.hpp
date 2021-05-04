@@ -39,6 +39,13 @@ private:
 public:
     void ForEach(std::function<void(const Texture &)> action);
 
+    // Copy the ready textures to another container
+    template <typename OtherT>
+        void CopyTo(OtherT &other) const
+        {
+            other.assign(_cache.begin(), _cache.end());
+        }
+
     // Scan the cache left to right removing outdated, reusing the actual and
     // adding updated textures.
     class Scanner

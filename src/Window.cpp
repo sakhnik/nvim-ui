@@ -50,10 +50,6 @@ void Window::_OnResize(GtkDrawingArea *, int width, int height, gpointer data)
 
 void Window::_OnResize2(int width, int height)
 {
-    std::lock_guard<std::mutex> guard{_mut};
-    GdkSurface *s = gtk_native_get_surface(gtk_widget_get_native(_grid));
-    _surface.reset(gdk_surface_create_similar_surface(s, CAIRO_CONTENT_COLOR, width, height));
-    _cairo.reset(cairo_create(_surface.get()));
 }
 
 Window::RowsColsT
@@ -65,29 +61,6 @@ Window::GetRowsCols() const
     int cols = std::max(1, allocation.width / _painter->GetCellWidth());
     int rows = std::max(1, allocation.height / _painter->GetCellHeight());
     return {rows, cols};
-}
-
-void Window::_OnDraw(GtkDrawingArea *, cairo_t *cr, int width, int height, gpointer data)
-{
-    reinterpret_cast<Window*>(data)->_OnDraw2(cr, width, height);
-}
-
-void Window::_OnDraw2(cairo_t *cr, int width, int height)
-{
-    std::lock_guard<std::mutex> guard{_mut};
-    cairo_set_source_surface(cr, _surface.get(), 0, 0);
-    cairo_rectangle(cr, 0, 0, width, height);
-    cairo_fill(cr);
-}
-
-void Window::Clear(unsigned bg)
-{
-    std::lock_guard<std::mutex> guard{_mut};
-    if (_cairo)
-    {
-        Painter::SetSource(_cairo.get(), bg);
-        cairo_paint(_cairo.get());
-    }
 }
 
 namespace {
@@ -107,21 +80,43 @@ struct Texture : IWindow::ITexture
 
 } //namespace;
 
-void Window::CopyTexture(int row, int col, ITexture *texture)
+void Window::_OnDraw(GtkDrawingArea *, cairo_t *cr, int width, int height, gpointer data)
 {
-    std::lock_guard<std::mutex> guard{_mut};
+    reinterpret_cast<Window*>(data)->_OnDraw2(cr, width, height);
+}
 
-    if (!_cairo)
-        return;
+void Window::_OnDraw2(cairo_t *cr, int width, int height)
+{
+    auto guard = _renderer->Lock();
 
-    Texture *t = static_cast<Texture *>(texture);
+    cairo_save(cr);
+    Logger().info("BG = {:x}", _renderer->GetBg());
+    Painter::SetSource(cr, _renderer->GetBg());
+    cairo_paint(cr);
+    cairo_restore(cr);
 
-    cairo_save(_cairo.get());
-    cairo_translate(_cairo.get(), col * _painter->GetCellWidth(), row * _painter->GetCellHeight());
-    cairo_set_source_surface(_cairo.get(), t->texture.get(), 0, 0);
-    cairo_rectangle(_cairo.get(), 0, 0, t->width, t->height);
-    cairo_paint(_cairo.get());
-    cairo_restore(_cairo.get());
+    for (int row = 0, rowN = _renderer->GetGridLines().size();
+         row < rowN; ++row)
+    {
+        const auto &line = _renderer->GetGridLines()[row];
+        for (const auto &texture : line)
+        {
+            Texture *t = static_cast<Texture *>(texture.texture.get());
+            auto col = texture.col;
+
+            cairo_save(cr);
+            cairo_translate(cr, col * _painter->GetCellWidth(), row * _painter->GetCellHeight());
+            cairo_set_source_surface(cr, t->texture.get(), 0, 0);
+            cairo_rectangle(cr, 0, 0, t->width, t->height);
+            cairo_fill(cr);
+            cairo_restore(cr);
+        }
+    }
+
+    if (!_renderer->IsBusy())
+    {
+        DrawCursor(cr, _renderer->GetCursorRow(), _renderer->GetCursorCol(), _renderer->GetFg(), _renderer->GetMode());
+    }
 }
 
 IWindow::ITexture::PtrT
@@ -164,18 +159,14 @@ void Window::Present()
     gtk_widget_queue_draw(_grid);
 }
 
-void Window::DrawCursor(int row, int col, unsigned fg, std::string_view mode)
+void Window::DrawCursor(cairo_t *cr, int row, int col, unsigned fg, std::string_view mode)
 {
     int cell_width = _painter->GetCellWidth();
     int cell_height = _painter->GetCellHeight();
 
-    std::lock_guard<std::mutex> guard{_mut};
-
-    PtrT<cairo_t> cr(cairo_create(_surface.get()), cairo_destroy);
-
-    cairo_save(cr.get());
-    cairo_translate(cr.get(), col * cell_width, row * cell_height);
-    cairo_set_source_rgba(cr.get(),
+    cairo_save(cr);
+    cairo_translate(cr, col * cell_width, row * cell_height);
+    cairo_set_source_rgba(cr,
         static_cast<double>(fg >> 16) / 255,
         static_cast<double>((fg >> 8) & 0xff) / 255,
         static_cast<double>(fg & 0xff) / 255,
@@ -183,18 +174,18 @@ void Window::DrawCursor(int row, int col, unsigned fg, std::string_view mode)
 
     if (mode == "insert")
     {
-        cairo_rectangle(cr.get(), 0, 0, 0.2 * cell_width, cell_height);
+        cairo_rectangle(cr, 0, 0, 0.2 * cell_width, cell_height);
     }
     else if (mode == "replace" || mode == "operator")
     {
-        cairo_rectangle(cr.get(), 0, 0.75 * cell_height, cell_width, 0.25 * cell_height);
+        cairo_rectangle(cr, 0, 0.75 * cell_height, cell_width, 0.25 * cell_height);
     }
     else
     {
-        cairo_rectangle(cr.get(), 0, 0, cell_width, cell_height);
+        cairo_rectangle(cr, 0, 0, cell_width, cell_height);
     }
-    cairo_fill(cr.get());
-    cairo_restore(cr.get());
+    cairo_fill(cr);
+    cairo_restore(cr);
 }
 
 void Window::SetBusy(bool is_busy)
