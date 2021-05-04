@@ -17,8 +17,10 @@ class Timer;
 class Renderer
 {
 public:
-    Renderer(MsgPackRpc *, IWindow *, Timer *);
+    Renderer(MsgPackRpc *, Timer *);
     ~Renderer();
+
+    void AttachWindow(IWindow *);
 
     // Get current grid cell dimensions
     int GetHeight() const { return _lines.size(); }
@@ -41,8 +43,8 @@ public:
 
 private:
     MsgPackRpc *_rpc;
-    IWindow *_window;
     Timer *_timer;
+    IWindow *_window = nullptr;
 
     std::unordered_map<unsigned, HlAttr> _hl_attr;
     HlAttr _def_attr;

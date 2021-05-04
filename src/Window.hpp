@@ -6,13 +6,14 @@
 #include <mutex>
 #include <gtk/gtk.h>
 
+class Renderer;
 class Input;
 
 class Window
     : public IWindow
 {
 public:
-    Window(Input *&);
+    Window(Renderer *, Input *);
     ~Window();
 
     RowsColsT GetRowsCols() const override;
@@ -25,7 +26,8 @@ public:
     void SetBusy(bool is_busy) override;
 
 private:
-    Input *& _input;
+    Renderer *_renderer;
+    Input * _input;
     GtkWidget *_window;
     GtkWidget *_grid;
     std::unique_ptr<Painter> _painter;

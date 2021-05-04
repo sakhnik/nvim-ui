@@ -1,10 +1,12 @@
 #include "Window.hpp"
 #include "Logger.hpp"
 #include "Input.hpp"
+#include "Renderer.hpp"
 
 
-Window::Window(Input *&input)
-    : _input{input}
+Window::Window(Renderer *renderer, Input *input)
+    : _renderer{renderer}
+    , _input{input}
 {
     gtk_init();
 
@@ -32,6 +34,8 @@ Window::Window(Input *&input)
 
     int scale = gtk_widget_get_scale_factor (_window);
     _painter.reset(new Painter(scale, scale));
+
+    _renderer->AttachWindow(this);
 }
 
 Window::~Window()

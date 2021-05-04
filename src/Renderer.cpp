@@ -6,24 +6,27 @@
 #include <sstream>
 
 
-Renderer::Renderer(MsgPackRpc *rpc, IWindow *window, Timer *timer)
+Renderer::Renderer(MsgPackRpc *rpc, Timer *timer)
     : _rpc{rpc}
-    , _window{window}
     , _timer{timer}
 {
     // Default hightlight attributes
     _def_attr.fg = 0xffffff;
     _def_attr.bg = 0;
 
-    auto [rows, cols] = _window->GetRowsCols();
-
     // Prepare the initial cell grid to fill the whole window.
     // The NeoVim UI will be attached using these dimensions.
-    GridResize(cols, rows);
+    GridResize(80, 25);
 }
 
 Renderer::~Renderer()
 {
+}
+
+void Renderer::AttachWindow(IWindow *window)
+{
+    assert(!_window);
+    _window = window;
 }
 
 void Renderer::Flush()

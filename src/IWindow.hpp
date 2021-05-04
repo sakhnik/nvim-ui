@@ -16,7 +16,7 @@ struct IWindow
 
     struct ITexture
     {
-        using PtrT = std::unique_ptr<ITexture>;
+        using PtrT = std::shared_ptr<ITexture>;
         virtual ~ITexture() {}
     };
 
