@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 
         MsgPackRpc rpc(&stdin_pipe, &stdout_pipe);
         Timer timer{loop};
-        Renderer renderer{&rpc, &timer};
+        Renderer renderer{loop, &rpc, &timer};
         RedrawHandler redraw_handler{&rpc, &renderer};
 
         if (!rpc.Activate())

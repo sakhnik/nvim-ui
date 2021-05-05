@@ -9,9 +9,6 @@ struct IWindow
 {
     virtual ~IWindow() = default;
 
-    using RowsColsT = std::pair<int, int>;
-    virtual RowsColsT GetRowsCols() const = 0;
-
     struct ITexture
     {
         using PtrT = std::shared_ptr<ITexture>;

@@ -38,6 +38,7 @@ include_directories(${spdlog_SOURCE_DIR}/include)
 #
 add_library(nvim-ui-lib STATIC
     src/MsgPackRpc.cpp
+    src/AsyncExec.cpp
     src/RedrawHandler.cpp
     src/Renderer.cpp
     src/TextureCache.cpp

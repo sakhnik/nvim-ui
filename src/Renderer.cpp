@@ -6,9 +6,10 @@
 #include <sstream>
 
 
-Renderer::Renderer(MsgPackRpc *rpc, Timer *timer)
+Renderer::Renderer(uv_loop_t *loop, MsgPackRpc *rpc, Timer *timer)
     : _rpc{rpc}
     , _timer{timer}
+    , _async_exec{loop}
 {
     // Default hightlight attributes
     _def_attr.fg = 0xffffff;
@@ -265,31 +266,30 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
     _def_attr.bg = bg;
 }
 
-void Renderer::OnResized()
+void Renderer::OnResized(int rows, int cols)
 {
-    auto rows_cols = _window->GetRowsCols();
-    auto rows = rows_cols.first;
-    auto cols = rows_cols.second;
-
+    Logger().info("OnResized {} {}", rows, cols);
     if (rows != static_cast<int>(_lines.size()) ||
         cols != static_cast<int>(_lines[0].text.size()))
     {
-        _rpc->Request(
-            [rows, cols](auto &pk) {
-                pk.pack("nvim_ui_try_resize");
-                pk.pack_array(2);
-                pk.pack(cols);
-                pk.pack(rows);
-            },
-            [](const msgpack::object &err, const auto &resp) {
-                if (!err.is_nil())
-                {
-                    std::ostringstream oss;
-                    oss << "Failed to resize UI " << err << std::endl;
-                    throw std::runtime_error(oss.str());
+        _async_exec.Post([rows, cols, this] {
+            _rpc->Request(
+                [rows, cols](auto &pk) {
+                    pk.pack("nvim_ui_try_resize");
+                    pk.pack_array(2);
+                    pk.pack(cols);
+                    pk.pack(rows);
+                },
+                [](const msgpack::object &err, const auto &resp) {
+                    if (!err.is_nil())
+                    {
+                        std::ostringstream oss;
+                        oss << "Failed to resize UI " << err << std::endl;
+                        throw std::runtime_error(oss.str());
+                    }
                 }
-            }
-        );
+            );
+        });
     }
 }
 

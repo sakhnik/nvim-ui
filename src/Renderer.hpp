@@ -2,6 +2,7 @@
 
 #include "HlAttr.hpp"
 #include "TextureCache.hpp"
+#include "AsyncExec.hpp"
 
 #include <vector>
 #include <unordered_map>
@@ -17,7 +18,7 @@ class Timer;
 class Renderer
 {
 public:
-    Renderer(MsgPackRpc *, Timer *);
+    Renderer(uv_loop_t *, MsgPackRpc *, Timer *);
     ~Renderer();
 
     void AttachWindow(IWindow *);
@@ -29,7 +30,7 @@ public:
     void Flush();
 
     // Window was resized
-    void OnResized();
+    void OnResized(int rows, int cols);
 
     void GridLine(int row, int col, std::string_view chunk, unsigned hl_id, int repeat);
     void GridCursorGoto(int row, int col);
@@ -61,6 +62,7 @@ public:
 private:
     MsgPackRpc *_rpc;
     Timer *_timer;
+    AsyncExec _async_exec;
     IWindow *_window = nullptr;
 
     std::unordered_map<unsigned, HlAttr> _hl_attr;

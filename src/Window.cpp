@@ -15,8 +15,6 @@ Window::Window(Renderer *renderer, Input *input)
     gtk_window_set_default_size (GTK_WINDOW (_window), 1024, 768);
 
     _grid = gtk_drawing_area_new ();
-    gtk_drawing_area_set_content_width (GTK_DRAWING_AREA (_grid), 1024);
-    gtk_drawing_area_set_content_height (GTK_DRAWING_AREA (_grid), 768);
     gtk_drawing_area_set_draw_func (GTK_DRAWING_AREA (_grid), _OnDraw, this, nullptr);
     gtk_widget_set_can_focus(_grid, true);
     gtk_widget_set_focusable(_grid, true);
@@ -50,17 +48,10 @@ void Window::_OnResize(GtkDrawingArea *, int width, int height, gpointer data)
 
 void Window::_OnResize2(int width, int height)
 {
-}
-
-Window::RowsColsT
-Window::GetRowsCols() const
-{
-    GtkAllocation allocation;
-    gtk_widget_get_allocation (_grid, &allocation);
-
-    int cols = std::max(1, allocation.width / _painter->GetCellWidth());
-    int rows = std::max(1, allocation.height / _painter->GetCellHeight());
-    return {rows, cols};
+    Logger().info("OnResize {} {}", width, height);
+    int cols = std::max(1, width / _painter->GetCellWidth());
+    int rows = std::max(1, height / _painter->GetCellHeight());
+    _renderer->OnResized(rows, cols);
 }
 
 namespace {
@@ -90,7 +81,6 @@ void Window::_OnDraw2(cairo_t *cr, int width, int height)
     auto guard = _renderer->Lock();
 
     cairo_save(cr);
-    Logger().info("BG = {:x}", _renderer->GetBg());
     Painter::SetSource(cr, _renderer->GetBg());
     cairo_paint(cr);
     cairo_restore(cr);

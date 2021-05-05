@@ -16,8 +16,6 @@ public:
     Window(Renderer *, Input *);
     ~Window();
 
-    RowsColsT GetRowsCols() const override;
-
     ITexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) override;
     void Present() override;
     void DrawCursor(cairo_t *, int row, int col, unsigned fg, std::string_view mode);

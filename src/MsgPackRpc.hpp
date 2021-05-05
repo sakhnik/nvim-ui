@@ -22,13 +22,14 @@ public:
     using PackRequestT = std::function<void(PackerT &)>;
     using OnResponseT = std::function<void(const msgpack::object &err, const msgpack::object &resp)>;
 
-    void Request(PackRequestT pack_request, OnResponseT on_response);
+    void Request(PackRequestT, OnResponseT);
     bool Activate();
+    void RequestAsync(PackRequestT pack_request, OnResponseT);
 
 private:
-    OnNotificationT _on_notification;
     uv_pipe_t *_stdin_pipe;
     uv_pipe_t *_stdout_pipe;
+    OnNotificationT _on_notification;
     // If any output is captured before activation, prevent activation.
     bool _dirty = false;
     bool _activated = false;
