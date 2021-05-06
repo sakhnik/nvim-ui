@@ -59,6 +59,16 @@ struct Texture : IWindow::ITexture
 {
     // Non-owning
     GtkWidget *widget = nullptr;
+    HlAttr hl_attr;
+
+    Texture(const HlAttr &attr, const HlAttr &def_attr)
+        : hl_attr{attr}
+    {
+        if (!hl_attr.fg.has_value())
+            hl_attr.fg = def_attr.fg;
+        if (!hl_attr.bg.has_value())
+            hl_attr.bg = def_attr.bg;
+    }
 };
 
 } //namespace;
@@ -109,7 +119,7 @@ Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, cons
     //int pixel_width = (width + (has_text ? 1 : 0)) * _painter->GetCellWidth();
     //int pixel_height = _painter->GetCellHeight();
 
-    return Texture::PtrT(new Texture);
+    return Texture::PtrT(new Texture(attr, def_attr));
 
 
     //// Allocate a surface slightly wider than necessary
@@ -147,6 +157,46 @@ gboolean Window::_Present(gpointer data)
     return false;
 }
 
+namespace {
+
+class FontMgr
+{
+public:
+    FontMgr()
+        : _font_desc(pango_font_description_new(), pango_font_description_free)
+    {
+        pango_font_description_set_family(_font_desc.get(), "Fira Code");
+        pango_font_description_set_absolute_size(_font_desc.get(), 20 * PANGO_SCALE);
+    }
+
+    PtrT<PangoAttrList> CreateAttrList(const std::string &text, const HlAttr &attr)
+    {
+        pango_font_description_set_weight(_font_desc.get(),
+                (attr.flags & HlAttr::F_BOLD) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL);
+        pango_font_description_set_style(_font_desc.get(),
+                (attr.flags & HlAttr::F_ITALIC) ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL);
+
+        PtrT<PangoAttrList> al(pango_attr_list_new(), [](PangoAttrList *l) { pango_attr_list_unref(l); });
+
+        pango_attr_list_insert(al.get(), pango_attr_font_desc_new(_font_desc.get()));
+
+        if ((attr.flags & HlAttr::F_UNDERLINE))
+            pango_attr_list_insert(al.get(), pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
+        if ((attr.flags & HlAttr::F_UNDERCURL))
+        {
+            pango_attr_list_insert(al.get(), pango_attr_underline_new(PANGO_UNDERLINE_ERROR));
+            pango_attr_list_insert(al.get(), pango_attr_underline_color_new(65535, 0, 0));
+        }
+
+        return al;
+    }
+
+private:
+    PtrT<PangoFontDescription> _font_desc;
+};
+
+} //namespace;
+
 void Window::_Present()
 {
     auto guard = _renderer->Lock();
@@ -165,6 +215,10 @@ void Window::_Present()
             if (!t->widget && !texture.IsSpace())
             {
                 t->widget = gtk_label_new(texture.text.c_str());
+
+                FontMgr font_mgr;
+                auto al = font_mgr.CreateAttrList(texture.text, t->hl_attr);
+                gtk_label_set_attributes(GTK_LABEL(t->widget), al.get());
             }
             if (gtk_widget_get_parent(t->widget))
             {
