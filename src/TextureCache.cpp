@@ -30,7 +30,7 @@ bool TextureCache::Scanner::EnsureNext(Texture &&texture, GeneratorT generator)
 
     if (_iter == _cache.end()
         || _iter->col != texture.col || _iter->hl_id != texture.hl_id
-        || _iter->text != texture.text || !_iter->texture)
+        || _iter->text != texture.text)
     {
         texture.texture = generator(texture);
         _iter = _cache.insert(_iter, std::move(texture));

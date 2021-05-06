@@ -85,7 +85,7 @@ void Renderer::_DoFlush()
         auto chunks = _SplitChunks(line);
 
         auto texture_generator = [&](const TextureCache::Texture &tex) {
-                // Paint the text on the surface carefully
+            // Paint the text on the surface carefully
             auto hlit = _hl_attr.find(tex.hl_id);
             return _window->CreateTexture(tex.width, tex.text,
                     hlit != _hl_attr.end() ? hlit->second : _def_attr,
@@ -130,7 +130,7 @@ void Renderer::_DoFlush()
 
     auto end_time = ClockT::now();
     oss << " " << std::chrono::duration<double>(end_time - _last_flush_time).count();
-    Logger().debug("Flush {}", oss.str());
+    Logger().info("Flush {}", oss.str());
 }
 
 std::vector<size_t> Renderer::_SplitChunks(const _Line &line)

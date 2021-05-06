@@ -3,7 +3,7 @@
 #include "IWindow.hpp"
 #include "Utils.hpp"
 #include "Painter.hpp"
-#include <mutex>
+#include <unordered_set>
 #include <gtk/gtk.h>
 
 class Renderer;
@@ -27,9 +27,10 @@ private:
     GtkWidget *_window;
     GtkWidget *_grid;
     std::unique_ptr<Painter> _painter;
+    std::unordered_set<GtkWidget *> _widgets;
 
-    static void _OnDraw(GtkDrawingArea *, cairo_t *cr, int width, int height, gpointer data);
-    void _OnDraw2(cairo_t *cr, int width, int height);
+    //static void _OnDraw(GtkDrawingArea *, cairo_t *cr, int width, int height, gpointer data);
+    //void _OnDraw2(cairo_t *cr, int width, int height);
     static void _OnResize(GtkDrawingArea *, int width, int height, gpointer data);
     void _OnResize2(int width, int height);
     static gboolean _OnKeyPressed(GtkEventControllerKey *,
@@ -39,4 +40,6 @@ private:
                                   gpointer               data);
     gboolean _OnKeyPressed2(guint keyval, guint keycode, GdkModifierType state);
 
+    static gboolean _Present(gpointer data);
+    void _Present();
 };

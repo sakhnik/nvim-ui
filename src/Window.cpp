@@ -10,27 +10,26 @@ Window::Window(Renderer *renderer, Input *input)
 {
     gtk_init();
 
-    _window = gtk_window_new ();
-    gtk_window_set_title (GTK_WINDOW (_window), "nvim-ui");
-    gtk_window_set_default_size (GTK_WINDOW (_window), 1024, 768);
+    _window = gtk_window_new();
+    gtk_window_set_title(GTK_WINDOW(_window), "nvim-ui");
+    gtk_window_set_default_size(GTK_WINDOW(_window), 1024, 768);
 
-    _grid = gtk_drawing_area_new ();
-    gtk_drawing_area_set_draw_func (GTK_DRAWING_AREA (_grid), _OnDraw, this, nullptr);
+    _grid = gtk_fixed_new();
     gtk_widget_set_can_focus(_grid, true);
     gtk_widget_set_focusable(_grid, true);
 
-    gtk_window_set_child (GTK_WINDOW (_window), _grid);
+    gtk_window_set_child(GTK_WINDOW(_window), _grid);
 
-    g_signal_connect (G_OBJECT (_grid), "resize", G_CALLBACK(_OnResize), this);
+    g_signal_connect(G_OBJECT(_grid), "resize", G_CALLBACK(_OnResize), this);
 
     GtkEventController *controller = gtk_event_controller_key_new();
     gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
     g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-pressed", G_CALLBACK(_OnKeyPressed), this);
     gtk_widget_add_controller(_grid, controller);
 
-    gtk_widget_show (_window);
+    gtk_widget_show(_window);
 
-    int scale = gtk_widget_get_scale_factor (_window);
+    int scale = gtk_widget_get_scale_factor(_window);
     _painter.reset(new Painter(scale, scale));
 
     _renderer->AttachWindow(this);
@@ -58,32 +57,101 @@ namespace {
 
 struct Texture : IWindow::ITexture
 {
-    Texture(cairo_surface_t *t, int width, int height)
-        : texture{t, cairo_surface_destroy}
-        , width{width}
-        , height{height}
-    {
-    }
-    ::PtrT<cairo_surface_t> texture;
-    int width;
-    int height;
+    // Non-owning
+    GtkWidget *widget = nullptr;
 };
 
 } //namespace;
 
-void Window::_OnDraw(GtkDrawingArea *, cairo_t *cr, int width, int height, gpointer data)
+//void Window::_OnDraw(GtkDrawingArea *, cairo_t *cr, int width, int height, gpointer data)
+//{
+//    reinterpret_cast<Window*>(data)->_OnDraw2(cr, width, height);
+//}
+//
+//void Window::_OnDraw2(cairo_t *cr, int width, int height)
+//{
+//    auto guard = _renderer->Lock();
+//
+//    cairo_save(cr);
+//    Painter::SetSource(cr, _renderer->GetBg());
+//    cairo_paint(cr);
+//    cairo_restore(cr);
+//
+//    for (int row = 0, rowN = _renderer->GetGridLines().size();
+//         row < rowN; ++row)
+//    {
+//        const auto &line = _renderer->GetGridLines()[row];
+//        for (const auto &texture : line)
+//        {
+//            Texture *t = static_cast<Texture *>(texture.texture.get());
+//            auto col = texture.col;
+//
+//            cairo_save(cr);
+//            cairo_translate(cr, col * _painter->GetCellWidth(), row * _painter->GetCellHeight());
+//            cairo_set_source_surface(cr, t->texture.get(), 0, 0);
+//            cairo_rectangle(cr, 0, 0, t->width, t->height);
+//            cairo_fill(cr);
+//            cairo_restore(cr);
+//        }
+//    }
+//
+//    if (!_renderer->IsBusy())
+//    {
+//        DrawCursor(cr, _renderer->GetCursorRow(), _renderer->GetCursorCol(), _renderer->GetFg(), _renderer->GetMode());
+//    }
+//}
+
+IWindow::ITexture::PtrT
+Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
-    reinterpret_cast<Window*>(data)->_OnDraw2(cr, width, height);
+    // not starts with "  "
+    //bool has_text = 0 != text.rfind("  ", 0);
+    //int pixel_width = (width + (has_text ? 1 : 0)) * _painter->GetCellWidth();
+    //int pixel_height = _painter->GetCellHeight();
+
+    return Texture::PtrT(new Texture);
+
+
+    //// Allocate a surface slightly wider than necessary
+    //GdkSurface *s = gtk_native_get_surface(gtk_widget_get_native(_grid));
+    //auto surface = PtrT<cairo_surface_t>(
+    //    gdk_surface_create_similar_surface(s, CAIRO_CONTENT_COLOR, pixel_width, pixel_height),
+    //    cairo_surface_destroy);
+
+    //// Paint the background color
+    //unsigned fg = attr.fg.value_or(def_attr.fg.value());
+    //unsigned bg = attr.bg.value_or(def_attr.bg.value());
+    //if ((attr.flags & HlAttr::F_REVERSE))
+    //    std::swap(bg, fg);
+
+    //{
+    //    auto cr = PtrT<cairo_t>(cairo_create(surface.get()), cairo_destroy);
+    //    Painter::SetSource(cr.get(), bg);
+    //    cairo_paint(cr.get());
+    //}
+
+    //if (has_text)
+    //{
+    //    pixel_width = _painter->Paint(surface.get(), text, attr, def_attr);
+    //}
 }
 
-void Window::_OnDraw2(cairo_t *cr, int width, int height)
+void Window::Present()
+{
+    g_main_context_invoke(nullptr, _Present, this);
+}
+
+gboolean Window::_Present(gpointer data)
+{
+    reinterpret_cast<Window *>(data)->_Present();
+    return false;
+}
+
+void Window::_Present()
 {
     auto guard = _renderer->Lock();
 
-    cairo_save(cr);
-    Painter::SetSource(cr, _renderer->GetBg());
-    cairo_paint(cr);
-    cairo_restore(cr);
+    decltype(_widgets) widgets;
 
     for (int row = 0, rowN = _renderer->GetGridLines().size();
          row < rowN; ++row)
@@ -91,62 +159,31 @@ void Window::_OnDraw2(cairo_t *cr, int width, int height)
         const auto &line = _renderer->GetGridLines()[row];
         for (const auto &texture : line)
         {
-            Texture *t = static_cast<Texture *>(texture.texture.get());
-            auto col = texture.col;
-
-            cairo_save(cr);
-            cairo_translate(cr, col * _painter->GetCellWidth(), row * _painter->GetCellHeight());
-            cairo_set_source_surface(cr, t->texture.get(), 0, 0);
-            cairo_rectangle(cr, 0, 0, t->width, t->height);
-            cairo_fill(cr);
-            cairo_restore(cr);
+            Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
+            int x = texture.col * _painter->GetCellWidth();
+            int y = row * _painter->GetCellHeight();
+            if (!t->widget && !texture.IsSpace())
+            {
+                t->widget = gtk_label_new(texture.text.c_str());
+            }
+            if (gtk_widget_get_parent(t->widget))
+            {
+                gtk_fixed_move(GTK_FIXED(_grid), t->widget, x, y);
+            }
+            else
+            {
+                gtk_fixed_put(GTK_FIXED(_grid), t->widget, x, y);
+            }
+            widgets.insert(t->widget);
+            _widgets.erase(t->widget);
         }
     }
 
-    if (!_renderer->IsBusy())
+    for (auto *w : _widgets)
     {
-        DrawCursor(cr, _renderer->GetCursorRow(), _renderer->GetCursorCol(), _renderer->GetFg(), _renderer->GetMode());
+        gtk_fixed_remove(GTK_FIXED(_grid), w);
     }
-}
-
-IWindow::ITexture::PtrT
-Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
-{
-    // not starts with "  "
-    bool has_text = 0 != text.rfind("  ", 0);
-    int pixel_width = (width + (has_text ? 1 : 0)) * _painter->GetCellWidth();
-    int pixel_height = _painter->GetCellHeight();
-
-    // Allocate a surface slightly wider than necessary
-    GdkSurface *s = gtk_native_get_surface(gtk_widget_get_native(_grid));
-    auto surface = PtrT<cairo_surface_t>(
-        gdk_surface_create_similar_surface(s, CAIRO_CONTENT_COLOR, pixel_width, pixel_height),
-        cairo_surface_destroy);
-
-    // Paint the background color
-    unsigned fg = attr.fg.value_or(def_attr.fg.value());
-    unsigned bg = attr.bg.value_or(def_attr.bg.value());
-    if ((attr.flags & HlAttr::F_REVERSE))
-        std::swap(bg, fg);
-
-    {
-        auto cr = PtrT<cairo_t>(cairo_create(surface.get()), cairo_destroy);
-        Painter::SetSource(cr.get(), bg);
-        cairo_paint(cr.get());
-    }
-
-    if (has_text)
-    {
-        pixel_width = _painter->Paint(surface.get(), text, attr, def_attr);
-    }
-
-    std::unique_ptr<Texture> texture{new Texture(surface.release(), pixel_width, pixel_height)};
-    return Texture::PtrT(texture.release());
-}
-
-void Window::Present()
-{
-    gtk_widget_queue_draw(_grid);
+    _widgets.swap(widgets);
 }
 
 void Window::DrawCursor(cairo_t *cr, int row, int col, unsigned fg, std::string_view mode)
