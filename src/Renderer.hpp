@@ -53,6 +53,8 @@ public:
 
     using AttrMapT = std::unordered_map<unsigned, HlAttr>;
     const AttrMapT& GetAttrMap() const { return _hl_attr; }
+    bool IsAttrMapModified() const { return _hl_attr_modified; }
+    void MarkAttrMapProcessed() { _hl_attr_modified = false; }
     unsigned GetBg() const { return _def_attr.bg.value(); }
     unsigned GetFg() const { return _def_attr.fg.value(); }
     const HlAttr& GetDefAttr() const { return _def_attr; }
@@ -69,6 +71,7 @@ private:
     IWindow *_window = nullptr;
 
     AttrMapT _hl_attr;
+    bool _hl_attr_modified = false;
     HlAttr _def_attr;
     int _cursor_row = 0;
     int _cursor_col = 0;

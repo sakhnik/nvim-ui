@@ -246,6 +246,7 @@ void Renderer::HlAttrDefine(unsigned hl_id, HlAttr attr)
 {
     Logger().debug("HlAttrDefine {}", hl_id);
     _hl_attr[hl_id] = attr;
+    _hl_attr_modified = true;
 }
 
 void Renderer::DefaultColorSet(unsigned fg, unsigned bg)

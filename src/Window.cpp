@@ -103,8 +103,9 @@ void Window::_Present()
 {
     auto guard = _renderer->Lock();
 
-    if (_style.empty())
+    if (_renderer->IsAttrMapModified())
     {
+        _renderer->MarkAttrMapProcessed();
         std::ostringstream oss;
         auto mapAttr = [&](const HlAttr &attr, const HlAttr &def_attr) {
             if ((attr.flags & HlAttr::F_REVERSE))
