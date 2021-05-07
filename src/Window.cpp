@@ -2,6 +2,8 @@
 #include "Logger.hpp"
 #include "Input.hpp"
 #include "Renderer.hpp"
+
+#include <sstream>
 #include <fmt/format.h>
 
 
@@ -164,53 +166,53 @@ gboolean Window::_Present(gpointer data)
     return false;
 }
 
-namespace {
-
-class FontMgr
-{
-public:
-    FontMgr()
-        : _font_desc(pango_font_description_new(), pango_font_description_free)
-    {
-        pango_font_description_set_family(_font_desc.get(), "Fira Code");
-        pango_font_description_set_absolute_size(_font_desc.get(), 20 * PANGO_SCALE);
-    }
-
-    PtrT<PangoAttrList> CreateAttrList(const std::string &text, const HlAttr &attr)
-    {
-        pango_font_description_set_weight(_font_desc.get(),
-                (attr.flags & HlAttr::F_BOLD) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL);
-        pango_font_description_set_style(_font_desc.get(),
-                (attr.flags & HlAttr::F_ITALIC) ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL);
-
-        PtrT<PangoAttrList> al(pango_attr_list_new(), [](PangoAttrList *l) { pango_attr_list_unref(l); });
-
-        pango_attr_list_insert(al.get(), pango_attr_font_desc_new(_font_desc.get()));
-
-        if ((attr.flags & HlAttr::F_UNDERLINE))
-            pango_attr_list_insert(al.get(), pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
-        if ((attr.flags & HlAttr::F_UNDERCURL))
-        {
-            pango_attr_list_insert(al.get(), pango_attr_underline_new(PANGO_UNDERLINE_ERROR));
-            pango_attr_list_insert(al.get(), pango_attr_underline_color_new(65535, 0, 0));
-        }
-
-        return al;
-    }
-
-private:
-    PtrT<PangoFontDescription> _font_desc;
-};
-
-} //namespace;
-
 void Window::_Present()
 {
     auto guard = _renderer->Lock();
 
     if (_style.empty())
     {
-        _style = fmt::format("* {{ background-color: #{:06x}; }}", _renderer->GetBg());
+        std::ostringstream oss;
+        auto mapAttr = [&](const HlAttr &attr, const HlAttr &def_attr) {
+            if ((attr.flags & HlAttr::F_REVERSE))
+            {
+                auto fg = attr.fg.value_or(def_attr.fg.value());
+                auto bg = attr.bg.value_or(def_attr.bg.value());
+                oss << fmt::format("background-color: #{:06x};\n", fg);
+                oss << fmt::format("color: #{:06x};\n", bg);
+            }
+            else
+            {
+                if (attr.bg.has_value())
+                    oss << fmt::format("background-color: #{:06x};\n", attr.bg.value());
+                if (attr.fg.has_value())
+                    oss << fmt::format("color: #{:06x};\n", attr.fg.value());
+            }
+            if ((attr.flags & HlAttr::F_ITALIC))
+                oss << "font-style: italic;\n";
+            if ((attr.flags & HlAttr::F_BOLD))
+                oss << "font-weight: bold;\n";
+        };
+
+        oss << "* {\n";
+        oss << "font-family: Fira Code;\n";
+        oss << "font-size: 14pt;\n";
+        mapAttr(_renderer->GetDefAttr(), _renderer->GetDefAttr());
+        oss << "}\n";
+
+        for (const auto &id_attr : _renderer->GetAttrMap())
+        {
+            int id = id_attr.first;
+            const auto &attr = id_attr.second;
+
+            oss << "\n";
+            oss << "label.hl" << id << " {\n";
+            mapAttr(attr, _renderer->GetDefAttr());
+            oss << "}\n";
+        }
+
+        _style = oss.str();
+        Logger().info("{}", _style);
         gtk_css_provider_load_from_data(_css_provider.get(), _style.data(), -1);
     }
 
@@ -229,20 +231,12 @@ void Window::_Present()
             {
                 t->widget = gtk_label_new(texture.text.c_str());
 
-                FontMgr font_mgr;
-                auto al = font_mgr.CreateAttrList(texture.text, t->hl_attr);
-                gtk_label_set_attributes(GTK_LABEL(t->widget), al.get());
-
-                // TODO Cache styles
-                unsigned fg = t->hl_attr.fg.value();
-                std::string style = fmt::format("label {{ color: #{:06x}; }}", fg);
-
-                PtrT<GtkCssProvider> provider{gtk_css_provider_new(), [](auto *p) { g_object_unref(p); }};
                 gtk_style_context_add_provider(
                         gtk_widget_get_style_context(t->widget),
-                        GTK_STYLE_PROVIDER(provider.get()),
+                        GTK_STYLE_PROVIDER(_css_provider.get()),
                         GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-                gtk_css_provider_load_from_data(provider.get(), style.data(), -1);
+                std::string class_name = fmt::format("hl{}", texture.hl_id);
+                gtk_widget_add_css_class(t->widget, class_name.data());
             }
             if (t->widget)
             {

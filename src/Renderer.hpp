@@ -51,8 +51,11 @@ public:
         return std::lock_guard<std::mutex>{_mutex};
     }
 
+    using AttrMapT = std::unordered_map<unsigned, HlAttr>;
+    const AttrMapT& GetAttrMap() const { return _hl_attr; }
     unsigned GetBg() const { return _def_attr.bg.value(); }
     unsigned GetFg() const { return _def_attr.fg.value(); }
+    const HlAttr& GetDefAttr() const { return _def_attr; }
 
     bool IsBusy() const { return _is_busy; }
     int GetCursorRow() const { return _cursor_row; }
@@ -65,7 +68,7 @@ private:
     AsyncExec _async_exec;
     IWindow *_window = nullptr;
 
-    std::unordered_map<unsigned, HlAttr> _hl_attr;
+    AttrMapT _hl_attr;
     HlAttr _def_attr;
     int _cursor_row = 0;
     int _cursor_col = 0;
