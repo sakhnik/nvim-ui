@@ -82,77 +82,10 @@ struct Texture : IWindow::ITexture
 
 } //namespace;
 
-//void Window::_OnDraw(GtkDrawingArea *, cairo_t *cr, int width, int height, gpointer data)
-//{
-//    reinterpret_cast<Window*>(data)->_OnDraw2(cr, width, height);
-//}
-//
-//void Window::_OnDraw2(cairo_t *cr, int width, int height)
-//{
-//    auto guard = _renderer->Lock();
-//
-//    cairo_save(cr);
-//    Painter::SetSource(cr, _renderer->GetBg());
-//    cairo_paint(cr);
-//    cairo_restore(cr);
-//
-//    for (int row = 0, rowN = _renderer->GetGridLines().size();
-//         row < rowN; ++row)
-//    {
-//        const auto &line = _renderer->GetGridLines()[row];
-//        for (const auto &texture : line)
-//        {
-//            Texture *t = static_cast<Texture *>(texture.texture.get());
-//            auto col = texture.col;
-//
-//            cairo_save(cr);
-//            cairo_translate(cr, col * _painter->GetCellWidth(), row * _painter->GetCellHeight());
-//            cairo_set_source_surface(cr, t->texture.get(), 0, 0);
-//            cairo_rectangle(cr, 0, 0, t->width, t->height);
-//            cairo_fill(cr);
-//            cairo_restore(cr);
-//        }
-//    }
-//
-//    if (!_renderer->IsBusy())
-//    {
-//        DrawCursor(cr, _renderer->GetCursorRow(), _renderer->GetCursorCol(), _renderer->GetFg(), _renderer->GetMode());
-//    }
-//}
-
 IWindow::ITexture::PtrT
 Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
-    // not starts with "  "
-    //bool has_text = 0 != text.rfind("  ", 0);
-    //int pixel_width = (width + (has_text ? 1 : 0)) * _painter->GetCellWidth();
-    //int pixel_height = _painter->GetCellHeight();
-
     return Texture::PtrT(new Texture(attr, def_attr));
-
-
-    //// Allocate a surface slightly wider than necessary
-    //GdkSurface *s = gtk_native_get_surface(gtk_widget_get_native(_grid));
-    //auto surface = PtrT<cairo_surface_t>(
-    //    gdk_surface_create_similar_surface(s, CAIRO_CONTENT_COLOR, pixel_width, pixel_height),
-    //    cairo_surface_destroy);
-
-    //// Paint the background color
-    //unsigned fg = attr.fg.value_or(def_attr.fg.value());
-    //unsigned bg = attr.bg.value_or(def_attr.bg.value());
-    //if ((attr.flags & HlAttr::F_REVERSE))
-    //    std::swap(bg, fg);
-
-    //{
-    //    auto cr = PtrT<cairo_t>(cairo_create(surface.get()), cairo_destroy);
-    //    Painter::SetSource(cr.get(), bg);
-    //    cairo_paint(cr.get());
-    //}
-
-    //if (has_text)
-    //{
-    //    pixel_width = _painter->Paint(surface.get(), text, attr, def_attr);
-    //}
 }
 
 void Window::Present()
