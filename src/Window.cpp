@@ -161,7 +161,7 @@ void Window::_Present()
             Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
             int x = texture.col * _painter->GetCellWidth();
             int y = row * _painter->GetCellHeight();
-            if (!t->widget && !texture.IsSpace())
+            if (!t->widget)
             {
                 t->widget = gtk_label_new(texture.text.c_str());
 
