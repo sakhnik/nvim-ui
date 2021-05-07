@@ -2,6 +2,7 @@
 #include "Logger.hpp"
 #include "Input.hpp"
 #include "Renderer.hpp"
+#include <fmt/format.h>
 
 
 Window::Window(Renderer *renderer, Input *input)
@@ -17,6 +18,12 @@ Window::Window(Renderer *renderer, Input *input)
     _grid = gtk_fixed_new();
     gtk_widget_set_can_focus(_grid, true);
     gtk_widget_set_focusable(_grid, true);
+
+    _css_provider.reset(gtk_css_provider_new());
+    gtk_style_context_add_provider(
+            gtk_widget_get_style_context(_grid),
+            GTK_STYLE_PROVIDER(_css_provider.get()),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
     gtk_window_set_child(GTK_WINDOW(_window), _grid);
 
@@ -201,6 +208,12 @@ void Window::_Present()
 {
     auto guard = _renderer->Lock();
 
+    if (_style.empty())
+    {
+        _style = fmt::format("* {{ background-color: #{:06x}; }}", _renderer->GetBg());
+        gtk_css_provider_load_from_data(_css_provider.get(), _style.data(), -1);
+    }
+
     decltype(_widgets) widgets;
 
     for (int row = 0, rowN = _renderer->GetGridLines().size();
@@ -219,6 +232,17 @@ void Window::_Present()
                 FontMgr font_mgr;
                 auto al = font_mgr.CreateAttrList(texture.text, t->hl_attr);
                 gtk_label_set_attributes(GTK_LABEL(t->widget), al.get());
+
+                // TODO Cache styles
+                unsigned fg = t->hl_attr.fg.value();
+                std::string style = fmt::format("label {{ color: #{:06x}; }}", fg);
+
+                PtrT<GtkCssProvider> provider{gtk_css_provider_new(), [](auto *p) { g_object_unref(p); }};
+                gtk_style_context_add_provider(
+                        gtk_widget_get_style_context(t->widget),
+                        GTK_STYLE_PROVIDER(provider.get()),
+                        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                gtk_css_provider_load_from_data(provider.get(), style.data(), -1);
             }
             if (t->widget)
             {
@@ -303,8 +327,8 @@ gboolean Window::_OnKeyPressed2(guint keyval, guint keycode, GdkModifierType sta
     //print ("* key pressed %u (%s) %u\n", keyval, key, keycode);
 
     gunichar uc = gdk_keyval_to_unicode(keyval);
-    auto input = MkPtrT(g_string_append_unichar(g_string_new(nullptr), uc),
-                                                [](GString *s) { g_string_free(s, true); });
+    auto input = MkPtr(g_string_append_unichar(g_string_new(nullptr), uc),
+                                               [](GString *s) { g_string_free(s, true); });
     auto start_length = input->len;
 
     // TODO: functional keys, shift etc

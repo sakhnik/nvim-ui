@@ -12,7 +12,7 @@ PtrT<T> NullPtr(void(*d)(T*))
 }
 
 template <typename T, typename D>
-PtrT<T, D> MkPtrT(T *t, D &&d)
+PtrT<T, D> MkPtr(T *t, D &&d)
 {
     return PtrT<T, D>(t, std::forward<D>(d));
 }

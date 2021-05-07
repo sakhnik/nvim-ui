@@ -28,6 +28,8 @@ private:
     GtkWidget *_grid;
     std::unique_ptr<Painter> _painter;
     std::unordered_set<GtkWidget *> _widgets;
+    PtrT<GtkCssProvider> _css_provider = NullPtr<GtkCssProvider>([](auto *p) { g_object_unref(p); });
+    std::string _style;
 
     //static void _OnDraw(GtkDrawingArea *, cairo_t *cr, int width, int height, gpointer data);
     //void _OnDraw2(cairo_t *cr, int width, int height);
