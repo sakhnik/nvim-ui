@@ -57,6 +57,9 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
         }
     };
 
+    // Going to update the renderer
+    auto lock = _renderer->Lock();
+
     const auto &arr = obj.via.array;
     for (size_t i = 0; i < arr.size; ++i)
     {

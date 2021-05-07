@@ -66,8 +66,6 @@ void Renderer::_DoFlush()
     oss << "Flush ";
     _last_flush_time = ClockT::now();
 
-    auto guard = Lock();
-
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
         auto &line = _lines[row];
@@ -194,7 +192,6 @@ void Renderer::GridCursorGoto(int row, int col)
 {
     Logger().debug("CursorGoto row={} col={}", row, col);
     _AnticipateFlush();
-    auto lock = Lock();
     _cursor_row = row;
     _cursor_col = col;
 }
@@ -261,7 +258,6 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
         line.texture_cache.Clear();
     }
 
-    auto lock = Lock();
     _def_attr.fg = fg;
     _def_attr.bg = bg;
 }
@@ -303,7 +299,6 @@ void Renderer::GridResize(int width, int height)
         line.text.resize(width, " ");
     }
 
-    auto lock = Lock();
     _grid_lines.resize(height);
 }
 
@@ -316,7 +311,6 @@ void Renderer::ModeChange(std::string_view mode)
 void Renderer::SetBusy(bool is_busy)
 {
     Logger().debug("SetBusy {}", is_busy);
-    auto lock = Lock();
     _is_busy = is_busy;
     _window->SetBusy(is_busy);
 }
