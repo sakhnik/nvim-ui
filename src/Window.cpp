@@ -220,16 +220,19 @@ void Window::_Present()
                 auto al = font_mgr.CreateAttrList(texture.text, t->hl_attr);
                 gtk_label_set_attributes(GTK_LABEL(t->widget), al.get());
             }
-            if (gtk_widget_get_parent(t->widget))
+            if (t->widget)
             {
-                gtk_fixed_move(GTK_FIXED(_grid), t->widget, x, y);
+                if (gtk_widget_get_parent(t->widget))
+                {
+                    gtk_fixed_move(GTK_FIXED(_grid), t->widget, x, y);
+                }
+                else
+                {
+                    gtk_fixed_put(GTK_FIXED(_grid), t->widget, x, y);
+                }
+                widgets.insert(t->widget);
+                _widgets.erase(t->widget);
             }
-            else
-            {
-                gtk_fixed_put(GTK_FIXED(_grid), t->widget, x, y);
-            }
-            widgets.insert(t->widget);
-            _widgets.erase(t->widget);
         }
     }
 
