@@ -38,10 +38,28 @@ Window::Window(Renderer *renderer, Input *input)
 
     gtk_widget_show(_window);
 
-    int scale = gtk_widget_get_scale_factor(_window);
-    _painter.reset(new Painter(scale, scale));
-
     _renderer->AttachWindow(this);
+
+    {
+        // Initial style setup
+        auto guard = _renderer->Lock();
+        _UpdateStyle();
+    }
+
+    // Measure cell width and height
+    const char *const RULER = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    GtkWidget *ruler = gtk_label_new(RULER);
+    gtk_style_context_add_provider(
+            gtk_widget_get_style_context(ruler),
+            GTK_STYLE_PROVIDER(_css_provider.get()),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    int width, height;
+    gtk_widget_measure(ruler, GTK_ORIENTATION_HORIZONTAL, -1, &width, nullptr, nullptr, nullptr);
+    gtk_widget_measure(ruler, GTK_ORIENTATION_VERTICAL, -1, &height, nullptr, nullptr, nullptr);
+    _cell_width = width * PANGO_SCALE / strlen(RULER);
+    _cell_height = height;
+    Logger().info("Measured cell: width={} height={}", static_cast<double>(_cell_width) / PANGO_SCALE, _cell_height);
+    g_object_ref_sink(ruler);
 }
 
 Window::~Window()
@@ -57,8 +75,8 @@ void Window::_OnResize(GtkDrawingArea *, int width, int height, gpointer data)
 void Window::_OnResize2(int width, int height)
 {
     Logger().info("OnResize {} {}", width, height);
-    int cols = std::max(1, width / _painter->GetCellWidth());
-    int rows = std::max(1, height / _painter->GetCellHeight());
+    int cols = std::max(1, width * PANGO_SCALE / _cell_width);
+    int rows = std::max(1, height / _cell_height);
     _renderer->OnResized(rows, cols);
 }
 
@@ -99,6 +117,52 @@ gboolean Window::_Present(gpointer data)
     return false;
 }
 
+void Window::_UpdateStyle()
+{
+    std::ostringstream oss;
+    auto mapAttr = [&](const HlAttr &attr, const HlAttr &def_attr) {
+        if ((attr.flags & HlAttr::F_REVERSE))
+        {
+            auto fg = attr.fg.value_or(def_attr.fg.value());
+            auto bg = attr.bg.value_or(def_attr.bg.value());
+            oss << fmt::format("background-color: #{:06x};\n", fg);
+            oss << fmt::format("color: #{:06x};\n", bg);
+        }
+        else
+        {
+            if (attr.bg.has_value())
+                oss << fmt::format("background-color: #{:06x};\n", attr.bg.value());
+            if (attr.fg.has_value())
+                oss << fmt::format("color: #{:06x};\n", attr.fg.value());
+        }
+        if ((attr.flags & HlAttr::F_ITALIC))
+            oss << "font-style: italic;\n";
+        if ((attr.flags & HlAttr::F_BOLD))
+            oss << "font-weight: bold;\n";
+    };
+
+    oss << "* {\n";
+    oss << "font-family: Fira Code;\n";
+    oss << "font-size: 14pt;\n";
+    mapAttr(_renderer->GetDefAttr(), _renderer->GetDefAttr());
+    oss << "}\n";
+
+    for (const auto &id_attr : _renderer->GetAttrMap())
+    {
+        int id = id_attr.first;
+        const auto &attr = id_attr.second;
+
+        oss << "\n";
+        oss << "label.hl" << id << " {\n";
+        mapAttr(attr, _renderer->GetDefAttr());
+        oss << "}\n";
+    }
+
+    _style = oss.str();
+    //Logger().info("{}", _style);
+    gtk_css_provider_load_from_data(_css_provider.get(), _style.data(), -1);
+}
+
 void Window::_Present()
 {
     auto guard = _renderer->Lock();
@@ -106,48 +170,7 @@ void Window::_Present()
     if (_renderer->IsAttrMapModified())
     {
         _renderer->MarkAttrMapProcessed();
-        std::ostringstream oss;
-        auto mapAttr = [&](const HlAttr &attr, const HlAttr &def_attr) {
-            if ((attr.flags & HlAttr::F_REVERSE))
-            {
-                auto fg = attr.fg.value_or(def_attr.fg.value());
-                auto bg = attr.bg.value_or(def_attr.bg.value());
-                oss << fmt::format("background-color: #{:06x};\n", fg);
-                oss << fmt::format("color: #{:06x};\n", bg);
-            }
-            else
-            {
-                if (attr.bg.has_value())
-                    oss << fmt::format("background-color: #{:06x};\n", attr.bg.value());
-                if (attr.fg.has_value())
-                    oss << fmt::format("color: #{:06x};\n", attr.fg.value());
-            }
-            if ((attr.flags & HlAttr::F_ITALIC))
-                oss << "font-style: italic;\n";
-            if ((attr.flags & HlAttr::F_BOLD))
-                oss << "font-weight: bold;\n";
-        };
-
-        oss << "* {\n";
-        oss << "font-family: Fira Code;\n";
-        oss << "font-size: 14pt;\n";
-        mapAttr(_renderer->GetDefAttr(), _renderer->GetDefAttr());
-        oss << "}\n";
-
-        for (const auto &id_attr : _renderer->GetAttrMap())
-        {
-            int id = id_attr.first;
-            const auto &attr = id_attr.second;
-
-            oss << "\n";
-            oss << "label.hl" << id << " {\n";
-            mapAttr(attr, _renderer->GetDefAttr());
-            oss << "}\n";
-        }
-
-        _style = oss.str();
-        Logger().info("{}", _style);
-        gtk_css_provider_load_from_data(_css_provider.get(), _style.data(), -1);
+        _UpdateStyle();
     }
 
     decltype(_widgets) widgets;
@@ -159,8 +182,8 @@ void Window::_Present()
         for (const auto &texture : line)
         {
             Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
-            int x = texture.col * _painter->GetCellWidth();
-            int y = row * _painter->GetCellHeight();
+            int x = texture.col * _cell_width / PANGO_SCALE;
+            int y = row * _cell_height;
             if (!t->widget)
             {
                 t->widget = gtk_label_new(texture.text.c_str());
@@ -197,11 +220,10 @@ void Window::_Present()
 
 void Window::DrawCursor(cairo_t *cr, int row, int col, unsigned fg, std::string_view mode)
 {
-    int cell_width = _painter->GetCellWidth();
-    int cell_height = _painter->GetCellHeight();
+    int cell_width = _cell_width / PANGO_SCALE;
 
     cairo_save(cr);
-    cairo_translate(cr, col * cell_width, row * cell_height);
+    cairo_translate(cr, 1. * col * _cell_width / PANGO_SCALE, row * _cell_height);
     cairo_set_source_rgba(cr,
         static_cast<double>(fg >> 16) / 255,
         static_cast<double>((fg >> 8) & 0xff) / 255,
@@ -210,15 +232,15 @@ void Window::DrawCursor(cairo_t *cr, int row, int col, unsigned fg, std::string_
 
     if (mode == "insert")
     {
-        cairo_rectangle(cr, 0, 0, 0.2 * cell_width, cell_height);
+        cairo_rectangle(cr, 0, 0, 0.2 * cell_width, _cell_height);
     }
     else if (mode == "replace" || mode == "operator")
     {
-        cairo_rectangle(cr, 0, 0.75 * cell_height, cell_width, 0.25 * cell_height);
+        cairo_rectangle(cr, 0, 0.75 * _cell_height, cell_width, 0.25 * _cell_height);
     }
     else
     {
-        cairo_rectangle(cr, 0, 0, cell_width, cell_height);
+        cairo_rectangle(cr, 0, 0, cell_width, _cell_height);
     }
     cairo_fill(cr);
     cairo_restore(cr);

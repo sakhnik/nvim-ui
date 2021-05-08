@@ -2,8 +2,8 @@
 
 #include "IWindow.hpp"
 #include "Utils.hpp"
-#include "Painter.hpp"
 #include <unordered_set>
+#include <string>
 #include <gtk/gtk.h>
 
 class Renderer;
@@ -26,7 +26,7 @@ private:
     Input * _input;
     GtkWidget *_window;
     GtkWidget *_grid;
-    std::unique_ptr<Painter> _painter;
+    int _cell_width = 0, _cell_height = 0;
     std::unordered_set<GtkWidget *> _widgets;
     PtrT<GtkCssProvider> _css_provider = NullPtr<GtkCssProvider>([](auto *p) { g_object_unref(p); });
     std::string _style;
@@ -42,4 +42,5 @@ private:
 
     static gboolean _Present(gpointer data);
     void _Present();
+    void _UpdateStyle();
 };

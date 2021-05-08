@@ -56,7 +56,6 @@ target_link_libraries(nvim-ui-lib PUBLIC
 add_executable(nvim-ui
     src/main.cpp
     src/Window.cpp
-    src/Painter.cpp
 )
 target_link_libraries(nvim-ui PUBLIC
     nvim-ui-lib
