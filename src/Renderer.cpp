@@ -63,7 +63,7 @@ void Renderer::_DoFlush()
 {
     _AnticipateFlush();
     std::ostringstream oss;
-    oss << "Flush ";
+    oss << "";
     _last_flush_time = ClockT::now();
 
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
