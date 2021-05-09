@@ -27,7 +27,12 @@ Window::Window(Renderer *renderer, Input *input)
             GTK_STYLE_PROVIDER(_css_provider.get()),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-    gtk_window_set_child(GTK_WINDOW(_window), _grid);
+    // GTK wouldn't allow shrinking the window if there are widgets
+    // placed in the _grid. So the scroll view is required.
+    _scroll = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(_scroll), _grid);
+
+    gtk_window_set_child(GTK_WINDOW(_window), _scroll);
 
     GtkEventController *controller = gtk_event_controller_key_new();
     gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
@@ -68,8 +73,8 @@ Window::~Window()
 
 void Window::_CheckSize()
 {
-    int width = gtk_widget_get_allocated_width(_grid);
-    int height = gtk_widget_get_allocated_width(_grid);
+    int width = gtk_widget_get_allocated_width(_window);
+    int height = gtk_widget_get_allocated_height(_window);
 
     int cols = std::max(1, width * PANGO_SCALE / _cell_width);
     int rows = std::max(1, height / _cell_height);
