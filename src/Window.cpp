@@ -91,16 +91,6 @@ struct Texture : IWindow::ITexture
 {
     // Non-owning
     GtkWidget *widget = nullptr;
-    HlAttr hl_attr;
-
-    Texture(const HlAttr &attr, const HlAttr &def_attr)
-        : hl_attr{attr}
-    {
-        if (!hl_attr.fg.has_value())
-            hl_attr.fg = def_attr.fg;
-        if (!hl_attr.bg.has_value())
-            hl_attr.bg = def_attr.bg;
-    }
 };
 
 } //namespace;
@@ -108,7 +98,7 @@ struct Texture : IWindow::ITexture
 IWindow::ITexture::PtrT
 Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
 {
-    return Texture::PtrT(new Texture(attr, def_attr));
+    return Texture::PtrT(new Texture);
 }
 
 void Window::Present()
