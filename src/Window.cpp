@@ -29,8 +29,6 @@ Window::Window(Renderer *renderer, Input *input)
 
     gtk_window_set_child(GTK_WINDOW(_window), _grid);
 
-    g_signal_connect(G_OBJECT(_grid), "resize", G_CALLBACK(_OnResize), this);
-
     GtkEventController *controller = gtk_event_controller_key_new();
     gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
     g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-pressed", G_CALLBACK(_OnKeyPressed), this);
@@ -45,6 +43,7 @@ Window::Window(Renderer *renderer, Input *input)
         auto guard = _renderer->Lock();
         _UpdateStyle();
     }
+
 
     // Measure cell width and height
     const char *const RULER = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -67,17 +66,18 @@ Window::~Window()
     gtk_window_destroy(GTK_WINDOW(_window));
 }
 
-void Window::_OnResize(GtkDrawingArea *, int width, int height, gpointer data)
+void Window::_CheckSize()
 {
-    reinterpret_cast<Window *>(data)->_OnResize2(width, height);
-}
+    int width = gtk_widget_get_allocated_width(_grid);
+    int height = gtk_widget_get_allocated_width(_grid);
 
-void Window::_OnResize2(int width, int height)
-{
-    Logger().info("OnResize {} {}", width, height);
     int cols = std::max(1, width * PANGO_SCALE / _cell_width);
     int rows = std::max(1, height / _cell_height);
-    _renderer->OnResized(rows, cols);
+    if (cols != _renderer->GetWidth() || rows != _renderer->GetHeight())
+    {
+        Logger().info("Grid size change detected rows={} cols={}", rows, cols);
+        _renderer->OnResized(rows, cols);
+    }
 }
 
 namespace {
@@ -216,6 +216,8 @@ void Window::_Present()
         gtk_fixed_remove(GTK_FIXED(_grid), w);
     }
     _widgets.swap(widgets);
+
+    _CheckSize();
 }
 
 void Window::DrawCursor(cairo_t *cr, int row, int col, unsigned fg, std::string_view mode)

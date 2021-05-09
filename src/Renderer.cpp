@@ -128,7 +128,7 @@ void Renderer::_DoFlush()
 
     auto end_time = ClockT::now();
     oss << " " << std::chrono::duration<double>(end_time - _last_flush_time).count();
-    Logger().info("Flush {}", oss.str());
+    Logger().debug("Flush {}", oss.str());
 }
 
 std::vector<size_t> Renderer::_SplitChunks(const _Line &line)
@@ -265,7 +265,6 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
 
 void Renderer::OnResized(int rows, int cols)
 {
-    Logger().info("OnResized {} {}", rows, cols);
     if (rows != static_cast<int>(_lines.size()) ||
         cols != static_cast<int>(_lines[0].text.size()))
     {
