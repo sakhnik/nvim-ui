@@ -67,6 +67,12 @@ Window::Window(Renderer *renderer, Input *input)
     _cell_height = height;
     Logger().info("Measured cell: width={} height={}", static_cast<double>(_cell_width) / PANGO_SCALE, _cell_height);
     g_object_ref_sink(ruler);
+
+    _cursor = gtk_drawing_area_new();
+    gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _cell_width / PANGO_SCALE);
+    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _cell_height);
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_cursor), _DrawCursor, this, nullptr);
+    gtk_fixed_put(GTK_FIXED(_grid), _cursor, 0, 0);
 }
 
 Window::~Window()
@@ -220,20 +226,34 @@ void Window::_Present()
         gtk_fixed_remove(GTK_FIXED(_grid), w);
     }
     _widgets.swap(widgets);
+
+    // Move the cursor
+    g_object_ref(_cursor);
+    gtk_fixed_remove(GTK_FIXED(_grid), _cursor);
+    gtk_fixed_put(GTK_FIXED(_grid), _cursor,
+            1.0 * _renderer->GetCursorCol() * _cell_width / PANGO_SCALE,
+            _renderer->GetCursorRow() * _cell_height);
 }
 
-void Window::DrawCursor(cairo_t *cr, int row, int col, unsigned fg, std::string_view mode)
+void Window::_DrawCursor(GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data)
 {
-    int cell_width = _cell_width / PANGO_SCALE;
+    reinterpret_cast<Window *>(data)->_DrawCursor2(da, cr, width, height);
+}
+
+void Window::_DrawCursor2(GtkDrawingArea *, cairo_t *cr, int width, int height)
+{
+    auto lock = _renderer->Lock();
+    double cell_width = 1.0 * _cell_width / PANGO_SCALE;
 
     cairo_save(cr);
-    cairo_translate(cr, 1. * col * _cell_width / PANGO_SCALE, row * _cell_height);
+    unsigned fg = _renderer->GetFg();
     cairo_set_source_rgba(cr,
         static_cast<double>(fg >> 16) / 255,
         static_cast<double>((fg >> 8) & 0xff) / 255,
         static_cast<double>(fg & 0xff) / 255,
         0.5);
 
+    const auto &mode = _renderer->GetMode();
     if (mode == "insert")
     {
         cairo_rectangle(cr, 0, 0, 0.2 * cell_width, _cell_height);

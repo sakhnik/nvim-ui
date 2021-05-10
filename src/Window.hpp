@@ -27,6 +27,7 @@ private:
     GtkWidget *_window;
     GtkWidget *_scroll;
     GtkWidget *_grid;
+    GtkWidget *_cursor;
     int _cell_width = 0, _cell_height = 0;
     std::unordered_set<GtkWidget *> _widgets;
     PtrT<GtkCssProvider> _css_provider = NullPtr<GtkCssProvider>([](auto *p) { g_object_unref(p); });
@@ -45,4 +46,6 @@ private:
     static gboolean _Present(gpointer data);
     void _Present();
     void _UpdateStyle();
+    static void _DrawCursor(GtkDrawingArea *, cairo_t *, int width, int height, gpointer data);
+    void _DrawCursor2(GtkDrawingArea *, cairo_t *, int width, int height);
 };
