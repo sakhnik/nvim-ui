@@ -228,11 +228,17 @@ void Window::_Present()
     _widgets.swap(widgets);
 
     // Move the cursor
-    g_object_ref(_cursor);
-    gtk_fixed_remove(GTK_FIXED(_grid), _cursor);
-    gtk_fixed_put(GTK_FIXED(_grid), _cursor,
-            1.0 * _renderer->GetCursorCol() * _cell_width / PANGO_SCALE,
-            _renderer->GetCursorRow() * _cell_height);
+    if (gtk_widget_get_parent(_cursor))
+    {
+        g_object_ref(_cursor);
+        gtk_fixed_remove(GTK_FIXED(_grid), _cursor);
+    }
+    if (!_renderer->IsBusy())
+    {
+        gtk_fixed_put(GTK_FIXED(_grid), _cursor,
+                1.0 * _renderer->GetCursorCol() * _cell_width / PANGO_SCALE,
+                _renderer->GetCursorRow() * _cell_height);
+    }
 }
 
 void Window::_DrawCursor(GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data)
