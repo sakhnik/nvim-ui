@@ -41,6 +41,9 @@ Window::Window(Renderer *renderer, Input *input)
 
     gtk_widget_show(_window);
 
+    g_signal_connect(_window, "notify::default-width", G_CALLBACK(_SizeChanged), this);
+    g_signal_connect(_window, "notify::default-height", G_CALLBACK(_SizeChanged), this);
+
     _renderer->AttachWindow(this);
 
     {
@@ -71,10 +74,16 @@ Window::~Window()
     gtk_window_destroy(GTK_WINDOW(_window));
 }
 
+gboolean Window::_SizeChanged(GObject *, GParamSpec *, gpointer data)
+{
+    reinterpret_cast<Window *>(data)->_CheckSize();
+    return false;
+}
+
 void Window::_CheckSize()
 {
-    int width = gtk_widget_get_allocated_width(_window);
-    int height = gtk_widget_get_allocated_height(_window);
+    int width, height;
+    g_object_get(_window, "default-width", &width, "default-height", &height, nullptr);
 
     int cols = std::max(1, width * PANGO_SCALE / _cell_width);
     int rows = std::max(1, height / _cell_height);
@@ -154,7 +163,7 @@ void Window::_UpdateStyle()
     }
 
     _style = oss.str();
-    //Logger().info("{}", _style);
+    Logger().debug("Updated CSS Style:\n{}", _style);
     gtk_css_provider_load_from_data(_css_provider.get(), _style.data(), -1);
 }
 
@@ -211,8 +220,6 @@ void Window::_Present()
         gtk_fixed_remove(GTK_FIXED(_grid), w);
     }
     _widgets.swap(widgets);
-
-    _CheckSize();
 }
 
 void Window::DrawCursor(cairo_t *cr, int row, int col, unsigned fg, std::string_view mode)

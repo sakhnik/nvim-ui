@@ -33,6 +33,7 @@ private:
     std::string _style;
 
     void _CheckSize();
+    static gboolean _SizeChanged(GObject *, GParamSpec *, gpointer data);
 
     static gboolean _OnKeyPressed(GtkEventControllerKey *,
                                   guint                  keyval,
