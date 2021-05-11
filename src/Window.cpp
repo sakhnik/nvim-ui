@@ -96,6 +96,11 @@ void Window::_CheckSize()
 
     int cols = std::max(1, width * PANGO_SCALE / _cell_width);
     int rows = std::max(1, height / _cell_height);
+    // Dejitter to request resizing only once
+    if (cols == _last_cols && rows == _last_rows)
+        return;
+    _last_cols = cols;
+    _last_rows = rows;
     if (cols != _renderer->GetWidth() || rows != _renderer->GetHeight())
     {
         Logger().info("Grid size change detected rows={} cols={}", rows, cols);

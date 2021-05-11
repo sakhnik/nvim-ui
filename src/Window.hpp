@@ -29,6 +29,7 @@ private:
     GtkWidget *_grid;
     GtkWidget *_cursor;
     int _cell_width = 0, _cell_height = 0;
+    int _last_rows = 0, _last_cols = 0;
     std::unordered_set<GtkWidget *> _widgets;
     PtrT<GtkCssProvider> _css_provider = NullPtr<GtkCssProvider>([](auto *p) { g_object_unref(p); });
     std::string _style;
