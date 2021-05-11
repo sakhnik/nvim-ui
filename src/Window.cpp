@@ -73,6 +73,9 @@ Window::Window(Renderer *renderer, Input *input)
     gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _cell_height);
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_cursor), _DrawCursor, this, nullptr);
     gtk_fixed_put(GTK_FIXED(_grid), _cursor, 0, 0);
+
+    // Adjust the grid size to the actual window size
+    _CheckSize();
 }
 
 Window::~Window()
