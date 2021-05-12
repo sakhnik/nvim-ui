@@ -1,6 +1,6 @@
 # nvim-ui
 
-NeoVim UI implemented in C++ using SDL2, pango/cairo.
+NeoVim UI implemented in C++ using gtk4.
 
 ## Why yet another NeoVim GUI?
 

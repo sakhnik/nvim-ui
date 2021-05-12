@@ -17,8 +17,8 @@
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/sakhnik/nvim-ui</projectSourceUrl>
     <tags>nvim-ui neovim</tags>
-    <summary>NeoVim GUI C++/SDL2/pango/cairo</summary>
-    <description>NeoVim GUI implemented in C++. SDL2 for hardware accelerated rendering. Pango for proper text layout.
+    <summary>NeoVim GUI C++/gtk4</summary>
+    <description>NeoVim GUI implemented in C++/gtk4.
       Requires nvim binary available in the executable search path.
     </description>
     <releaseNotes>https://github.com/sakhnik/nvim-ui/blob/main/CHANGELOG.md</releaseNotes>

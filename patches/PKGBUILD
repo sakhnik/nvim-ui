@@ -1,12 +1,11 @@
 pkgname=nvim-ui
 pkgver=0.0.1
 pkgrel=1
-pkgdesc='NeoVim GUI in C++ with SDL2'
+pkgdesc='NeoVim GUI in C++ with gtk4'
 arch=('x86_64' 'armv7h' 'aarch64')
 url='https://github.com/sakhnik/nvim-ui'
 licence=('MIT')
-depends=('neovim>=0.4.4' 'ttf-dejavu' 'sdl2>=2.0.14' 'libuv>=1.36' 'msgpack-c>=3.3'
-	'pango>=1.48' 'cairo>=1.17')
+depends=('neovim>=0.4.4' 'ttf-dejavu' 'gtk4>=4.2' 'libuv>=1.36' 'msgpack-c>=3.3')
 makedepends=('cmake' 'make')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/sakhnik/nvim-ui/archive/refs/tags/v$pkgver.tar.gz")
 md5sums=('9654ac6af348a73870a2e0c4be3d3f66')
