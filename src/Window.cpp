@@ -4,7 +4,7 @@
 #include "Renderer.hpp"
 
 #include <sstream>
-#include <fmt/format.h>
+#include <spdlog/fmt/fmt.h>
 
 
 Window::Window(Renderer *renderer, Input *input)
