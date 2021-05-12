@@ -7,9 +7,6 @@ find_package(Threads)
 find_package(PkgConfig REQUIRED) 
 pkg_check_modules(MSGPACK REQUIRED IMPORTED_TARGET msgpack)
 pkg_check_modules(LIBUV REQUIRED IMPORTED_TARGET libuv)
-pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
-pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pango)
-pkg_check_modules(PANGOCAIRO REQUIRED IMPORTED_TARGET pangocairo)
 pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
 pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk4)
 
@@ -59,9 +56,6 @@ add_executable(nvim-ui
 )
 target_link_libraries(nvim-ui PUBLIC
     nvim-ui-lib
-    PkgConfig::CAIRO
-    PkgConfig::PANGO
-    PkgConfig::PANGOCAIRO
     PkgConfig::GLIB
     PkgConfig::GTK
     )
