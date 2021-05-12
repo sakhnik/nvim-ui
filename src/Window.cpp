@@ -247,6 +247,19 @@ void Window::_Present()
                 1.0 * _renderer->GetCursorCol() * _cell_width / PANGO_SCALE,
                 _renderer->GetCursorRow() * _cell_height);
     }
+
+    if (_renderer->IsBusy())
+    {
+        if (!_busy_cursor)
+            _busy_cursor.reset(gdk_cursor_new_from_name("progress", nullptr));
+        gtk_widget_set_cursor(_grid, _busy_cursor.get());
+    }
+    else
+    {
+        if (!_active_cursor)
+            _active_cursor.reset(gdk_cursor_new_from_name("default", nullptr));
+        gtk_widget_set_cursor(_grid, _active_cursor.get());
+    }
 }
 
 void Window::_DrawCursor(GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data)
@@ -282,22 +295,6 @@ void Window::_DrawCursor2(GtkDrawingArea *, cairo_t *cr, int width, int height)
     }
     cairo_fill(cr);
     cairo_restore(cr);
-}
-
-void Window::SetBusy(bool is_busy)
-{
-    //if (is_busy)
-    //{
-    //    if (!_busy_cursor)
-    //        _busy_cursor.reset(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAITARROW));
-    //    SDL_SetCursor(_busy_cursor.get());
-    //}
-    //else
-    //{
-    //    if (!_active_cursor)
-    //        _active_cursor.reset(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));
-    //    SDL_SetCursor(_active_cursor.get());
-    //}
 }
 
 gboolean Window::_OnKeyPressed(GtkEventControllerKey *,

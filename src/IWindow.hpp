@@ -18,5 +18,4 @@ struct IWindow
     virtual ITexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) = 0;
 
     virtual void Present() = 0;
-    virtual void SetBusy(bool is_busy) = 0;
 };
