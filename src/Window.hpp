@@ -38,6 +38,7 @@ private:
     PtrT<GdkCursor> _busy_cursor = NullPtr<GdkCursor>([](auto *c) { g_object_unref(c); });
 
     void _CheckSize();
+    void _CheckSize2();
     static gboolean _SizeChanged(GObject *, GParamSpec *, gpointer data);
 
     static gboolean _OnKeyPressed(GtkEventControllerKey *,

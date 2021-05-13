@@ -73,6 +73,9 @@ Window::Window(Renderer *renderer, Input *input)
     gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _cell_height);
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_cursor), _DrawCursor, this, nullptr);
     gtk_fixed_put(GTK_FIXED(_grid), _cursor, 0, 0);
+
+    // Adjust the grid size to the actual window size
+    _CheckSize();
 }
 
 Window::~Window()
@@ -88,8 +91,16 @@ gboolean Window::_SizeChanged(GObject *, GParamSpec *, gpointer data)
 
 void Window::_CheckSize()
 {
-    int width = gtk_widget_get_width(_scroll);
-    int height = gtk_widget_get_height(_scroll);
+    g_timeout_add(0, [](gpointer data) {
+            reinterpret_cast<Window *>(data)->_CheckSize2();
+            return FALSE;
+        }, this);
+}
+
+void Window::_CheckSize2()
+{
+    int width = gtk_widget_get_allocated_width(_scroll);
+    int height = gtk_widget_get_allocated_height(_scroll);
 
     int cols = std::max(1, width * PANGO_SCALE / _cell_width);
     int rows = std::max(1, height / _cell_height);
@@ -257,9 +268,6 @@ void Window::_Present()
             _active_cursor.reset(gdk_cursor_new_from_name("default", nullptr));
         gtk_widget_set_cursor(_grid, _active_cursor.get());
     }
-
-    // Adjust the grid size to the actual window size
-    _CheckSize();
 }
 
 void Window::_DrawCursor(GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data)
