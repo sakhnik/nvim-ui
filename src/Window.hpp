@@ -39,18 +39,10 @@ private:
 
     void _CheckSize();
     void _CheckSize2();
-    static gboolean _SizeChanged(GObject *, GParamSpec *, gpointer data);
 
-    static gboolean _OnKeyPressed(GtkEventControllerKey *,
-                                  guint                  keyval,
-                                  guint                  keycode,
-                                  GdkModifierType        state,
-                                  gpointer               data);
-    gboolean _OnKeyPressed2(guint keyval, guint keycode, GdkModifierType state);
+    gboolean _OnKeyPressed(guint keyval, guint keycode, GdkModifierType state);
 
-    static gboolean _Present(gpointer data);
     void _Present();
     void _UpdateStyle();
-    static void _DrawCursor(GtkDrawingArea *, cairo_t *, int width, int height, gpointer data);
-    void _DrawCursor2(GtkDrawingArea *, cairo_t *, int width, int height);
+    void _DrawCursor(GtkDrawingArea *, cairo_t *, int width, int height);
 };

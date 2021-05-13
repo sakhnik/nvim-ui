@@ -36,13 +36,33 @@ Window::Window(Renderer *renderer, Input *input)
 
     GtkEventController *controller = gtk_event_controller_key_new();
     gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
-    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-pressed", G_CALLBACK(_OnKeyPressed), this);
+    using OnKeyPressedT = gboolean (*)(GtkEventControllerKey *,
+                                       guint                  keyval,
+                                       guint                  keycode,
+                                       GdkModifierType        state,
+                                       gpointer               data);
+    OnKeyPressedT onKeyPressed = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
+        return reinterpret_cast<Window *>(data)->_OnKeyPressed(keyval, keycode, state);
+    };
+    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-pressed", G_CALLBACK(onKeyPressed), this);
     gtk_widget_add_controller(_grid, controller);
 
     gtk_widget_show(_window);
 
-    g_signal_connect(_window, "notify::default-width", G_CALLBACK(_SizeChanged), this);
-    g_signal_connect(_window, "notify::default-height", G_CALLBACK(_SizeChanged), this);
+    using SizeChangedT = gboolean (*)(GObject *, GParamSpec *, gpointer data);
+    SizeChangedT sizeChanged = [](auto *, auto *, gpointer data) {
+        reinterpret_cast<Window *>(data)->_CheckSize();
+        return FALSE;
+    };
+
+    g_signal_connect(_window, "notify::default-width", G_CALLBACK(sizeChanged), this);
+    g_signal_connect(_window, "notify::default-height", G_CALLBACK(sizeChanged), this);
+
+    using OnShowT = void (*)(GtkWidget *, gpointer);
+    OnShowT onShow = [](auto *, gpointer data) {
+        reinterpret_cast<Window *>(data)->_CheckSize();
+    };
+    g_signal_connect(_window, "show", G_CALLBACK(onShow), this);
 
     _renderer->AttachWindow(this);
 
@@ -71,7 +91,11 @@ Window::Window(Renderer *renderer, Input *input)
     _cursor = gtk_drawing_area_new();
     gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _cell_width / PANGO_SCALE);
     gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _cell_height);
-    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_cursor), _DrawCursor, this, nullptr);
+
+    auto drawCursor = [](GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data) {
+        reinterpret_cast<Window *>(data)->_DrawCursor(da, cr, width, height);
+    };
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_cursor), drawCursor, this, nullptr);
     gtk_fixed_put(GTK_FIXED(_grid), _cursor, 0, 0);
 
     // Adjust the grid size to the actual window size
@@ -81,12 +105,6 @@ Window::Window(Renderer *renderer, Input *input)
 Window::~Window()
 {
     gtk_window_destroy(GTK_WINDOW(_window));
-}
-
-gboolean Window::_SizeChanged(GObject *, GParamSpec *, gpointer data)
-{
-    reinterpret_cast<Window *>(data)->_CheckSize();
-    return false;
 }
 
 void Window::_CheckSize()
@@ -134,13 +152,11 @@ Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, cons
 
 void Window::Present()
 {
-    g_main_context_invoke(nullptr, _Present, this);
-}
-
-gboolean Window::_Present(gpointer data)
-{
-    reinterpret_cast<Window *>(data)->_Present();
-    return false;
+    auto present = [](gpointer data) {
+        reinterpret_cast<Window *>(data)->_Present();
+        return FALSE;
+    };
+    g_main_context_invoke(nullptr, present, this);
 }
 
 void Window::_UpdateStyle()
@@ -270,12 +286,7 @@ void Window::_Present()
     }
 }
 
-void Window::_DrawCursor(GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data)
-{
-    reinterpret_cast<Window *>(data)->_DrawCursor2(da, cr, width, height);
-}
-
-void Window::_DrawCursor2(GtkDrawingArea *, cairo_t *cr, int width, int height)
+void Window::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int width, int height)
 {
     auto lock = _renderer->Lock();
     double cell_width = 1.0 * _cell_width / PANGO_SCALE;
@@ -305,16 +316,7 @@ void Window::_DrawCursor2(GtkDrawingArea *, cairo_t *cr, int width, int height)
     cairo_restore(cr);
 }
 
-gboolean Window::_OnKeyPressed(GtkEventControllerKey *,
-                               guint                  keyval,
-                               guint                  keycode,
-                               GdkModifierType        state,
-                               gpointer               data)
-{
-    return reinterpret_cast<Window *>(data)->_OnKeyPressed2(keyval, keycode, state);
-}
-
-gboolean Window::_OnKeyPressed2(guint keyval, guint keycode, GdkModifierType state)
+gboolean Window::_OnKeyPressed(guint keyval, guint keycode, GdkModifierType state)
 {
     //string key = Gdk.keyval_name (keyval);
     //print ("* key pressed %u (%s) %u\n", keyval, key, keycode);
