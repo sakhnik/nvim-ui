@@ -284,6 +284,8 @@ void Window::_Present()
             _active_cursor.reset(gdk_cursor_new_from_name("default", nullptr));
         gtk_widget_set_cursor(_grid, _active_cursor.get());
     }
+
+    _CheckSize2();
 }
 
 void Window::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int width, int height)
