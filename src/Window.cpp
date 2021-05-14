@@ -51,7 +51,7 @@ Window::Window(Renderer *renderer, Input *input)
 
     using SizeChangedT = gboolean (*)(GObject *, GParamSpec *, gpointer data);
     SizeChangedT sizeChanged = [](auto *, auto *, gpointer data) {
-        reinterpret_cast<Window *>(data)->_CheckSize();
+        reinterpret_cast<Window *>(data)->_CheckSizeAsync();
         return FALSE;
     };
 
@@ -60,7 +60,7 @@ Window::Window(Renderer *renderer, Input *input)
 
     using OnShowT = void (*)(GtkWidget *, gpointer);
     OnShowT onShow = [](auto *, gpointer data) {
-        reinterpret_cast<Window *>(data)->_CheckSize();
+        reinterpret_cast<Window *>(data)->_CheckSizeAsync();
     };
     g_signal_connect(_window, "show", G_CALLBACK(onShow), this);
 
@@ -99,7 +99,7 @@ Window::Window(Renderer *renderer, Input *input)
     gtk_fixed_put(GTK_FIXED(_grid), _cursor, 0, 0);
 
     // Adjust the grid size to the actual window size
-    _CheckSize();
+    _CheckSizeAsync();
 }
 
 Window::~Window()
@@ -107,15 +107,15 @@ Window::~Window()
     gtk_window_destroy(GTK_WINDOW(_window));
 }
 
-void Window::_CheckSize()
+void Window::_CheckSizeAsync()
 {
     g_timeout_add(0, [](gpointer data) {
-            reinterpret_cast<Window *>(data)->_CheckSize2();
+            reinterpret_cast<Window *>(data)->_CheckSize();
             return FALSE;
         }, this);
 }
 
-void Window::_CheckSize2()
+void Window::_CheckSize()
 {
     int width = gtk_widget_get_allocated_width(_scroll);
     int height = gtk_widget_get_allocated_height(_scroll);
@@ -285,7 +285,7 @@ void Window::_Present()
         gtk_widget_set_cursor(_grid, _active_cursor.get());
     }
 
-    _CheckSize2();
+    _CheckSize();
 }
 
 void Window::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int width, int height)

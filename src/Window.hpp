@@ -37,8 +37,8 @@ private:
     PtrT<GdkCursor> _active_cursor = NullPtr<GdkCursor>([](auto *c) { g_object_unref(c); });
     PtrT<GdkCursor> _busy_cursor = NullPtr<GdkCursor>([](auto *c) { g_object_unref(c); });
 
+    void _CheckSizeAsync();
     void _CheckSize();
-    void _CheckSize2();
 
     gboolean _OnKeyPressed(guint keyval, guint keycode, GdkModifierType state);
 
