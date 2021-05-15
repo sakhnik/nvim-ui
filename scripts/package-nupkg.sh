@@ -13,6 +13,9 @@ for dll in $dlls; do
   cp /mingw64/bin/$dll dist/bin
 done
 
+cp -R /mingw64/lib/gdk-pixbuf-2.0 dist/lib/
+cp -R /mingw64/share/{glib-2.0,icons} dist/share/
+
 cp -r chocolatey/* dist/
 if [[ "$NVIM_UI_RELEASE" == "$NVIM_UI_VERSION" ]]; then
   sed -i "s|PACKAGE_SOURCE_URL|https://github.com/sakhnik/nvim-ui/tree/v${NVIM_UI_VERSION}/chocolatey|" dist/*.nuspec

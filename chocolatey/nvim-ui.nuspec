@@ -31,6 +31,8 @@
   </metadata>
   <files>
     <file src="bin\**" target="bin" />
+    <file src="lib\**" target="lib" />
+    <file src="share\**" target="share" />
     <file src="tools\**" target="tools" />
   </files>
 </package>
