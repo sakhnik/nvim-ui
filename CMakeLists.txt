@@ -54,6 +54,7 @@ add_executable(nvim-ui
     src/main.cpp
     src/Window.cpp
 )
+set_target_properties(nvim-ui PROPERTIES WIN32_EXECUTABLE TRUE)
 target_link_libraries(nvim-ui PUBLIC
     nvim-ui-lib
     PkgConfig::GLIB
