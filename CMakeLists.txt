@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(nvim-ui CXX)
+project(nvim-ui C CXX)
 
 set(VERSION 0.0.3)
 
@@ -50,18 +50,44 @@ target_link_libraries(nvim-ui-lib PUBLIC
     spdlog::spdlog
     )
 
-add_executable(nvim-ui
+add_executable(${PROJECT_NAME}
     src/main.cpp
     src/Window.cpp
 )
-set_target_properties(nvim-ui PROPERTIES WIN32_EXECUTABLE TRUE)
-target_link_libraries(nvim-ui PUBLIC
+
+find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
+
+set(GRESOURCE_C   res.c)
+set(GRESOURCE_XML ${CMAKE_CURRENT_SOURCE_DIR}/res/res.xml)
+
+add_custom_command(
+    OUTPUT ${GRESOURCE_C}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res
+    COMMAND ${GLIB_COMPILE_RESOURCES}
+    ARGS
+        --generate
+        --target=${CMAKE_CURRENT_BINARY_DIR}/${GRESOURCE_C}
+        ${GRESOURCE_XML}
+    VERBATIM
+    MAIN_DEPENDENCY ${GRESOURCE_XML}
+    DEPENDS
+        res/nvim-ui.svg
+)
+
+target_sources(
+    ${PROJECT_NAME}
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/windows.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/${GRESOURCE_C}
+)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+target_link_libraries(${PROJECT_NAME} PUBLIC
     nvim-ui-lib
     PkgConfig::GLIB
     PkgConfig::GTK
     )
-target_sources(nvim-ui PRIVATE res/windows.rc)
-install(TARGETS nvim-ui DESTINATION bin)
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 #target_precompile_headers(nvim-cur PRIVATE pch.hpp)
 
 add_subdirectory(tests)

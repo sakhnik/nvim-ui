@@ -13,6 +13,9 @@ Window::Window(Renderer *renderer, Input *input)
 {
     gtk_init();
 
+    GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
+    gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
+
     _window = gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(_window), "nvim-ui");
     gtk_window_set_icon_name(GTK_WINDOW(_window), "nvim-ui");
