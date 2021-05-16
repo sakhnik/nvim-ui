@@ -15,6 +15,7 @@ Window::Window(Renderer *renderer, Input *input)
 
     _window = gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(_window), "nvim-ui");
+    gtk_window_set_icon_name(GTK_WINDOW(_window), "nvim-ui");
     gtk_window_set_default_size(GTK_WINDOW(_window), 1024, 768);
 
     _grid = gtk_fixed_new();

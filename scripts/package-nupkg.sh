@@ -4,7 +4,7 @@ if [[ "$WORKSPACE_MSYS2" ]]; then
   cd "$WORKSPACE_MSYS2"
 fi
 
-mkdir -p dist/{bin,lib,share/glib-2.0}
+mkdir -p dist/{bin,lib,share/{glib-2.0,icons/hicolor/scalable/apps}}
 cp build/nvim-ui.exe dist/bin
 touch dist/bin/nvim-ui.exe.gui
 
@@ -15,7 +15,9 @@ done
 
 cp -R /mingw64/lib/gdk-pixbuf-2.0 dist/lib/
 cp -R /mingw64/share/glib-2.0/schemas dist/share/glib-2.0/
-#cp -R /mingw64/share/icons dist/share/
+cp -R /mingw64/share/icons/hicolor/index.theme dist/share/icons/hicolor/
+cp -R res/nvim-ui.svg dist/share/icons/hicolor/scalable/apps/
+gtk-update-icon-cache dist/share/icons/hicolor
 
 cp -r chocolatey/* dist/
 if [[ "$NVIM_UI_RELEASE" == "$NVIM_UI_VERSION" ]]; then
