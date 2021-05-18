@@ -1,7 +1,7 @@
 project('nvim-ui', ['c', 'cpp'],
   default_options: [
-    'cpp_std=c++17',
-    'warning_level=3',
+    'cpp_std=c++20',
+    'warning_level=2',
   ],
   version : '0.0.3',
   license : 'MIT')
