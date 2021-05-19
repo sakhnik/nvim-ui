@@ -39,4 +39,5 @@ executable('nvim-ui',
   nvim_ui_sources,
   dependencies: [spdlog_dep, gtk4_dep],
   link_with: [nvim_ui_lib],
+  win_subsystem: 'windows',
   install: true)
