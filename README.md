@@ -22,11 +22,8 @@ Turns out, it's quite easy to code after experiments with [SpyUI](https://github
 The required font DejaVuSansMono.ttf is ubiquitously available in Linux. 
 
 ```
-mkdir BUILD
-cd BUILD
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make
-sudo make install
+meson setup BUILD --buildtype=debugoptimized
+meson compile -C BUILD -j0
 ```
 
 ### Windows
@@ -36,5 +33,5 @@ In Windows, the required font could be installed with [chocolatey](https://commu
 ```
 choco install neovim --pre
 choco install dejavufonts
-choco install .\nvim-ui.0.0.1.nupkg
+choco install nvim-ui
 ```

@@ -24,10 +24,10 @@ APP_DIR="$APP.AppDir"
 # Compile nvim-ui and install it into AppDir
 ########################################################################
 
-cmake -B $APP_BUILD_DIR -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
-make -C $APP_BUILD_DIR VERBOSE=1
-make -C $APP_BUILD_DIR VERBOSE=1 test
-make -C $APP_BUILD_DIR DESTDIR=${APP_DIR} VERBOSE=1 install
+meson setup BUILD --buildtype=release --prefix=/usr
+meson compile -C BUILD -j0
+ninja -C $APP_BUILD_DIR test
+DESTDIR=${APP_DIR} ninja -C $APP_BUILD_DIR install
 
 ########################################################################
 # Get helper functions and move to AppDir

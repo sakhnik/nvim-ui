@@ -1,3 +1,3 @@
 #!/bin/bash
 
-grep -Po '(?<=set\(VERSION )[^) ]+' CMakeLists.txt
+grep -Po "(?<=version: ')[^']+" meson.build

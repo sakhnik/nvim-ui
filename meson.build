@@ -3,8 +3,8 @@ project('nvim-ui', ['c', 'cpp'],
     'cpp_std=c++20',
     'warning_level=2',
   ],
-  version : '0.0.3',
-  license : 'MIT')
+  version: '0.0.3',
+  license: 'MIT')
 
 add_global_arguments('-DVERSION="' + meson.project_version() + '"', language: ['c', 'cpp'])
 

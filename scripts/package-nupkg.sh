@@ -5,10 +5,10 @@ if [[ "$WORKSPACE_MSYS2" ]]; then
 fi
 
 mkdir -p dist/{bin,lib,share/glib-2.0}
-cp build/nvim-ui.exe dist/bin
+cp BUILD/src/nvim-ui.exe dist/bin
 touch dist/bin/nvim-ui.exe.gui
 
-dlls=$(ntldd.exe -R build/nvim-ui.exe | grep -Po "[^ ]+?msys64[^ ]+" | sort -u | grep -Po '[^\\]+$')
+dlls=$(ntldd.exe -R BUILD/src/nvim-ui.exe | grep -Po "[^ ]+?msys64[^ ]+" | sort -u | grep -Po '[^\\]+$')
 for dll in $dlls; do
   cp /mingw64/bin/$dll dist/bin
 done

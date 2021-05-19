@@ -4,7 +4,6 @@ if [[ "$WORKSPACE_MSYS2" ]]; then
   cd "$WORKSPACE_MSYS2"
 fi
 
-mkdir build
-cd build
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
-ninja -v
+meson setup BUILD --buildtype=release --prefix=/usr
+ln -sf BUILD/compile_commands.json
+meson compile -C BUILD -j0
