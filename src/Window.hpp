@@ -23,6 +23,7 @@ public:
 private:
     Renderer *_renderer;
     Input *_input;
+    GtkBuilder *_builder;
     GtkWidget *_window;
     GtkWidget *_scroll;
     GtkWidget *_grid;

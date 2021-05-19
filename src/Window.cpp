@@ -16,13 +16,10 @@ Window::Window(Renderer *renderer, Input *input)
     GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
     gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
 
-    _window = gtk_window_new();
-    gtk_window_set_title(GTK_WINDOW(_window), "nvim-ui");
-    gtk_window_set_icon_name(GTK_WINDOW(_window), "nvim-ui");
-    gtk_window_set_default_size(GTK_WINDOW(_window), 1024, 768);
+    _builder = gtk_builder_new_from_resource("/org/nvim-ui/ui/main.glade");
 
-    _grid = gtk_fixed_new();
-    gtk_widget_set_can_focus(_grid, true);
+    _window = GTK_WIDGET(gtk_builder_get_object(_builder, "main_window"));
+    _grid = GTK_WIDGET(gtk_builder_get_object(_builder, "grid"));
     gtk_widget_set_focusable(_grid, true);
 
     _css_provider.reset(gtk_css_provider_new());
@@ -33,10 +30,7 @@ Window::Window(Renderer *renderer, Input *input)
 
     // GTK wouldn't allow shrinking the window if there are widgets
     // placed in the _grid. So the scroll view is required.
-    _scroll = gtk_scrolled_window_new();
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(_scroll), _grid);
-
-    gtk_window_set_child(GTK_WINDOW(_window), _scroll);
+    _scroll = GTK_WIDGET(gtk_builder_get_object(_builder, "scrolled_window"));
 
     GtkEventController *controller = gtk_event_controller_key_new();
     gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
@@ -92,7 +86,7 @@ Window::Window(Renderer *renderer, Input *input)
     Logger().info("Measured cell: width={} height={}", static_cast<double>(_cell_width) / PANGO_SCALE, _cell_height);
     g_object_ref_sink(ruler);
 
-    _cursor = gtk_drawing_area_new();
+    _cursor = GTK_WIDGET(gtk_builder_get_object(_builder, "cursor"));
     gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _cell_width / PANGO_SCALE);
     gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _cell_height);
 
@@ -100,7 +94,6 @@ Window::Window(Renderer *renderer, Input *input)
         reinterpret_cast<Window *>(data)->_DrawCursor(da, cr, width, height);
     };
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_cursor), drawCursor, this, nullptr);
-    gtk_fixed_put(GTK_FIXED(_grid), _cursor, 0, 0);
 
     // Adjust the grid size to the actual window size
     _CheckSizeAsync();
@@ -109,6 +102,7 @@ Window::Window(Renderer *renderer, Input *input)
 Window::~Window()
 {
     gtk_window_destroy(GTK_WINDOW(_window));
+    g_object_unref(_builder);
 }
 
 void Window::_CheckSizeAsync()
