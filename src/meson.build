@@ -8,6 +8,8 @@ nvim_ui_lib_sources = [
   'RedrawHandler.hpp',
   'Renderer.cpp',
   'Renderer.hpp',
+  'Session.cpp',
+  'Session.hpp',
   'TextureCache.cpp',
   'TextureCache.hpp',
   'Timer.cpp',

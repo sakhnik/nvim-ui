@@ -6,7 +6,9 @@
     <property name="can-focus">True</property>
     <property name="default-width">1024</property>
     <property name="default-height">768</property>
+    <property name="icon-name">nvim-ui</property>
     <property name="deletable">False</property>
+    <property name="title">nvim-ui</property>
     <child>
       <object class="GtkScrolledWindow" id="scrolled_window">
         <property name="can-focus">True</property>
@@ -20,6 +22,7 @@
                   <object class="GtkDrawingArea" id="cursor">
                     <property name="width-request">10</property>
                     <property name="height-request">20</property>
+                    <property name="can-focus">False</property>
                   </object>
                 </child>
               </object>
@@ -27,6 +30,9 @@
           </object>
         </child>
       </object>
+    </child>
+    <child type="titlebar">
+      <placeholder/>
     </child>
   </object>
 </interface>
