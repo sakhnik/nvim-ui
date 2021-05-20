@@ -1,5 +1,6 @@
 #include "Session.hpp"
 #include "Logger.hpp"
+#include "IWindow.hpp"
 #include <string>
 #include <vector>
 
@@ -30,6 +31,8 @@ Session::Session(int argc, char *argv[])
         Logger().info("Exit: status={} signal={}", exit_status, signal);
         session->_nvim_exited.store(true, std::memory_order_relaxed);
         uv_stop(uv_default_loop());
+        if (session->_window)
+            session->_window->SessionEnd();
     };
 
     uv_process_options_t options{};
@@ -80,8 +83,11 @@ Session::~Session()
         _thread->join();
 }
 
-void Session::RunAsync()
+void Session::RunAsync(IWindow *window)
 {
+    _window = window;
+    _renderer->AttachWindow(window);
+
     _thread.reset(new std::thread([&] {
         try
         {

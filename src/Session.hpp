@@ -10,13 +10,15 @@
 #include <thread>
 #include <uv.h>
 
+struct IWindow;
+
 class Session
 {
 public:
     Session(int argc, char *argv[]);
     ~Session();
 
-    void RunAsync();
+    void RunAsync(IWindow *);
 
     Renderer* GetRenderer() { return _renderer.get(); }
     Input* GetInput() { return _input.get(); }
@@ -37,4 +39,5 @@ private:
 
     std::unique_ptr<std::thread> _thread;
     std::atomic<bool> _nvim_exited = false;
+    IWindow *_window = nullptr;
 };

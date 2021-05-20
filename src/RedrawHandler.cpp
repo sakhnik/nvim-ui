@@ -30,7 +30,7 @@ void RedrawHandler::AttachUI()
             pk.pack("ext_linegrid");
             pk.pack(true);
         },
-        [](const msgpack::object &err, const auto &resp) {
+        [](const msgpack::object &err, const auto &/*resp*/) {
             if (!err.is_nil())
             {
                 std::ostringstream oss;

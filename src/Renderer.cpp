@@ -276,7 +276,7 @@ void Renderer::OnResized(int rows, int cols)
                     pk.pack(cols);
                     pk.pack(rows);
                 },
-                [](const msgpack::object &err, const auto &resp) {
+                [](const msgpack::object &err, const auto &/*resp*/) {
                     if (!err.is_nil())
                     {
                         std::ostringstream oss;

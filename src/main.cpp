@@ -1,12 +1,10 @@
-#include "Session.hpp"
 #include "Window.hpp"
 #include "Logger.hpp"
 #include <spdlog/cfg/env.h>
-#include <thread>
 
 #include <uv.h>
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
     setlocale(LC_CTYPE, "");
     spdlog::cfg::load_env_levels();
@@ -14,12 +12,11 @@ int main(int argc, char* argv[])
     Logger().info("nvim-ui v{}", VERSION);
     try
     {
+        gtk_init();
 
-        Session session{argc, argv};
-        Window window{session.GetRenderer(), session.GetInput()};
-        session.RunAsync();
+        Window window;
 
-        while (session.IsRunning())
+        while (true /*session.IsRunning()*/)
         {
             g_main_context_iteration(g_main_context_default(), true);
         }

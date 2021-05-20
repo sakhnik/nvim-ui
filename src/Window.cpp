@@ -7,11 +7,9 @@
 #include <spdlog/fmt/fmt.h>
 
 
-Window::Window(Renderer *renderer, Input *input)
-    : _renderer{renderer}
-    , _input{input}
+Window::Window()
 {
-    gtk_init();
+    _session.reset(new Session(0, nullptr));
 
     GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
     gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
@@ -62,11 +60,11 @@ Window::Window(Renderer *renderer, Input *input)
     };
     g_signal_connect(_window, "show", G_CALLBACK(onShow), this);
 
-    _renderer->AttachWindow(this);
+    _session->RunAsync(this);
 
     {
         // Initial style setup
-        auto guard = _renderer->Lock();
+        auto guard = _session->GetRenderer()->Lock();
         _UpdateStyle();
     }
 
@@ -125,10 +123,11 @@ void Window::_CheckSize()
         return;
     _last_cols = cols;
     _last_rows = rows;
-    if (cols != _renderer->GetWidth() || rows != _renderer->GetHeight())
+    auto renderer = _session->GetRenderer();
+    if (cols != renderer->GetWidth() || rows != renderer->GetHeight())
     {
         Logger().info("Grid size change detected rows={} cols={}", rows, cols);
-        _renderer->OnResized(rows, cols);
+        renderer->OnResized(rows, cols);
     }
 }
 
@@ -143,7 +142,8 @@ struct Texture : IWindow::ITexture
 } //namespace;
 
 IWindow::ITexture::PtrT
-Window::CreateTexture(int width, std::string_view text, const HlAttr &attr, const HlAttr &def_attr)
+Window::CreateTexture(int /*width*/, std::string_view /*text*/,
+                      const HlAttr &/*attr*/, const HlAttr &/*def_attr*/)
 {
     return Texture::PtrT(new Texture);
 }
@@ -154,7 +154,29 @@ void Window::Present()
         reinterpret_cast<Window *>(data)->_Present();
         return FALSE;
     };
-    g_main_context_invoke(nullptr, present, this);
+    g_timeout_add(0, present, this);
+}
+
+void Window::SessionEnd()
+{
+    auto session_end = [](gpointer data) {
+        reinterpret_cast<Window *>(data)->_SessionEnd();
+        return FALSE;
+    };
+    g_timeout_add(0, session_end, this);
+}
+
+void Window::_SessionEnd()
+{
+    _session.reset();
+    for (auto *w : _widgets)
+    {
+        gtk_fixed_remove(GTK_FIXED(_grid), w);
+    }
+    _widgets.clear();
+    gtk_widget_hide(_cursor);
+
+    // TODO: change the style for some fancy background
 }
 
 void Window::_UpdateStyle()
@@ -181,20 +203,22 @@ void Window::_UpdateStyle()
             oss << "font-weight: bold;\n";
     };
 
+    auto renderer = _session->GetRenderer();
+
     oss << "* {\n";
     oss << "font-family: Fira Code;\n";
     oss << "font-size: 14pt;\n";
-    mapAttr(_renderer->GetDefAttr(), _renderer->GetDefAttr());
+    mapAttr(renderer->GetDefAttr(), renderer->GetDefAttr());
     oss << "}\n";
 
-    for (const auto &id_attr : _renderer->GetAttrMap())
+    for (const auto &id_attr : renderer->GetAttrMap())
     {
         int id = id_attr.first;
         const auto &attr = id_attr.second;
 
         oss << "\n";
         oss << "label.hl" << id << " {\n";
-        mapAttr(attr, _renderer->GetDefAttr());
+        mapAttr(attr, renderer->GetDefAttr());
         oss << "}\n";
     }
 
@@ -205,20 +229,21 @@ void Window::_UpdateStyle()
 
 void Window::_Present()
 {
-    auto guard = _renderer->Lock();
+    auto renderer = _session->GetRenderer();
+    auto guard = renderer->Lock();
 
-    if (_renderer->IsAttrMapModified())
+    if (renderer->IsAttrMapModified())
     {
-        _renderer->MarkAttrMapProcessed();
+        renderer->MarkAttrMapProcessed();
         _UpdateStyle();
     }
 
     decltype(_widgets) widgets;
 
-    for (int row = 0, rowN = _renderer->GetGridLines().size();
+    for (int row = 0, rowN = renderer->GetGridLines().size();
          row < rowN; ++row)
     {
-        const auto &line = _renderer->GetGridLines()[row];
+        const auto &line = renderer->GetGridLines()[row];
         for (const auto &texture : line)
         {
             Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
@@ -263,14 +288,14 @@ void Window::_Present()
         g_object_ref(_cursor);
         gtk_fixed_remove(GTK_FIXED(_grid), _cursor);
     }
-    if (!_renderer->IsBusy())
+    if (!renderer->IsBusy())
     {
         gtk_fixed_put(GTK_FIXED(_grid), _cursor,
-                1.0 * _renderer->GetCursorCol() * _cell_width / PANGO_SCALE,
-                _renderer->GetCursorRow() * _cell_height);
+                1.0 * renderer->GetCursorCol() * _cell_width / PANGO_SCALE,
+                renderer->GetCursorRow() * _cell_height);
     }
 
-    if (_renderer->IsBusy())
+    if (renderer->IsBusy())
     {
         if (!_busy_cursor)
             _busy_cursor.reset(gdk_cursor_new_from_name("progress", nullptr));
@@ -286,20 +311,21 @@ void Window::_Present()
     _CheckSize();
 }
 
-void Window::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int width, int height)
+void Window::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int /*width*/, int /*height*/)
 {
-    auto lock = _renderer->Lock();
+    auto renderer = _session->GetRenderer();
+    auto lock = renderer->Lock();
     double cell_width = 1.0 * _cell_width / PANGO_SCALE;
 
     cairo_save(cr);
-    unsigned fg = _renderer->GetFg();
+    unsigned fg = renderer->GetFg();
     cairo_set_source_rgba(cr,
         static_cast<double>(fg >> 16) / 255,
         static_cast<double>((fg >> 8) & 0xff) / 255,
         static_cast<double>(fg & 0xff) / 255,
         0.5);
 
-    const auto &mode = _renderer->GetMode();
+    const auto &mode = renderer->GetMode();
     if (mode == "insert")
     {
         cairo_rectangle(cr, 0, 0, 0.2 * cell_width, _cell_height);
@@ -316,10 +342,13 @@ void Window::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int width, int height)
     cairo_restore(cr);
 }
 
-gboolean Window::_OnKeyPressed(guint keyval, guint keycode, GdkModifierType state)
+gboolean Window::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType state)
 {
     //string key = Gdk.keyval_name (keyval);
     //print ("* key pressed %u (%s) %u\n", keyval, key, keycode);
+
+    if (!_session)
+        return true;
 
     gunichar uc = gdk_keyval_to_unicode(keyval);
     auto input = MkPtr(g_string_append_unichar(g_string_new(nullptr), uc),
@@ -365,6 +394,6 @@ gboolean Window::_OnKeyPressed(guint keyval, guint keycode, GdkModifierType stat
         g_string_printf(input.get(), "<%s>", raw.c_str());
     }
 
-    _input->Accept(input->str);
+    _session->GetInput()->Accept(input->str);
     return true;
 }
