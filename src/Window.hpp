@@ -21,8 +21,11 @@ public:
     void DrawCursor(cairo_t *, int row, int col, unsigned fg, std::string_view mode);
     void SessionEnd() override;
 
+    bool IsRunning() const { return _running; }
+
 private:
     std::unique_ptr<Session> _session;
+    bool _running = true;
 
     GtkBuilder *_builder;
     GtkWidget *_window;

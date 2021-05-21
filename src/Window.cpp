@@ -60,7 +60,16 @@ Window::Window()
     };
     g_signal_connect(_window, "show", G_CALLBACK(onShow), this);
 
+    using OnCloseT = gboolean (*)(GtkWindow *, gpointer);
+    OnCloseT on_close = [](auto *, gpointer data) {
+        // TODO: prohibit closing when neovim is connected
+        reinterpret_cast<Window *>(data)->_running = false;
+        return FALSE;
+    };
+    g_signal_connect(_window, "close-request", G_CALLBACK(on_close), this);
+
     _session->RunAsync(this);
+    gtk_window_set_hide_on_close(GTK_WINDOW(_window), true);
 
     {
         // Initial style setup
@@ -175,6 +184,8 @@ void Window::_SessionEnd()
     }
     _widgets.clear();
     gtk_widget_hide(_cursor);
+
+    gtk_window_set_hide_on_close(GTK_WINDOW(_window), false);
 
     // TODO: change the style for some fancy background
 }

@@ -16,7 +16,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
         Window window;
 
-        while (true /*session.IsRunning()*/)
+        while (window.IsRunning())
         {
             g_main_context_iteration(g_main_context_default(), true);
         }
