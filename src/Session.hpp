@@ -15,10 +15,13 @@ struct IWindow;
 class Session
 {
 public:
+    using PtrT = std::unique_ptr<Session>;
+
     Session(int argc, char *argv[]);
     ~Session();
 
-    void RunAsync(IWindow *);
+    void RunAsync();
+    void SetWindow(IWindow *);
 
     Renderer* GetRenderer() { return _renderer.get(); }
     Input* GetInput() { return _input.get(); }

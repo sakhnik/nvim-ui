@@ -21,7 +21,7 @@ public:
     Renderer(uv_loop_t *, MsgPackRpc *, Timer *);
     ~Renderer();
 
-    void AttachWindow(IWindow *);
+    void SetWindow(IWindow *);
 
     // Get current grid cell dimensions
     int GetHeight() const { return _lines.size(); }

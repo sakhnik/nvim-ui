@@ -83,11 +83,8 @@ Session::~Session()
         _thread->join();
 }
 
-void Session::RunAsync(IWindow *window)
+void Session::RunAsync()
 {
-    _window = window;
-    _renderer->AttachWindow(window);
-
     _thread.reset(new std::thread([&] {
         try
         {
@@ -102,4 +99,10 @@ void Session::RunAsync(IWindow *window)
             Logger().critical("Unknown exception");
         }
     }));
+}
+
+void Session::SetWindow(IWindow *window)
+{
+    _window = window;
+    _renderer->SetWindow(window);
 }

@@ -24,9 +24,8 @@ Renderer::~Renderer()
 {
 }
 
-void Renderer::AttachWindow(IWindow *window)
+void Renderer::SetWindow(IWindow *window)
 {
-    assert(!_window);
     _window = window;
 }
 
@@ -84,6 +83,8 @@ void Renderer::_DoFlush()
 
         auto texture_generator = [&](const TextureCache::Texture &tex) {
             // Paint the text on the surface carefully
+            if (!_window)
+                return IWindow::ITexture::PtrT{};
             auto hlit = _hl_attr.find(tex.hl_id);
             return _window->CreateTexture(tex.width, tex.text,
                     hlit != _hl_attr.end() ? hlit->second : _def_attr,
@@ -124,7 +125,8 @@ void Renderer::_DoFlush()
         tex_cache.CopyTo(_grid_lines[row]);
     }
 
-    _window->Present();
+    if (_window)
+        _window->Present();
 
     auto end_time = ClockT::now();
     oss << " " << std::chrono::duration<double>(end_time - _last_flush_time).count();

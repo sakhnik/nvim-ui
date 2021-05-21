@@ -6,11 +6,9 @@
 #include <sstream>
 #include <spdlog/fmt/fmt.h>
 
-
-Window::Window()
+Window::Window(Session::PtrT &session)
+    : _session{session}
 {
-    _session.reset(new Session(0, nullptr));
-
     GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
     gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
 
@@ -62,14 +60,17 @@ Window::Window()
 
     using OnCloseT = gboolean (*)(GtkWindow *, gpointer);
     OnCloseT on_close = [](auto *, gpointer data) {
-        // TODO: prohibit closing when neovim is connected
-        reinterpret_cast<Window *>(data)->_running = false;
+        Logger().info("Window close request");
+        Window *w = reinterpret_cast<Window *>(data);
+        if (w->_session)
+            w->_session->SetWindow(nullptr);
+        w->_running = false;
         return FALSE;
     };
     g_signal_connect(_window, "close-request", G_CALLBACK(on_close), this);
 
-    _session->RunAsync(this);
-    gtk_window_set_hide_on_close(GTK_WINDOW(_window), true);
+    _session->SetWindow(this);
+    //gtk_window_set_hide_on_close(GTK_WINDOW(_window), true);
 
     {
         // Initial style setup
@@ -177,6 +178,7 @@ void Window::SessionEnd()
 
 void Window::_SessionEnd()
 {
+    Logger().info("Session end");
     _session.reset();
     for (auto *w : _widgets)
     {
@@ -185,7 +187,7 @@ void Window::_SessionEnd()
     _widgets.clear();
     gtk_widget_hide(_cursor);
 
-    gtk_window_set_hide_on_close(GTK_WINDOW(_window), false);
+    //gtk_window_set_hide_on_close(GTK_WINDOW(_window), false);
 
     // TODO: change the style for some fancy background
 }

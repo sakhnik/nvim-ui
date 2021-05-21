@@ -13,7 +13,7 @@ class Window
     : public IWindow
 {
 public:
-    Window();
+    Window(Session::PtrT &session);
     ~Window();
 
     ITexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) override;
@@ -24,7 +24,7 @@ public:
     bool IsRunning() const { return _running; }
 
 private:
-    std::unique_ptr<Session> _session;
+    Session::PtrT &_session;
     bool _running = true;
 
     GtkBuilder *_builder;
