@@ -5,6 +5,11 @@
 
 #include <uv.h>
 
+namespace {
+    Session::PtrT session;
+    std::unique_ptr<Window> window;
+} //namespace;
+
 int main(int argc, char* argv[])
 {
     setlocale(LC_CTYPE, "");
@@ -13,18 +18,29 @@ int main(int argc, char* argv[])
     Logger().info("nvim-ui v{}", VERSION);
     try
     {
-        gtk_init();
+        GtkApplication *app = gtk_application_new("org.nvim-ui", G_APPLICATION_FLAGS_NONE);
 
-        Session::PtrT session(new Session(argc, argv));
-        std::unique_ptr<Window> window(new Window{session});
+        using OnActivateT = void (*)(GtkApplication *);
+        OnActivateT on_activate = [](auto *app) {
+            window.reset(new Window{app, session});
+        };
+        g_signal_connect(app, "activate", G_CALLBACK(on_activate), nullptr);
+
+        using OnWindowRemovedT = void (*)(GtkApplication *, GtkWindow *, gpointer);
+        OnWindowRemovedT on_window_removed = [](auto *app, auto *, gpointer) {
+            if (session)
+            {
+                // Resurrect the window if the session is still active
+                window.reset(new Window{app, session});
+                // TODO: give some hint to quit neovim properly
+            }
+        };
+        g_signal_connect(app, "window-removed", G_CALLBACK(on_window_removed), nullptr);
+
+        session.reset(new Session(argc, argv));
         session->RunAsync();
 
-        while (window->IsRunning() || session)
-        {
-            if (!window->IsRunning())
-                window.reset(new Window{session});
-            g_main_context_iteration(g_main_context_default(), true);
-        }
+        g_application_run(G_APPLICATION(app), argc, argv);
     }
     catch (std::exception& e)
     {

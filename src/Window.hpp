@@ -13,7 +13,7 @@ class Window
     : public IWindow
 {
 public:
-    Window(Session::PtrT &session);
+    Window(GtkApplication *, Session::PtrT &session);
     ~Window();
 
     ITexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) override;
@@ -21,11 +21,9 @@ public:
     void DrawCursor(cairo_t *, int row, int col, unsigned fg, std::string_view mode);
     void SessionEnd() override;
 
-    bool IsRunning() const { return _running; }
-
 private:
+    GtkApplication *_app;
     Session::PtrT &_session;
-    bool _running = true;
 
     GtkBuilder *_builder;
     GtkWidget *_window;

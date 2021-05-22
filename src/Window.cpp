@@ -6,8 +6,9 @@
 #include <sstream>
 #include <spdlog/fmt/fmt.h>
 
-Window::Window(Session::PtrT &session)
-    : _session{session}
+Window::Window(GtkApplication *app, Session::PtrT &session)
+    : _app{app}
+    , _session{session}
 {
     GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
     gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
@@ -15,6 +16,10 @@ Window::Window(Session::PtrT &session)
     _builder = gtk_builder_new_from_resource("/org/nvim-ui/ui/main.glade");
 
     _window = GTK_WIDGET(gtk_builder_get_object(_builder, "main_window"));
+    gtk_window_set_application(GTK_WINDOW(_window), app);
+    if (_session)
+        gtk_window_set_deletable(GTK_WINDOW(_window), false);
+
     _grid = GTK_WIDGET(gtk_builder_get_object(_builder, "grid"));
     gtk_widget_set_focusable(_grid, true);
 
@@ -63,14 +68,21 @@ Window::Window(Session::PtrT &session)
         Logger().info("Window close request");
         Window *w = reinterpret_cast<Window *>(data);
         if (w->_session)
+        {
             w->_session->SetWindow(nullptr);
-        w->_running = false;
+        }
+        else
+        {
+            g_application_quit(G_APPLICATION(w->_app));
+        }
+        gtk_application_remove_window(w->_app, GTK_WINDOW(w->_window));
+        gtk_window_close(GTK_WINDOW(w->_window));
         return FALSE;
     };
     g_signal_connect(_window, "close-request", G_CALLBACK(on_close), this);
 
+    assert(_session);
     _session->SetWindow(this);
-    //gtk_window_set_hide_on_close(GTK_WINDOW(_window), true);
 
     {
         // Initial style setup
@@ -187,7 +199,7 @@ void Window::_SessionEnd()
     _widgets.clear();
     gtk_widget_hide(_cursor);
 
-    //gtk_window_set_hide_on_close(GTK_WINDOW(_window), false);
+    gtk_window_set_deletable(GTK_WINDOW(_window), true);
 
     // TODO: change the style for some fancy background
 }
