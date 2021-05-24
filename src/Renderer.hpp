@@ -3,6 +3,7 @@
 #include "HlAttr.hpp"
 #include "TextureCache.hpp"
 #include "AsyncExec.hpp"
+#include "Timer.hpp"
 
 #include <vector>
 #include <unordered_map>
@@ -13,12 +14,11 @@
 
 class MsgPackRpc;
 struct IWindow;
-class Timer;
 
 class Renderer
 {
 public:
-    Renderer(uv_loop_t *, MsgPackRpc *, Timer *);
+    Renderer(uv_loop_t *, MsgPackRpc *);
     ~Renderer();
 
     void SetWindow(IWindow *);
@@ -66,7 +66,7 @@ public:
 
 private:
     MsgPackRpc *_rpc;
-    Timer *_timer;
+    Timer _timer;
     AsyncExec _async_exec;
     IWindow *_window = nullptr;
 

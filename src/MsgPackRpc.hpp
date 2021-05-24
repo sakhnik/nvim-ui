@@ -23,16 +23,18 @@ public:
     using OnResponseT = std::function<void(const msgpack::object &err, const msgpack::object &resp)>;
 
     void Request(PackRequestT, OnResponseT);
-    bool Activate();
     void RequestAsync(PackRequestT pack_request, OnResponseT);
+
+    const std::string& GetOutput() const { return _output; }
 
 private:
     uv_pipe_t *_stdin_pipe;
     uv_pipe_t *_stdout_pipe;
     OnNotificationT _on_notification;
-    // If any output is captured before activation, prevent activation.
-    bool _dirty = false;
-    bool _activated = false;
+
+    // Capture any non msgpack-rpc output, as it may be text output from --version or alike
+    std::string _output;
+
     msgpack::unpacker _unp;
     uint32_t _seq = 0;
     std::map<uint32_t, OnResponseT> _requests;

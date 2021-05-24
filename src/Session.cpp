@@ -65,12 +65,9 @@ Session::Session(int argc, char *argv[])
     }
 
     _rpc.reset(new MsgPackRpc(&_stdin_pipe, &_stdout_pipe));
-    _timer.reset(new Timer{loop});
-    _renderer.reset(new Renderer{loop, _rpc.get(), _timer.get()});
+    _renderer.reset(new Renderer{loop, _rpc.get()});
     _redraw_handler.reset(new RedrawHandler{_rpc.get(), _renderer.get()});
 
-    if (!_rpc->Activate())
-        throw std::runtime_error("Couldn't start RPC");
     _redraw_handler->AttachUI();
 
     _input.reset(new Input{loop, _rpc.get()});

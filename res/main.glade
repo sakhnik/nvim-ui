@@ -4,10 +4,10 @@
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkApplicationWindow" id="main_window">
     <property name="can-focus">True</property>
+    <property name="title">nvim-ui</property>
     <property name="default-width">1024</property>
     <property name="default-height">768</property>
     <property name="icon-name">nvim-ui</property>
-    <property name="title">nvim-ui</property>
     <child>
       <object class="GtkScrolledWindow" id="scrolled_window">
         <property name="can-focus">True</property>
@@ -22,6 +22,18 @@
                     <property name="width-request">10</property>
                     <property name="height-request">20</property>
                     <property name="can-focus">False</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="status">
+                    <property name="width-request">100</property>
+                    <property name="height-request">80</property>
+                    <property name="visible">False</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">status</property>
+                    <style>
+                      <class name="status"/>
+                    </style>
                   </object>
                 </child>
               </object>

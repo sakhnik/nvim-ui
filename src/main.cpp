@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
         using OnActivateT = void (*)(GtkApplication *);
         OnActivateT on_activate = [](auto *app) {
             window.reset(new Window{app, session});
+            session->RunAsync();
         };
         g_signal_connect(app, "activate", G_CALLBACK(on_activate), nullptr);
 
@@ -38,9 +39,8 @@ int main(int argc, char* argv[])
         g_signal_connect(app, "window-removed", G_CALLBACK(on_window_removed), nullptr);
 
         session.reset(new Session(argc, argv));
-        session->RunAsync();
 
-        g_application_run(G_APPLICATION(app), argc, argv);
+        g_application_run(G_APPLICATION(app), 0, nullptr);
     }
     catch (std::exception& e)
     {

@@ -1,14 +1,13 @@
 #include "Renderer.hpp"
 #include "MsgPackRpc.hpp"
-#include "Timer.hpp"
 #include "IWindow.hpp"
 #include "Logger.hpp"
 #include <sstream>
 
 
-Renderer::Renderer(uv_loop_t *loop, MsgPackRpc *rpc, Timer *timer)
+Renderer::Renderer(uv_loop_t *loop, MsgPackRpc *rpc)
     : _rpc{rpc}
-    , _timer{timer}
+    , _timer{loop}
     , _async_exec{loop}
 {
     // Default hightlight attributes
@@ -48,14 +47,14 @@ void Renderer::Flush()
     else
     {
         // Make sure the final view will be presented if no more flush requests.
-        _timer->Start(FLUSH_DURATION_MS, 0, [&] { _DoFlush(); });
+        _timer.Start(FLUSH_DURATION_MS, 0, [&] { _DoFlush(); });
     }
 }
 
 void Renderer::_AnticipateFlush()
 {
     // The grid is being updated, cancel the last flush request. A new one is pending.
-    _timer->Stop();
+    _timer.Stop();
 }
 
 void Renderer::_DoFlush()

@@ -1,4 +1,5 @@
 #include "MsgPackRpc.hpp"
+#include "Logger.hpp"
 #include <iostream>
 
 
@@ -43,10 +44,11 @@ void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
     pk.pack(it->first);
     pack_request(pk);
 
-
     auto cb = [](uv_write_t* req, int status) {
-        // TODO: check status
-        delete reinterpret_cast<Write*>(req);
+        Write *w = reinterpret_cast<Write *>(req);
+        if (status < 0)
+            Logger().error("Failed to write {} bytes: {}", w->buffer.size(), status);
+        delete w;
     };
 
     uv_buf_t buf;
@@ -58,19 +60,20 @@ void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
 
 void MsgPackRpc::_handle_data(const char *data, size_t length)
 {
-    if (!_activated)
-    {
-        _dirty = true;
-        std::cout << std::string_view(data, length) << std::flush;
-        return;
-    }
-
     _unp.buffer_consumed(length);
 
     msgpack::unpacked result;
     while (_unp.next(result))
     {
         msgpack::object obj{result.get()};
+        // It's unlikely that this check will be passed unless
+        // msgpack RPC is established.
+        if (obj.type != msgpack::type::ARRAY)
+        {
+            // Bail out to capture output of --help, --version etc.
+            _output.append(std::string_view(data, length));
+            return;
+        }
         const auto &arr = obj.via.array;
         if (arr.ptr[0] == 1)
         {
@@ -85,11 +88,4 @@ void MsgPackRpc::_handle_data(const char *data, size_t length)
             _on_notification(arr.ptr[1].as<std::string_view>(), arr.ptr[2]);
         }
     }
-}
-
-bool MsgPackRpc::Activate()
-{
-    if (_dirty)
-        return false;
-    return _activated = true;
 }

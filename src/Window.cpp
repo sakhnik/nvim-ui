@@ -33,6 +33,13 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
     // placed in the _grid. So the scroll view is required.
     _scroll = GTK_WIDGET(gtk_builder_get_object(_builder, "scrolled_window"));
 
+    GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder, "status"));
+    gtk_style_context_add_provider(
+            gtk_widget_get_style_context(status_label),
+            GTK_STYLE_PROVIDER(_css_provider.get()),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    gtk_widget_set_visible(status_label, false);
+
     GtkEventController *controller = gtk_event_controller_key_new();
     gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
     using OnKeyPressedT = gboolean (*)(GtkEventControllerKey *,
@@ -135,6 +142,9 @@ void Window::_CheckSizeAsync()
 
 void Window::_CheckSize()
 {
+    if (!_session)
+        return;
+
     int width = gtk_widget_get_allocated_width(_scroll);
     int height = gtk_widget_get_allocated_height(_scroll);
 
@@ -191,7 +201,6 @@ void Window::SessionEnd()
 void Window::_SessionEnd()
 {
     Logger().info("Session end");
-    _session.reset();
     for (auto *w : _widgets)
     {
         gtk_fixed_remove(GTK_FIXED(_grid), w);
@@ -200,6 +209,14 @@ void Window::_SessionEnd()
     gtk_widget_hide(_cursor);
 
     gtk_window_set_deletable(GTK_WINDOW(_window), true);
+
+    GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder, "status"));
+    if (_session && !_session->GetOutput().empty())
+    {
+        gtk_widget_set_visible(status_label, true);
+        gtk_label_set_text(GTK_LABEL(status_label), _session->GetOutput().c_str());
+    }
+    _session.reset();
 
     // TODO: change the style for some fancy background
 }
@@ -234,6 +251,10 @@ void Window::_UpdateStyle()
     oss << "font-family: Fira Code;\n";
     oss << "font-size: 14pt;\n";
     mapAttr(renderer->GetDefAttr(), renderer->GetDefAttr());
+    oss << "}\n";
+
+    oss << "label.status {\n";
+    oss << "color: #cccccc;";
     oss << "}\n";
 
     for (const auto &id_attr : renderer->GetAttrMap())
