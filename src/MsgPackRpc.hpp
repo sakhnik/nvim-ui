@@ -10,6 +10,7 @@ class MsgPackRpc
 {
 public:
     MsgPackRpc(uv_pipe_t *stdin_pipe, uv_pipe_t *stdout_pipe);
+    ~MsgPackRpc();
 
     using OnNotificationT = std::function<void(std::string_view, msgpack::object)>;
 

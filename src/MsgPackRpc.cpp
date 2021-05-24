@@ -27,6 +27,11 @@ MsgPackRpc::MsgPackRpc(uv_pipe_t *stdin_pipe, uv_pipe_t *stdout_pipe)
     ::uv_read_start((uv_stream_t*)_stdout_pipe, alloc_buffer, read_apipe);
 }
 
+MsgPackRpc::~MsgPackRpc()
+{
+    ::uv_read_stop((uv_stream_t*)_stdout_pipe);
+}
+
 void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
 {
     auto [it, _] = _requests.emplace(_seq++, std::move(on_response));
