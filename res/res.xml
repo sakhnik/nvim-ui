@@ -4,6 +4,6 @@
 		<file>nvim-ui.svg</file>
   </gresource>
   <gresource prefix="/org/nvim-ui/ui">
-    <file>main.glade</file>
+    <file>main.ui</file>
   </gresource>
 </gresources>

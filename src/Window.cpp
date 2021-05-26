@@ -13,7 +13,7 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
     GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
     gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
 
-    _builder = gtk_builder_new_from_resource("/org/nvim-ui/ui/main.glade");
+    _builder = gtk_builder_new_from_resource("/org/nvim-ui/ui/main.ui");
 
     _window = GTK_WIDGET(gtk_builder_get_object(_builder, "main_window"));
     gtk_window_set_application(GTK_WINDOW(_window), app);
