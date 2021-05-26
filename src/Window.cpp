@@ -88,30 +88,14 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
     };
     g_signal_connect(_window, "close-request", G_CALLBACK(on_close), this);
 
-    assert(_session);
-    _session->SetWindow(this);
-
+    if (_session)
     {
         // Initial style setup
         auto guard = _session->GetRenderer()->Lock();
         _UpdateStyle();
     }
 
-
-    // Measure cell width and height
-    const char *const RULER = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    GtkWidget *ruler = gtk_label_new(RULER);
-    gtk_style_context_add_provider(
-            gtk_widget_get_style_context(ruler),
-            GTK_STYLE_PROVIDER(_css_provider.get()),
-            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    int width, height;
-    gtk_widget_measure(ruler, GTK_ORIENTATION_HORIZONTAL, -1, &width, nullptr, nullptr, nullptr);
-    gtk_widget_measure(ruler, GTK_ORIENTATION_VERTICAL, -1, &height, nullptr, nullptr, nullptr);
-    _cell_width = width * PANGO_SCALE / strlen(RULER);
-    _cell_height = height;
-    Logger().info("Measured cell: width={} height={}", static_cast<double>(_cell_width) / PANGO_SCALE, _cell_height);
-    g_object_ref_sink(ruler);
+    _MeasureCell();
 
     _cursor = GTK_WIDGET(gtk_builder_get_object(_builder, "cursor"));
     gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _cell_width / PANGO_SCALE);
@@ -161,6 +145,24 @@ void Window::_CheckSize()
         Logger().info("Grid size change detected rows={} cols={}", rows, cols);
         renderer->OnResized(rows, cols);
     }
+}
+
+void Window::_MeasureCell()
+{
+    // Measure cell width and height
+    const char *const RULER = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    GtkWidget *ruler = gtk_label_new(RULER);
+    gtk_style_context_add_provider(
+            gtk_widget_get_style_context(ruler),
+            GTK_STYLE_PROVIDER(_css_provider.get()),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    int width, height;
+    gtk_widget_measure(ruler, GTK_ORIENTATION_HORIZONTAL, -1, &width, nullptr, nullptr, nullptr);
+    gtk_widget_measure(ruler, GTK_ORIENTATION_VERTICAL, -1, &height, nullptr, nullptr, nullptr);
+    _cell_width = width * PANGO_SCALE / strlen(RULER);
+    _cell_height = height;
+    Logger().info("Measured cell: width={} height={}", static_cast<double>(_cell_width) / PANGO_SCALE, _cell_height);
+    g_object_ref_sink(ruler);
 }
 
 namespace {
@@ -271,6 +273,8 @@ void Window::_UpdateStyle()
     _style = oss.str();
     Logger().debug("Updated CSS Style:\n{}", _style);
     gtk_css_provider_load_from_data(_css_provider.get(), _style.data(), -1);
+
+    _MeasureCell();
 }
 
 void Window::_Present()
@@ -359,6 +363,9 @@ void Window::_Present()
 
 void Window::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int /*width*/, int /*height*/)
 {
+    if (!_session)
+        return;
+
     auto renderer = _session->GetRenderer();
     auto lock = renderer->Lock();
     double cell_width = 1.0 * _cell_width / PANGO_SCALE;
@@ -442,4 +449,15 @@ gboolean Window::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType 
 
     _session->GetInput()->Accept(input->str);
     return true;
+}
+
+void Window::SetError(const char *error)
+{
+    std::string title = "nvim-ui";
+    if (error)
+    {
+        title += " - ";
+        title += error;
+    }
+    gtk_window_set_title(GTK_WINDOW(_window), title.c_str());
 }

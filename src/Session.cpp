@@ -60,8 +60,10 @@ Session::Session(int argc, char *argv[])
     _child_req.data = this;
     if (int r = ::uv_spawn(loop, &_child_req, &options))
     {
-        Logger().error("Failed to spawn: {}", uv_strerror(r));
-        throw std::runtime_error("Failed to spawn");
+        std::string message = "Failed to spawn: ";
+        message += uv_strerror(r);
+        Logger().error(message.c_str());
+        throw std::runtime_error(message.c_str());
     }
 
     _rpc.reset(new MsgPackRpc(&_stdin_pipe, &_stdout_pipe));

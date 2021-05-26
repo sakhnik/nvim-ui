@@ -21,6 +21,8 @@ public:
     void DrawCursor(cairo_t *, int row, int col, unsigned fg, std::string_view mode);
     void SessionEnd() override;
 
+    void SetError(const char *error);
+
 private:
     GtkApplication *_app;
     Session::PtrT &_session;
@@ -42,6 +44,7 @@ private:
 
     void _CheckSizeAsync();
     void _CheckSize();
+    void _MeasureCell();
 
     gboolean _OnKeyPressed(guint keyval, guint keycode, GdkModifierType state);
 

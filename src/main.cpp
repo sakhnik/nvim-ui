@@ -10,8 +10,14 @@ namespace {
     std::unique_ptr<Window> window;
 } //namespace;
 
+int _argc;
+char **_argv;
+
 int main(int argc, char* argv[])
 {
+    _argc = argc;
+    _argv = argv;
+
     setlocale(LC_CTYPE, "");
     spdlog::cfg::load_env_levels();
 
@@ -22,8 +28,26 @@ int main(int argc, char* argv[])
 
         using OnActivateT = void (*)(GtkApplication *);
         OnActivateT on_activate = [](auto *app) {
+            std::string error;
+            try
+            {
+                session.reset(new Session(_argc, _argv));
+            }
+            catch (std::exception &ex)
+            {
+                error = ex.what();
+            }
             window.reset(new Window{app, session});
-            session->RunAsync();
+            if (session)
+            {
+                window->SetError(nullptr);
+                session->SetWindow(window.get());
+                session->RunAsync();
+            }
+            else
+            {
+                window->SetError(error.data());
+            }
         };
         g_signal_connect(app, "activate", G_CALLBACK(on_activate), nullptr);
 
@@ -37,8 +61,6 @@ int main(int argc, char* argv[])
             }
         };
         g_signal_connect(app, "window-removed", G_CALLBACK(on_window_removed), nullptr);
-
-        session.reset(new Session(argc, argv));
 
         g_application_run(G_APPLICATION(app), 0, nullptr);
     }
