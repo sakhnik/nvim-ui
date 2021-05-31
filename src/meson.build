@@ -18,11 +18,13 @@ nvim_ui_lib_sources = [
   'Logger.hpp',
   'Input.cpp',
   'Input.hpp',
+  'TcpServer.cpp',
+  'TcpServer.hpp',
 ]
 
 nvim_ui_lib = static_library('nvim-ui-lib',
   nvim_ui_lib_sources,
-  dependencies: [spdlog_dep, msgpack_dep, libuv_dep],
+  dependencies: [spdlog_dep, msgpack_dep, libuv_dep, glib_dep],
 )
 
 nvim_ui_lib_dep = declare_dependency(

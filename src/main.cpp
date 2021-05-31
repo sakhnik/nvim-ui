@@ -1,6 +1,7 @@
 #include "Window.hpp"
 #include "Session.hpp"
 #include "Logger.hpp"
+#include "TcpServer.hpp"
 #include <spdlog/cfg/env.h>
 
 #include <uv.h>
@@ -25,6 +26,7 @@ int main(int argc, char* argv[])
     try
     {
         GtkApplication *app = gtk_application_new("org.nvim-ui", G_APPLICATION_FLAGS_NONE);
+        TcpServer tcp_server;
 
         using OnActivateT = void (*)(GtkApplication *);
         OnActivateT on_activate = [](auto *app) {
