@@ -10,7 +10,6 @@ add_global_arguments('-DVERSION="' + meson.project_version() + '"', language: ['
 
 msgpack_dep = dependency('msgpack')
 libuv_dep = dependency('libuv')
-glib_dep = dependency('glib-2.0')
 gtk4_dep = dependency('gtk4')
 
 cmake = import('cmake')

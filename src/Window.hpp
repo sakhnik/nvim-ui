@@ -8,13 +8,12 @@
 #include <memory>
 #include <gtk/gtk.h>
 
-class TcpServer;
 
 class Window
     : public IWindow
 {
 public:
-    Window(GtkApplication *, Session::PtrT &session, const TcpServer &);
+    Window(GtkApplication *, Session::PtrT &session);
     ~Window();
 
     ITexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) override;
@@ -22,12 +21,11 @@ public:
     void DrawCursor(cairo_t *, int row, int col, unsigned fg, std::string_view mode);
     void SessionEnd() override;
 
-    void SetTitle(const char *error);
+    void SetError(const char *error);
 
 private:
     GtkApplication *_app;
     Session::PtrT &_session;
-    const TcpServer &_tcp_server;
 
     GtkBuilder *_builder;
     GtkWidget *_window;
