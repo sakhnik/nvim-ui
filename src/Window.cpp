@@ -2,13 +2,15 @@
 #include "Logger.hpp"
 #include "Input.hpp"
 #include "Renderer.hpp"
+#include "TcpServer.hpp"
 
 #include <sstream>
 #include <spdlog/fmt/fmt.h>
 
-Window::Window(GtkApplication *app, Session::PtrT &session)
+Window::Window(GtkApplication *app, Session::PtrT &session, const TcpServer &tcp_server)
     : _app{app}
     , _session{session}
+    , _tcp_server{tcp_server}
 {
     GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
     gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
@@ -451,9 +453,9 @@ gboolean Window::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType 
     return true;
 }
 
-void Window::SetError(const char *error)
+void Window::SetTitle(const char *error)
 {
-    std::string title = "nvim-ui";
+    std::string title = fmt::format("nvim-ui[tcp:{}]", _tcp_server.GetPort());
     if (error)
     {
         title += " - ";

@@ -8,6 +8,8 @@ public:
     TcpServer();
     ~TcpServer();
 
+    guint16 GetPort() const { return _port; }
+
 private:
     GSocketService *_service;
     guint16 _port;

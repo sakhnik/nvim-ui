@@ -1,14 +1,17 @@
-#include "Window.hpp"
 #include "Session.hpp"
-#include "Logger.hpp"
+#include "Window.hpp"
 #include "TcpServer.hpp"
+#include "Logger.hpp"
 #include <spdlog/cfg/env.h>
 
 #include <uv.h>
 
 namespace {
+
     Session::PtrT session;
     std::unique_ptr<Window> window;
+    std::unique_ptr<TcpServer> tcp_server;
+
 } //namespace;
 
 int _argc;
@@ -26,7 +29,7 @@ int main(int argc, char* argv[])
     try
     {
         GtkApplication *app = gtk_application_new("org.nvim-ui", G_APPLICATION_FLAGS_NONE);
-        TcpServer tcp_server;
+        tcp_server.reset(new TcpServer);
 
         using OnActivateT = void (*)(GtkApplication *);
         OnActivateT on_activate = [](auto *app) {
@@ -39,16 +42,16 @@ int main(int argc, char* argv[])
             {
                 error = ex.what();
             }
-            window.reset(new Window{app, session});
+            window.reset(new Window{app, session, *tcp_server.get()});
             if (session)
             {
-                window->SetError(nullptr);
+                window->SetTitle(nullptr);
                 session->SetWindow(window.get());
                 session->RunAsync();
             }
             else
             {
-                window->SetError(error.data());
+                window->SetTitle(error.data());
             }
         };
         g_signal_connect(app, "activate", G_CALLBACK(on_activate), nullptr);
@@ -58,7 +61,7 @@ int main(int argc, char* argv[])
             if (session)
             {
                 // Resurrect the window if the session is still active
-                window.reset(new Window{app, session});
+                window.reset(new Window{app, session, *tcp_server.get()});
                 // TODO: give some hint to quit neovim properly
             }
         };
