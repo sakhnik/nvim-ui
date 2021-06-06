@@ -25,6 +25,7 @@ int main(int argc, char* argv[])
     try
     {
         GtkApplication *app = gtk_application_new("org.nvim-ui", G_APPLICATION_FLAGS_NONE);
+        g_application_set_resource_base_path(G_APPLICATION(app), "/org/nvim-ui");
 
         using OnActivateT = void (*)(GtkApplication *);
         OnActivateT on_activate = [](auto *app) {

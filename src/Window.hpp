@@ -47,6 +47,9 @@ private:
     void _MeasureCell();
 
     gboolean _OnKeyPressed(guint keyval, guint keycode, GdkModifierType state);
+    gboolean _OnKeyReleased(guint keyval, guint keycode, GdkModifierType state);
+    // Mark the Alt was pressed, show the menubar when the alt is released without any other key pressed.
+    bool _alt_pending = false;
 
     void _Present();
     void _UpdateStyle();

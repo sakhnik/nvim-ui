@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <menu id='menubar'>
+    <submenu>
+      <attribute name='label' translatable='yes'>_Neovim</attribute>
+      <item>
+        <attribute name='label' translatable='yes'>_Spawn</attribute>
+        <attribute name='action'>nvim.spawn</attribute>
+      </item>
+      <item>
+        <attribute name='label' translatable='yes'>_Connect TCP...</attribute>
+        <attribute name='action'>nvim.connect</attribute>
+      </item>
+    </submenu>
+  </menu>
+</interface>

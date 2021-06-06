@@ -13,7 +13,7 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
     GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
     gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
 
-    _builder = gtk_builder_new_from_resource("/org/nvim-ui/ui/main.ui");
+    _builder = gtk_builder_new_from_resource("/org/nvim-ui/gtk/main.ui");
 
     _window = GTK_WIDGET(gtk_builder_get_object(_builder, "main_window"));
     gtk_window_set_application(GTK_WINDOW(_window), app);
@@ -51,6 +51,10 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
         return reinterpret_cast<Window *>(data)->_OnKeyPressed(keyval, keycode, state);
     };
     g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-pressed", G_CALLBACK(onKeyPressed), this);
+    OnKeyPressedT onKeyReleased = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
+        return reinterpret_cast<Window *>(data)->_OnKeyReleased(keyval, keycode, state);
+    };
+    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-released", G_CALLBACK(onKeyReleased), this);
     gtk_widget_add_controller(_grid, controller);
 
     gtk_widget_show(_window);
@@ -400,6 +404,14 @@ gboolean Window::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType 
     //string key = Gdk.keyval_name (keyval);
     //print ("* key pressed %u (%s) %u\n", keyval, key, keycode);
 
+    if (keyval == GDK_KEY_Alt_L)
+    {
+        _alt_pending = true;
+        return true;
+    }
+    _alt_pending = false;
+    gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(_window), false);
+
     if (!_session)
         return true;
 
@@ -448,6 +460,17 @@ gboolean Window::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType 
     }
 
     _session->GetInput()->Accept(input->str);
+    return true;
+}
+
+gboolean Window::_OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType /*state*/)
+{
+    if (_alt_pending && keyval == GDK_KEY_Alt_L)
+    {
+        // Toggle the menubar
+        gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(_window),
+            !gtk_application_window_get_show_menubar(GTK_APPLICATION_WINDOW(_window)));
+    }
     return true;
 }
 
