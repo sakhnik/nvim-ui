@@ -5,11 +5,11 @@
       <attribute name='label' translatable='yes'>_Neovim</attribute>
       <item>
         <attribute name='label' translatable='yes'>_Spawn</attribute>
-        <attribute name='action'>nvim.spawn</attribute>
+        <attribute name='action'>app.spawn</attribute>
       </item>
       <item>
         <attribute name='label' translatable='yes'>_Connect TCP...</attribute>
-        <attribute name='action'>nvim.connect</attribute>
+        <attribute name='action'>app.connect</attribute>
       </item>
     </submenu>
   </menu>

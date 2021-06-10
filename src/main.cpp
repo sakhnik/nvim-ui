@@ -6,8 +6,10 @@
 #include <uv.h>
 
 namespace {
+
     Session::PtrT session;
     std::unique_ptr<Window> window;
+
 } //namespace;
 
 int _argc;
@@ -62,6 +64,16 @@ int main(int argc, char* argv[])
             }
         };
         g_signal_connect(app.get(), "window-removed", G_CALLBACK(on_window_removed), nullptr);
+
+        using ActionCbT = void (*)(GSimpleAction *, GVariant *, gpointer);
+        ActionCbT action_cb = [](GSimpleAction *action, GVariant *, gpointer) {
+            Logger().info("Action {}", g_action_get_name(G_ACTION(action)));
+        };
+        const GActionEntry actions[] = {
+            { "spawn", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
+            { "connect", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
+        };
+        g_action_map_add_action_entries(G_ACTION_MAP(app.get()), actions, G_N_ELEMENTS(actions), app.get());
 
         g_application_run(G_APPLICATION(app.get()), 0, nullptr);
     }
