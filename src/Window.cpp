@@ -15,9 +15,36 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
 
     _builder.reset(gtk_builder_new_from_resource("/org/nvim-ui/gtk/main.ui"));
 
-    // Window
+    _SetupWindow();
+    _SetupGrid();
+    _SetupStatusLabel();
+
+    gtk_widget_show(_window);
+
+    _SetupWindowSignals();
+
+    if (_session)
+    {
+        // Initial style setup
+        auto guard = _session->GetRenderer()->Lock();
+        _UpdateStyle();
+    }
+
+    _SetupCursor();
+
+    // Adjust the grid size to the actual window size
+    _CheckSizeAsync();
+}
+
+Window::~Window()
+{
+    gtk_window_destroy(GTK_WINDOW(_window));
+}
+
+void Window::_SetupWindow()
+{
     _window = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "main_window"));
-    gtk_window_set_application(GTK_WINDOW(_window), app);
+    gtk_window_set_application(GTK_WINDOW(_window), _app);
     if (_session)
         gtk_window_set_deletable(GTK_WINDOW(_window), false);
 
@@ -32,47 +59,22 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
     };
     g_action_map_add_action_entries(G_ACTION_MAP(_window), actions, G_N_ELEMENTS(actions), this);
 
+    GtkEventController *controller = gtk_shortcut_controller_new();
+    gtk_shortcut_controller_set_scope(GTK_SHORTCUT_CONTROLLER(controller), GTK_SHORTCUT_SCOPE_GLOBAL);
+    gtk_widget_add_controller(_window, controller);
+    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller),
+            gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_n, GDK_CONTROL_MASK),
+                             gtk_named_action_new("win.spawn")));
+    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller),
+            gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_t, GDK_CONTROL_MASK),
+                             gtk_named_action_new("win.connect")));
+    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller),
+            gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_q, GDK_CONTROL_MASK),
+                             gtk_named_action_new("win.quit")));
+}
 
-    // Grid
-    _grid = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "grid"));
-    gtk_widget_set_focusable(_grid, true);
-
-    _css_provider.reset(gtk_css_provider_new());
-    gtk_style_context_add_provider(
-            gtk_widget_get_style_context(_grid),
-            GTK_STYLE_PROVIDER(_css_provider.get()),
-            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-
-    // GTK wouldn't allow shrinking the window if there are widgets
-    // placed in the _grid. So the scroll view is required.
-    _scroll = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "scrolled_window"));
-
-    GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "status"));
-    gtk_style_context_add_provider(
-            gtk_widget_get_style_context(status_label),
-            GTK_STYLE_PROVIDER(_css_provider.get()),
-            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    gtk_widget_set_visible(status_label, false);
-
-    GtkEventController *controller = gtk_event_controller_key_new();
-    gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
-    using OnKeyPressedT = gboolean (*)(GtkEventControllerKey *,
-                                       guint                  keyval,
-                                       guint                  keycode,
-                                       GdkModifierType        state,
-                                       gpointer               data);
-    OnKeyPressedT onKeyPressed = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
-        return reinterpret_cast<Window *>(data)->_OnKeyPressed(keyval, keycode, state);
-    };
-    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-pressed", G_CALLBACK(onKeyPressed), this);
-    OnKeyPressedT onKeyReleased = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
-        return reinterpret_cast<Window *>(data)->_OnKeyReleased(keyval, keycode, state);
-    };
-    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-released", G_CALLBACK(onKeyReleased), this);
-    gtk_widget_add_controller(_grid, controller);
-
-    gtk_widget_show(_window);
-
+void Window::_SetupWindowSignals()
+{
     using SizeChangedT = gboolean (*)(GObject *, GParamSpec *, gpointer data);
     SizeChangedT sizeChanged = [](auto *, auto *, gpointer data) {
         reinterpret_cast<Window *>(data)->_CheckSizeAsync();
@@ -105,32 +107,50 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
         return FALSE;
     };
     g_signal_connect(_window, "close-request", G_CALLBACK(on_close), this);
-
-    if (_session)
-    {
-        // Initial style setup
-        auto guard = _session->GetRenderer()->Lock();
-        _UpdateStyle();
-    }
-
-    _MeasureCell();
-
-    _cursor = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "cursor"));
-    gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _cell_width / PANGO_SCALE);
-    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _cell_height);
-
-    auto drawCursor = [](GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data) {
-        reinterpret_cast<Window *>(data)->_DrawCursor(da, cr, width, height);
-    };
-    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_cursor), drawCursor, this, nullptr);
-
-    // Adjust the grid size to the actual window size
-    _CheckSizeAsync();
 }
 
-Window::~Window()
+void Window::_SetupGrid()
 {
-    gtk_window_destroy(GTK_WINDOW(_window));
+    // Grid
+    _grid = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "grid"));
+    gtk_widget_set_focusable(_grid, true);
+
+    _css_provider.reset(gtk_css_provider_new());
+    gtk_style_context_add_provider(
+            gtk_widget_get_style_context(_grid),
+            GTK_STYLE_PROVIDER(_css_provider.get()),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+    // GTK wouldn't allow shrinking the window if there are widgets
+    // placed in the _grid. So the scroll view is required.
+    _scroll = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "scrolled_window"));
+
+    GtkEventController *controller = gtk_event_controller_key_new();
+    gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
+    using OnKeyPressedT = gboolean (*)(GtkEventControllerKey *,
+                                       guint                  keyval,
+                                       guint                  keycode,
+                                       GdkModifierType        state,
+                                       gpointer               data);
+    OnKeyPressedT onKeyPressed = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
+        return reinterpret_cast<Window *>(data)->_OnKeyPressed(keyval, keycode, state);
+    };
+    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-pressed", G_CALLBACK(onKeyPressed), this);
+    OnKeyPressedT onKeyReleased = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
+        return reinterpret_cast<Window *>(data)->_OnKeyReleased(keyval, keycode, state);
+    };
+    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-released", G_CALLBACK(onKeyReleased), this);
+    gtk_widget_add_controller(_grid, controller);
+}
+
+void Window::_SetupStatusLabel()
+{
+    GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "status"));
+    gtk_style_context_add_provider(
+            gtk_widget_get_style_context(status_label),
+            GTK_STYLE_PROVIDER(_css_provider.get()),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    gtk_widget_set_visible(status_label, false);
 }
 
 void Window::_CheckSizeAsync()
@@ -139,6 +159,19 @@ void Window::_CheckSizeAsync()
             reinterpret_cast<Window *>(data)->_CheckSize();
             return FALSE;
         }, this);
+}
+
+void Window::_SetupCursor()
+{
+    _MeasureCell();
+    _cursor = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "cursor"));
+    gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _cell_width / PANGO_SCALE);
+    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _cell_height);
+
+    auto drawCursor = [](GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data) {
+        reinterpret_cast<Window *>(data)->_DrawCursor(da, cr, width, height);
+    };
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_cursor), drawCursor, this, nullptr);
 }
 
 void Window::_CheckSize()
