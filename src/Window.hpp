@@ -27,7 +27,7 @@ private:
     GtkApplication *_app;
     Session::PtrT &_session;
 
-    GtkBuilder *_builder;
+    PtrT<GtkBuilder> _builder = NullPtr<GtkBuilder>([](auto *b) { g_object_unref(b); });
     GtkWidget *_window;
     GtkWidget *_scroll;
     GtkWidget *_grid;

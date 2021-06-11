@@ -13,14 +13,28 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
     GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
     gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
 
-    _builder = gtk_builder_new_from_resource("/org/nvim-ui/gtk/main.ui");
+    _builder.reset(gtk_builder_new_from_resource("/org/nvim-ui/gtk/main.ui"));
 
-    _window = GTK_WIDGET(gtk_builder_get_object(_builder, "main_window"));
+    // Window
+    _window = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "main_window"));
     gtk_window_set_application(GTK_WINDOW(_window), app);
     if (_session)
         gtk_window_set_deletable(GTK_WINDOW(_window), false);
 
-    _grid = GTK_WIDGET(gtk_builder_get_object(_builder, "grid"));
+    using ActionCbT = void (*)(GSimpleAction *, GVariant *, gpointer);
+    ActionCbT action_cb = [](GSimpleAction *action, GVariant *, gpointer) {
+        Logger().info("Action {}", g_action_get_name(G_ACTION(action)));
+    };
+    const GActionEntry actions[] = {
+        { "spawn", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "connect", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "quit", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
+    };
+    g_action_map_add_action_entries(G_ACTION_MAP(_window), actions, G_N_ELEMENTS(actions), this);
+
+
+    // Grid
+    _grid = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "grid"));
     gtk_widget_set_focusable(_grid, true);
 
     _css_provider.reset(gtk_css_provider_new());
@@ -31,9 +45,9 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
 
     // GTK wouldn't allow shrinking the window if there are widgets
     // placed in the _grid. So the scroll view is required.
-    _scroll = GTK_WIDGET(gtk_builder_get_object(_builder, "scrolled_window"));
+    _scroll = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "scrolled_window"));
 
-    GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder, "status"));
+    GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "status"));
     gtk_style_context_add_provider(
             gtk_widget_get_style_context(status_label),
             GTK_STYLE_PROVIDER(_css_provider.get()),
@@ -101,7 +115,7 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
 
     _MeasureCell();
 
-    _cursor = GTK_WIDGET(gtk_builder_get_object(_builder, "cursor"));
+    _cursor = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "cursor"));
     gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _cell_width / PANGO_SCALE);
     gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _cell_height);
 
@@ -117,7 +131,6 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
 Window::~Window()
 {
     gtk_window_destroy(GTK_WINDOW(_window));
-    g_object_unref(_builder);
 }
 
 void Window::_CheckSizeAsync()
@@ -216,7 +229,7 @@ void Window::_SessionEnd()
 
     gtk_window_set_deletable(GTK_WINDOW(_window), true);
 
-    GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder, "status"));
+    GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "status"));
     if (_session && !_session->GetOutput().empty())
     {
         gtk_widget_set_visible(status_label, true);

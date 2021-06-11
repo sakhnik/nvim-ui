@@ -5,11 +5,18 @@
       <attribute name='label' translatable='yes'>_Neovim</attribute>
       <item>
         <attribute name='label' translatable='yes'>_Spawn</attribute>
-        <attribute name='action'>app.spawn</attribute>
+        <attribute name='action'>win.spawn</attribute>
+        <attribute name='accel'>&lt;ctrl&gt;n</attribute>
       </item>
       <item>
         <attribute name='label' translatable='yes'>_Connect TCP...</attribute>
-        <attribute name='action'>app.connect</attribute>
+        <attribute name='action'>win.connect</attribute>
+        <attribute name='accel'>&lt;ctrl&gt;t</attribute>
+      </item>
+      <item>
+        <attribute name='label' translatable='yes'>_Quit</attribute>
+        <attribute name='action'>win.quit</attribute>
+        <attribute name='accel'>&lt;ctrl&gt;q</attribute>
       </item>
     </submenu>
   </menu>
