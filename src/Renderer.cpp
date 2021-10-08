@@ -153,7 +153,8 @@ std::vector<size_t> Renderer::_SplitChunks(const _Line &line)
             chunks.push_back(back + 1);
             is_space = false;
         }
-        else if (!is_space && back > 0 && text[back] == " " && text[back - 1] == " ")
+        else if (!is_space && back > 0
+                 && text[back] == " " && text[back - 1] == " ")
         {
             // Make sure contiguous spaces form their own chunk
             is_space = true;
@@ -161,6 +162,9 @@ std::vector<size_t> Renderer::_SplitChunks(const _Line &line)
             if (back > 1)
             {
                 chunks.back() = back - 1;
+                // Remove empty chunks immediately
+                if (chunks[chunks.size() - 2] == chunks.back())
+                    chunks.resize(chunks.size() - 1);
                 chunks.push_back(back + 1);
             }
         }

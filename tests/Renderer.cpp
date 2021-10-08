@@ -16,7 +16,7 @@ suite s = [] {
             auto chunks = Renderer::_SplitChunks(line);
             expect(2_u == chunks.size());
             expect(0_u == chunks[0]);
-            expect(0_u == chunks[0]);
+            expect(1_u == chunks[1]);
         };
 
         "contiguous"_test = [] {
@@ -95,6 +95,20 @@ suite s = [] {
             expect(0_u == chunks[0]);
             expect(1_u == chunks[1]);
             expect(4_u == chunks[2]);
+        };
+
+        "distinct_space"_test = [] {
+            Renderer::_Line line{
+                .text = {"a"s, " "s, " "s, " "s, " "s},
+                .hl_id = {0, 0, 1, 0, 0},
+                .texture_cache = {},
+            };
+            auto chunks = Renderer::_SplitChunks(line);
+            expect(4_u == chunks.size());
+            expect(0_u == chunks[0]);
+            expect(2_u == chunks[1]);
+            expect(3_u == chunks[2]);
+            expect(5_u == chunks[3]);
         };
     };
 };
