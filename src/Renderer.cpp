@@ -107,7 +107,9 @@ void Renderer::_DoFlush()
                 unsigned def_bg = _def_attr.bg.value();
 
                 if (texture.IsSpace()
-                    && (hlit == _hl_attr.end() || hlit->second.bg.value_or(def_bg) == def_bg))
+                    && (hlit == _hl_attr.end()                                   // No highlighting
+                        || (hlit->second.bg.value_or(def_bg) == def_bg           // Default background
+                            && 0 == (hlit->second.flags & HlAttr::F_REVERSE))))  // No reverse (foreground becomes background)
                 {
                     // No need to create empty textures coinciding with the background color
                     continue;
