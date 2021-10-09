@@ -11,6 +11,10 @@ TextureCache::Scanner::~Scanner()
     if (_started)
         ++_iter;
     // The unscanned entries are considered outdated
+    for (auto it = _iter; it != _cache.end(); ++it)
+    {
+        it->texture->MarkToDestroy();
+    }
     _cache.erase(_iter, _cache.end());
 }
 
@@ -23,10 +27,16 @@ bool TextureCache::Scanner::EnsureNext(Texture &&texture, GeneratorT generator)
 
     // Remove potentially outdated cached textures
     while (_iter != _cache.end() && _iter->col < texture.col)
+    {
+        _iter->texture->MarkToDestroy();
         _iter = _cache.erase(_iter);
+    }
     while (_iter != _cache.end() && _iter->col == texture.col
         && (_iter->hl_id != texture.hl_id || _iter->text != texture.text))
+    {
+        _iter->texture->MarkToDestroy();
         _iter = _cache.erase(_iter);
+    }
 
     if (_iter == _cache.end()
         || _iter->hl_id != texture.hl_id
@@ -49,6 +59,10 @@ bool TextureCache::Scanner::EnsureNext(Texture &&texture, GeneratorT generator)
 
 void TextureCache::Clear()
 {
+    for (auto &t : _cache)
+    {
+        t.texture->MarkToDestroy();
+    }
     _cache.clear();
 }
 

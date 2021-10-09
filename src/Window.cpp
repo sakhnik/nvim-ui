@@ -256,7 +256,8 @@ void Window::_SessionEnd()
     for (auto &t : _textures)
     {
         Texture *texture = static_cast<Texture *>(t.get());
-        gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
+        if (texture->widget)
+            gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
     }
     _textures.clear();
     gtk_widget_hide(_cursor);
@@ -339,12 +340,26 @@ void Window::_Present()
         _UpdateStyle();
     }
 
-    decltype(_textures) textures;
+    // First remove outdated textures
+    auto removeOutdated = [&] {
+        auto it = std::partition(_textures.begin(), _textures.end(), [](auto &t) { return !t->ToBeDestroyed(); });
+        for (auto it2 = it; it2 != _textures.end(); ++it2)
+        {
+            Texture *texture = static_cast<Texture *>(it2->get());
+            if (texture->widget)
+                gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
+        }
+        _textures.erase(it, _textures.end());
+    };
+    removeOutdated();
+
+    size_t texture_count = 0;
 
     for (int row = 0, rowN = renderer->GetGridLines().size();
          row < rowN; ++row)
     {
         const auto &line = renderer->GetGridLines()[row];
+        texture_count += line.size();
         for (const auto &texture : line)
         {
             Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
@@ -362,6 +377,7 @@ void Window::_Present()
                 gtk_widget_add_css_class(t->widget, class_name.data());
 
                 gtk_fixed_put(GTK_FIXED(_grid), t->widget, x, y);
+                _textures.push_back(texture.texture);
             }
             else
             {
@@ -371,17 +387,11 @@ void Window::_Present()
                     t->MarkToRedraw(false);
                 }
             }
-            textures.insert(texture.texture);
-            _textures.erase(texture.texture);
         }
     }
 
-    for (auto &t : _textures)
-    {
-        Texture *texture = static_cast<Texture *>(t.get());
-        gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
-    }
-    _textures.swap(textures);
+    if (texture_count != _textures.size())
+        Logger().warn("Texture count mismatch: {} != {}", texture_count, _textures.size());
 
     // Move the cursor
     if (gtk_widget_get_parent(_cursor))

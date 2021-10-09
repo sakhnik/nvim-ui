@@ -17,8 +17,12 @@ struct IWindow
         bool ToBeRedrawn() const { return _redraw; }
         void MarkToRedraw(bool redraw = true) { _redraw = redraw; }
 
+        bool ToBeDestroyed() const { return _destroy; }
+        void MarkToDestroy(bool destroy = true) { _destroy = destroy; }
+
     private:
         bool _redraw = true;
+        bool _destroy = false;
     };
 
     virtual ITexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) = 0;
