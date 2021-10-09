@@ -29,12 +29,18 @@ bool TextureCache::Scanner::EnsureNext(Texture &&texture, GeneratorT generator)
         _iter = _cache.erase(_iter);
 
     if (_iter == _cache.end()
-        || _iter->col != texture.col || _iter->hl_id != texture.hl_id
+        || _iter->hl_id != texture.hl_id
         || _iter->text != texture.text)
     {
         texture.texture = generator(texture);
         _iter = _cache.insert(_iter, std::move(texture));
         return true;
+    }
+
+    if (_iter->col != texture.col)
+    {
+        // The texture has just shifted
+        _iter->col = texture.col;
     }
 
     return false;
