@@ -13,6 +13,12 @@ struct IWindow
     {
         using PtrT = std::shared_ptr<ITexture>;
         virtual ~ITexture() {}
+
+        bool ToBeRedrawn() const { return _redraw; }
+        void MarkToRedraw(bool redraw = true) { _redraw = redraw; }
+
+    private:
+        bool _redraw = true;
     };
 
     virtual ITexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) = 0;

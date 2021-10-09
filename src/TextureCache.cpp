@@ -41,6 +41,7 @@ bool TextureCache::Scanner::EnsureNext(Texture &&texture, GeneratorT generator)
     {
         // The texture has just shifted
         _iter->col = texture.col;
+        _iter->texture->MarkToRedraw(true);
     }
 
     return false;
@@ -64,6 +65,7 @@ void TextureCache::MoveFrom(TextureCache &o, int left, int right)
         // Find a suitable place to insert to still maintaining the sorted order
         while (it != _cache.end() && it->col < it_from->col)
             ++it;
+        it_from->texture->MarkToRedraw(true);
         _cache.splice(it++, o._cache, it_from++);
     }
 }

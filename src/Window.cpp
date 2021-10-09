@@ -359,20 +359,19 @@ void Window::_Present()
                         GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
                 std::string class_name = fmt::format("hl{}", texture.hl_id);
                 gtk_widget_add_css_class(t->widget, class_name.data());
+
+                gtk_fixed_put(GTK_FIXED(_grid), t->widget, x, y);
             }
-            if (t->widget)
+            else
             {
-                if (gtk_widget_get_parent(t->widget))
+                if (t->ToBeRedrawn())
                 {
                     gtk_fixed_move(GTK_FIXED(_grid), t->widget, x, y);
+                    t->MarkToRedraw(false);
                 }
-                else
-                {
-                    gtk_fixed_put(GTK_FIXED(_grid), t->widget, x, y);
-                }
-                widgets.insert(t->widget);
-                _widgets.erase(t->widget);
             }
+            widgets.insert(t->widget);
+            _widgets.erase(t->widget);
         }
     }
 
