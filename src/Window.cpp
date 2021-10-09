@@ -253,11 +253,12 @@ void Window::SessionEnd()
 void Window::_SessionEnd()
 {
     Logger().info("Session end");
-    for (auto *w : _widgets)
+    for (auto &t : _textures)
     {
-        gtk_fixed_remove(GTK_FIXED(_grid), w);
+        Texture *texture = static_cast<Texture *>(t.get());
+        gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
     }
-    _widgets.clear();
+    _textures.clear();
     gtk_widget_hide(_cursor);
 
     gtk_window_set_deletable(GTK_WINDOW(_window), true);
@@ -338,7 +339,7 @@ void Window::_Present()
         _UpdateStyle();
     }
 
-    decltype(_widgets) widgets;
+    decltype(_textures) textures;
 
     for (int row = 0, rowN = renderer->GetGridLines().size();
          row < rowN; ++row)
@@ -370,16 +371,17 @@ void Window::_Present()
                     t->MarkToRedraw(false);
                 }
             }
-            widgets.insert(t->widget);
-            _widgets.erase(t->widget);
+            textures.insert(texture.texture);
+            _textures.erase(texture.texture);
         }
     }
 
-    for (auto *w : _widgets)
+    for (auto &t : _textures)
     {
-        gtk_fixed_remove(GTK_FIXED(_grid), w);
+        Texture *texture = static_cast<Texture *>(t.get());
+        gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
     }
-    _widgets.swap(widgets);
+    _textures.swap(textures);
 
     // Move the cursor
     if (gtk_widget_get_parent(_cursor))
