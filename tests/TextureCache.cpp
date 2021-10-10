@@ -15,6 +15,7 @@ struct Tex : IWindow::ITexture
 
 suite s = [] {
     auto generator = [](const auto &t) { return Tex::n(t.text); };
+    auto no_generator = [](const auto &) { return Tex::n("*"); };
 
     auto dump = [](TextureCache &tc) {
         std::string buf;
@@ -58,7 +59,7 @@ suite s = [] {
 
             {
                 auto s = c.GetScanner();
-                expect(!s.EnsureNext(TextureCache::Texture(0, 1, 0, "He"), generator));
+                expect(!s.EnsureNext(TextureCache::Texture(0, 1, 0, "He"), no_generator));
                 expect(s.EnsureNext(TextureCache::Texture(2, 1, 0, "llo "), generator));
                 expect(s.EnsureNext(TextureCache::Texture(3, 1, 0, "again"), generator));
             }
@@ -79,8 +80,8 @@ suite s = [] {
             {
                 auto s = c.GetScanner();
                 expect(s.EnsureNext(TextureCache::Texture(0, 1, 0, "B"), generator));
-                expect(!s.EnsureNext(TextureCache::Texture(1, 1, 0, "e"), generator));
-                expect(!s.EnsureNext(TextureCache::Texture(3, 1, 0, "t"), generator));
+                expect(!s.EnsureNext(TextureCache::Texture(1, 1, 0, "e"), no_generator));
+                expect(!s.EnsureNext(TextureCache::Texture(3, 1, 0, "t"), no_generator));
             }
             expect(eq("Bet"s, dump(c)));
             expect(eq("Bet"s, dump2(c)));
@@ -110,6 +111,26 @@ suite s = [] {
             expect(eq("TeWsEt2"s, dump2(c1)));
             expect(eq("QR"s, dump(c2)));
             expect(eq("QR"s, dump2(c2)));
+        };
+
+        "shift"_test = [&] {
+            TextureCache c;
+            {
+                auto s = c.GetScanner();
+                expect(s.EnsureNext(TextureCache::Texture(0, 2, 0, "He"), generator));
+                expect(s.EnsureNext(TextureCache::Texture(2, 1, 0, " "), generator));
+                expect(s.EnsureNext(TextureCache::Texture(3, 3, 0, "llo"), generator));
+            }
+            expect(eq("He llo"s, dump(c)));
+            expect(eq("He llo"s, dump2(c)));
+
+            {
+                auto s = c.GetScanner();
+                expect(!s.EnsureNext(TextureCache::Texture(0, 2, 0, "He"), no_generator));
+                expect(!s.EnsureNext(TextureCache::Texture(2, 3, 0, "llo"), no_generator));
+            }
+            expect(eq("Hello"s, dump(c)));
+            expect(eq("Hello"s, dump2(c)));
         };
     };
 };
