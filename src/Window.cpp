@@ -379,13 +379,11 @@ void Window::_Present()
                 gtk_fixed_put(GTK_FIXED(_grid), t->widget, x, y);
                 _textures.push_back(texture.texture);
             }
-            else
+
+            if (t->ToBeRedrawn())
             {
-                if (t->ToBeRedrawn())
-                {
-                    gtk_fixed_move(GTK_FIXED(_grid), t->widget, x, y);
-                    t->MarkToRedraw(false);
-                }
+                gtk_fixed_move(GTK_FIXED(_grid), t->widget, x, y);
+                t->MarkToRedraw(false);
             }
         }
     }
