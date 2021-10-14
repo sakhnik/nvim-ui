@@ -388,8 +388,7 @@ void Window::_Present()
         }
     }
 
-    if (texture_count != _textures.size())
-        Logger().warn("Texture count mismatch: {} != {}", texture_count, _textures.size());
+    assert(texture_count == _textures.size() && "Texture count consistency");
 
     // Move the cursor
     if (gtk_widget_get_parent(_cursor))
