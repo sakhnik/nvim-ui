@@ -10,6 +10,8 @@ nvim_ui_lib_sources = [
   'Renderer.hpp',
   'Session.cpp',
   'Session.hpp',
+  'SessionSpawn.cpp',
+  'SessionSpawn.hpp',
   'TextureCache.cpp',
   'TextureCache.hpp',
   'Timer.cpp',

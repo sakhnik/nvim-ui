@@ -16,8 +16,7 @@ class Session
 public:
     using PtrT = std::unique_ptr<Session>;
 
-    Session(int argc, char *argv[]);
-    ~Session();
+    virtual ~Session();
 
     void RunAsync();
     void SetWindow(IWindow *);
@@ -35,9 +34,7 @@ public:
         return _rpc->GetOutput();
     }
 
-private:
-    uv_pipe_t _stdin_pipe, _stdout_pipe;
-    uv_process_t _child_req;
+protected:
     std::unique_ptr<MsgPackRpc> _rpc;
     std::unique_ptr<Renderer> _renderer;
     std::unique_ptr<RedrawHandler> _redraw_handler;
@@ -46,4 +43,6 @@ private:
     std::unique_ptr<std::thread> _thread;
     std::atomic<bool> _nvim_exited = false;
     IWindow *_window = nullptr;
+
+    void _Init(uv_stream_t *in, uv_stream_t *out);
 };

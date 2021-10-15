@@ -1,5 +1,5 @@
 #include "Window.hpp"
-#include "Session.hpp"
+#include "SessionSpawn.hpp"
 #include "Logger.hpp"
 #include <spdlog/cfg/env.h>
 
@@ -34,7 +34,8 @@ int main(int argc, char* argv[])
             std::string error;
             try
             {
-                session.reset(new Session(_argc, _argv));
+                // Start the app by spawning a local nvim
+                session.reset(new SessionSpawn(_argc, _argv));
             }
             catch (std::exception &ex)
             {
