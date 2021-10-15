@@ -47,7 +47,10 @@ void Renderer::Flush()
     else
     {
         // Make sure the final view will be presented if no more flush requests.
-        _timer.Start(FLUSH_DURATION_MS, 0, [&] { _DoFlush(); });
+        _timer.Start(FLUSH_DURATION_MS, 0, [&] {
+            auto lock = Lock();
+            _DoFlush();
+        });
     }
 }
 
