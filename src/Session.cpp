@@ -66,7 +66,8 @@ Session::Session(int argc, char *argv[])
         throw std::runtime_error(message.c_str());
     }
 
-    _rpc.reset(new MsgPackRpc(&_stdin_pipe, &_stdout_pipe));
+    _rpc.reset(new MsgPackRpc(reinterpret_cast<uv_stream_t*>(&_stdin_pipe),
+                              reinterpret_cast<uv_stream_t*>(&_stdout_pipe)));
     _renderer.reset(new Renderer{loop, _rpc.get()});
     _redraw_handler.reset(new RedrawHandler{_rpc.get(), _renderer.get()});
 

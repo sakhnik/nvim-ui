@@ -3,11 +3,11 @@
 #include <iostream>
 
 
-MsgPackRpc::MsgPackRpc(uv_pipe_t *stdin_pipe, uv_pipe_t *stdout_pipe)
-    : _stdin_pipe{stdin_pipe}
-    , _stdout_pipe{stdout_pipe}
+MsgPackRpc::MsgPackRpc(uv_stream_t *stdin_stream, uv_stream_t *stdout_stream)
+    : _stdin_stream{stdin_stream}
+    , _stdout_stream{stdout_stream}
 {
-    _stdout_pipe->data = this;
+    _stdout_stream->data = this;
 
     auto alloc_buffer = [](uv_handle_t *handle, size_t len, uv_buf_t *buf) {
         MsgPackRpc *self = reinterpret_cast<MsgPackRpc*>(handle->data);
@@ -16,7 +16,7 @@ MsgPackRpc::MsgPackRpc(uv_pipe_t *stdin_pipe, uv_pipe_t *stdout_pipe)
         buf->len = len;
     };
 
-    auto read_apipe = [](uv_stream_t* stream, ssize_t nread, const uv_buf_t *buf) {
+    auto read_astream = [](uv_stream_t* stream, ssize_t nread, const uv_buf_t *buf) {
         if (nread > 0)
         {
             MsgPackRpc *self = reinterpret_cast<MsgPackRpc*>(stream->data);
@@ -24,12 +24,12 @@ MsgPackRpc::MsgPackRpc(uv_pipe_t *stdin_pipe, uv_pipe_t *stdout_pipe)
         }
     };
 
-    ::uv_read_start((uv_stream_t*)_stdout_pipe, alloc_buffer, read_apipe);
+    ::uv_read_start(_stdout_stream, alloc_buffer, read_astream);
 }
 
 MsgPackRpc::~MsgPackRpc()
 {
-    ::uv_read_stop((uv_stream_t*)_stdout_pipe);
+    ::uv_read_stop(_stdout_stream);
 }
 
 void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
@@ -60,7 +60,7 @@ void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
     buf.base = w->buffer.data();
     buf.len = w->buffer.size();
 
-    uv_write(w.release(), reinterpret_cast<uv_stream_t*>(_stdin_pipe), &buf, 1, cb);
+    uv_write(w.release(), _stdin_stream, &buf, 1, cb);
 }
 
 void MsgPackRpc::_handle_data(const char *data, size_t length)
