@@ -477,21 +477,15 @@ gboolean Window::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType 
     // TODO: functional keys, shift etc
     switch (keyval)
     {
-    case GDK_KEY_Escape:
-        input.reset(g_string_new("esc"));
-        break;
-    case GDK_KEY_Return:
-        input.reset(g_string_new("cr"));
-        break;
-    case GDK_KEY_BackSpace:
-        input.reset(g_string_new("bs"));
-        break;
-    case GDK_KEY_Tab:
-        input.reset(g_string_new("tab"));
-        break;
-    case GDK_KEY_less:
-        input.reset(g_string_new("lt"));
-        break;
+    case GDK_KEY_Escape:        input.reset(g_string_new("esc"));   break;
+    case GDK_KEY_Return:        input.reset(g_string_new("cr"));    break;
+    case GDK_KEY_BackSpace:     input.reset(g_string_new("bs"));    break;
+    case GDK_KEY_Tab:           input.reset(g_string_new("tab"));   break;
+    case GDK_KEY_less:          input.reset(g_string_new("lt"));    break;
+    case GDK_KEY_Left:          input.reset(g_string_new("Left"));  break;
+    case GDK_KEY_Right:         input.reset(g_string_new("Right")); break;
+    case GDK_KEY_Up:            input.reset(g_string_new("Up"));    break;
+    case GDK_KEY_Down:          input.reset(g_string_new("Down"));  break;
     }
 
     if (0 != (GDK_CONTROL_MASK & state))
