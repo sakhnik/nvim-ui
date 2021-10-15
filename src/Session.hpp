@@ -19,7 +19,7 @@ public:
     virtual ~Session();
 
     void RunAsync();
-    void SetWindow(IWindow *);
+    virtual void SetWindow(IWindow *);
 
     Renderer* GetRenderer() { return _renderer.get(); }
     Input* GetInput() { return _input.get(); }

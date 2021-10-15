@@ -52,7 +52,7 @@ void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
     auto cb = [](uv_write_t* req, int status) {
         Write *w = reinterpret_cast<Write *>(req);
         if (status < 0)
-            Logger().error("Failed to write {} bytes: {}", w->buffer.size(), status);
+            Logger().error("Failed to write {} bytes: {}", w->buffer.size(), uv_strerror(status));
         delete w;
     };
 

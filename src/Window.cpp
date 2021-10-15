@@ -23,7 +23,7 @@ Window::Window(GtkApplication *app, Session::PtrT &session)
 
     _SetupWindowSignals();
 
-    if (_session)
+    if (_session && _session->GetRenderer())
     {
         // Initial style setup
         auto guard = _session->GetRenderer()->Lock();
@@ -190,7 +190,7 @@ void Window::_CheckSize()
     _last_cols = cols;
     _last_rows = rows;
     auto renderer = _session->GetRenderer();
-    if (cols != renderer->GetWidth() || rows != renderer->GetHeight())
+    if (renderer && (cols != renderer->GetWidth() || rows != renderer->GetHeight()))
     {
         Logger().info("Grid size change detected rows={} cols={}", rows, cols);
         renderer->OnResized(rows, cols);
