@@ -488,17 +488,27 @@ gboolean Window::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType 
     case GDK_KEY_Down:          input.reset(g_string_new("Down"));  break;
     }
 
+    auto remapForMeta = [](decltype(input) &in) -> auto& {
+        if (in->len != 1)
+            return in;
+        char &ch = in->str[0];
+        const char SHIFTS[] = ")!@#$%^&*(";
+        if (ch >= '0' && ch <= '9')
+            ch = SHIFTS[ch - '0'];
+        return in;
+    };
+
     if (0 != (GDK_CONTROL_MASK & state))
     {
-        input.reset(g_string_prepend(input.release(), "c-"));
+        input.reset(g_string_prepend(remapForMeta(input).release(), "c-"));
     }
     if (0 != (GDK_META_MASK & state) || 0 != (GDK_ALT_MASK & state))
     {
-        input.reset(g_string_prepend(input.release(), "m-"));
+        input.reset(g_string_prepend(remapForMeta(input).release(), "m-"));
     }
     if (0 != (GDK_SUPER_MASK & state))
     {
-        input.reset(g_string_prepend(input.release(), "d-"));
+        input.reset(g_string_prepend(remapForMeta(input).release(), "d-"));
     }
 
     if (input->len != start_length)
