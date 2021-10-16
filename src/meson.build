@@ -36,8 +36,10 @@ nvim_ui_lib_dep = declare_dependency(
 
 nvim_ui_sources = [
   'main.cpp',
-  'Window.cpp',
-  'Window.hpp',
+  'GGrid.hpp',
+  'GGrid.cpp',
+  'GWindow.cpp',
+  'GWindow.hpp',
   gtk_res,
   win_res,
 ]

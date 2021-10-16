@@ -3,18 +3,18 @@
 #include "IWindow.hpp"
 #include "Utils.hpp"
 #include "Session.hpp"
-#include <vector>
+#include "GGrid.hpp"
 #include <string>
 #include <memory>
 #include <gtk/gtk.h>
 
 
-class Window
+class GWindow
     : public IWindow
 {
 public:
-    Window(GtkApplication *, Session::PtrT &session);
-    ~Window();
+    GWindow(GtkApplication *, Session::PtrT &session);
+    ~GWindow();
 
     ITexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) override;
     void Present() override;
@@ -32,12 +32,9 @@ private:
     GtkWidget *_scroll;
     GtkWidget *_grid;
     GtkWidget *_cursor;
+    std::unique_ptr<GGrid> _ggrid;
 
-    int _cell_width = 0, _cell_height = 0;
     int _last_rows = 0, _last_cols = 0;
-    std::vector<ITexture::PtrT> _textures;
-    PtrT<GtkCssProvider> _css_provider = NullPtr<GtkCssProvider>([](auto *p) { g_object_unref(p); });
-    std::string _style;
 
     PtrT<GdkCursor> _active_cursor = NullPtr<GdkCursor>([](auto *c) { g_object_unref(c); });
     PtrT<GdkCursor> _busy_cursor = NullPtr<GdkCursor>([](auto *c) { g_object_unref(c); });
@@ -50,7 +47,6 @@ private:
 
     void _CheckSizeAsync();
     void _CheckSize();
-    void _MeasureCell();
 
     gboolean _OnKeyPressed(guint keyval, guint keycode, GdkModifierType state);
     gboolean _OnKeyReleased(guint keyval, guint keycode, GdkModifierType state);
@@ -58,7 +54,6 @@ private:
     bool _alt_pending = false;
 
     void _Present();
-    void _UpdateStyle();
     void _DrawCursor(GtkDrawingArea *, cairo_t *, int width, int height);
     void _SessionEnd();
 };

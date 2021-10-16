@@ -1,4 +1,4 @@
-#include "Window.hpp"
+#include "GWindow.hpp"
 #include "SessionSpawn.hpp"
 #include "SessionTcp.hpp"
 #include "Logger.hpp"
@@ -9,7 +9,7 @@
 namespace {
 
     Session::PtrT session;
-    std::unique_ptr<Window> window;
+    std::unique_ptr<GWindow> window;
 
 } //namespace;
 
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
             {
                 error = ex.what();
             }
-            window.reset(new Window{app, session});
+            window.reset(new GWindow{app, session});
             if (session)
             {
                 window->SetError(nullptr);
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
             if (session)
             {
                 // Resurrect the window if the session is still active
-                window.reset(new Window{app, session});
+                window.reset(new GWindow{app, session});
                 // TODO: give some hint to quit neovim properly
             }
         };
