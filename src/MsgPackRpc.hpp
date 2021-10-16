@@ -9,7 +9,9 @@
 class MsgPackRpc
 {
 public:
-    MsgPackRpc(uv_stream_t *, uv_stream_t *);
+    using OnErrorT = std::function<void(const char *)>;
+
+    MsgPackRpc(uv_stream_t *, uv_stream_t *, OnErrorT);
     ~MsgPackRpc();
 
     using OnNotificationT = std::function<void(std::string_view, msgpack::object)>;
@@ -31,6 +33,7 @@ public:
 private:
     uv_stream_t *_stdin_stream;
     uv_stream_t *_stdout_stream;
+    OnErrorT _on_error;
     OnNotificationT _on_notification;
 
     // Capture any non msgpack-rpc output, as it may be text output from --version or alike

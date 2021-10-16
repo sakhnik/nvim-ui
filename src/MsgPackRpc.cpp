@@ -3,9 +3,11 @@
 #include <iostream>
 
 
-MsgPackRpc::MsgPackRpc(uv_stream_t *stdin_stream, uv_stream_t *stdout_stream)
+MsgPackRpc::MsgPackRpc(uv_stream_t *stdin_stream, uv_stream_t *stdout_stream,
+                       OnErrorT on_error)
     : _stdin_stream{stdin_stream}
     , _stdout_stream{stdout_stream}
+    , _on_error{on_error}
 {
     _stdout_stream->data = this;
 
@@ -17,10 +19,13 @@ MsgPackRpc::MsgPackRpc(uv_stream_t *stdin_stream, uv_stream_t *stdout_stream)
     };
 
     auto read_astream = [](uv_stream_t* stream, ssize_t nread, const uv_buf_t *buf) {
+        MsgPackRpc *self = reinterpret_cast<MsgPackRpc*>(stream->data);
         if (nread > 0)
-        {
-            MsgPackRpc *self = reinterpret_cast<MsgPackRpc*>(stream->data);
             self->_handle_data(buf->base, nread);
+        else
+        {
+            Logger().error("Failed to read: {}", uv_strerror(nread));
+            self->_on_error(uv_strerror(nread));
         }
     };
 
@@ -52,7 +57,11 @@ void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
     auto cb = [](uv_write_t* req, int status) {
         Write *w = reinterpret_cast<Write *>(req);
         if (status < 0)
+        {
             Logger().error("Failed to write {} bytes: {}", w->buffer.size(), uv_strerror(status));
+            MsgPackRpc *self = reinterpret_cast<MsgPackRpc *>(req->data);
+            self->_on_error(uv_strerror(status));
+        }
         delete w;
     };
 

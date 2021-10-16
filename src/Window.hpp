@@ -21,7 +21,7 @@ public:
     void DrawCursor(cairo_t *, int row, int col, unsigned fg, std::string_view mode);
     void SessionEnd() override;
 
-    void SetError(const char *error);
+    void SetError(const char *error) override;
 
 private:
     GtkApplication *_app;

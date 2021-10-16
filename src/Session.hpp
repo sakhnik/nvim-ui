@@ -45,4 +45,6 @@ protected:
     IWindow *_window = nullptr;
 
     void _Init(uv_stream_t *in, uv_stream_t *out);
+    void _OnError(const char *);
+    void _Exit();
 };

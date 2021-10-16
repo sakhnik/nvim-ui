@@ -24,12 +24,9 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
     //});
 
     auto on_exit = [](uv_process_t *proc, int64_t exit_status, int signal) {
-        SessionSpawn *session = reinterpret_cast<SessionSpawn *>(proc->data);
         Logger().info("Exit: status={} signal={}", exit_status, signal);
-        session->_nvim_exited.store(true, std::memory_order_relaxed);
-        uv_stop(uv_default_loop());
-        if (session->_window)
-            session->_window->SessionEnd();
+        SessionSpawn *session = reinterpret_cast<SessionSpawn *>(proc->data);
+        session->_Exit();
     };
 
     uv_process_options_t options{};

@@ -6,7 +6,8 @@
 
 void Session::_Init(uv_stream_t *in, uv_stream_t *out)
 {
-    _rpc.reset(new MsgPackRpc(in, out));
+    auto onError = [this](const char *error) { _OnError(error); };
+    _rpc.reset(new MsgPackRpc(in, out, onError));
     _renderer.reset(new Renderer{uv_default_loop(), _rpc.get()});
     _redraw_handler.reset(new RedrawHandler{_rpc.get(), _renderer.get()});
 
@@ -44,4 +45,19 @@ void Session::SetWindow(IWindow *window)
 {
     _window = window;
     _renderer->SetWindow(window);
+}
+
+void Session::_OnError(const char *error)
+{
+    _Exit();
+    if (_window && error)
+        _window->SetError(error);
+}
+
+void Session::_Exit()
+{
+    _nvim_exited.store(true, std::memory_order_relaxed);
+    uv_stop(uv_default_loop());
+    if (_window)
+        _window->SessionEnd();
 }
