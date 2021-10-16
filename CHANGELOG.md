@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Switched to gtk4 to get rid of texture noise. Chunks of texts are rendered as gtk labels.
 - Capture and display service output like --help or --version in the GUI window
+- TCP session that can be engaged by recompiling currently
 
 ### Fixed
 
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved text rendering for fancy fonts like Fira Code where glyphs may be wider than one cell
 - Icon URL in chocolatey nuspec should point to a CDN
 - Don't allow closing the window if neovim session is still active, resurrect the window if necessary
+- Handle process crash or disconnection
 
 ## [0.0.2] - 2021-04-27
 

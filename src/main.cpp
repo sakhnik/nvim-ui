@@ -1,5 +1,6 @@
 #include "Window.hpp"
 #include "SessionSpawn.hpp"
+#include "SessionTcp.hpp"
 #include "Logger.hpp"
 #include <spdlog/cfg/env.h>
 
@@ -36,6 +37,7 @@ int main(int argc, char* argv[])
             {
                 // Start the app by spawning a local nvim
                 session.reset(new SessionSpawn(_argc, _argv));
+                //session.reset(new SessionTcp("10.0.2.6", 12345));
             }
             catch (std::exception &ex)
             {
