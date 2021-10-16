@@ -27,6 +27,7 @@ nvim_ui_lib_sources = [
 nvim_ui_lib = static_library('nvim-ui-lib',
   nvim_ui_lib_sources,
   dependencies: [spdlog_dep, msgpack_dep, libuv_dep],
+  cpp_pch: 'pch/all.hpp',
 )
 
 nvim_ui_lib_dep = declare_dependency(
@@ -45,5 +46,6 @@ executable('nvim-ui',
   nvim_ui_sources,
   dependencies: [spdlog_dep, gtk4_dep],
   link_with: [nvim_ui_lib],
+  cpp_pch: 'pch/all-gtk.hpp',
   win_subsystem: 'windows',
   install: true)
