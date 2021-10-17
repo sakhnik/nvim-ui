@@ -16,7 +16,14 @@ GWindow::GWindow(GtkApplication *app, Session::PtrT &session)
     _builder.reset(gtk_builder_new_from_resource("/org/nvim-ui/gtk/main.ui"));
 
     _SetupWindow();
-    _SetupGrid();
+
+    // Grid
+    GtkWidget *grid = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "grid"));
+    _grid.reset(new GGrid(grid, _session, this));
+
+    // GTK wouldn't allow shrinking the window if there are widgets
+    // placed in the grid. So the scroll view is required.
+    _scroll = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "scrolled_window"));
 
     _SetupStatusLabel();
 
@@ -108,17 +115,6 @@ void GWindow::_SetupWindowSignals()
     g_signal_connect(_window, "close-request", G_CALLBACK(on_close), this);
 }
 
-void GWindow::_SetupGrid()
-{
-    // Grid
-    GtkWidget *grid = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "grid"));
-    _grid.reset(new GGrid(grid, _session, this));
-
-    // GTK wouldn't allow shrinking the window if there are widgets
-    // placed in the grid. So the scroll view is required.
-    _scroll = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "scrolled_window"));
-}
-
 void GWindow::_SetupStatusLabel()
 {
     GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "status"));
@@ -139,25 +135,9 @@ void GWindow::_CheckSizeAsync()
 
 void GWindow::_CheckSize()
 {
-    if (!_session)
-        return;
-
     int width = gtk_widget_get_allocated_width(_scroll);
     int height = gtk_widget_get_allocated_height(_scroll);
-
-    int cols = std::max(1, static_cast<int>(width / _grid->CalcX(1)));
-    int rows = std::max(1, static_cast<int>(height / _grid->CalcY(1)));
-    // Dejitter to request resizing only once
-    if (cols == _last_cols && rows == _last_rows)
-        return;
-    _last_cols = cols;
-    _last_rows = rows;
-    auto renderer = _session->GetRenderer();
-    if (renderer && (cols != renderer->GetWidth() || rows != renderer->GetHeight()))
-    {
-        Logger().info("Grid size change detected rows={} cols={}", rows, cols);
-        renderer->OnResized(rows, cols);
-    }
+    _grid->CheckSize(width, height);
 }
 
 IWindow::ITexture::PtrT
@@ -170,7 +150,8 @@ GWindow::CreateTexture(int /*width*/, std::string_view /*text*/,
 void GWindow::Present()
 {
     auto present = [](gpointer data) {
-        reinterpret_cast<GWindow *>(data)->_Present();
+        GWindow *self = reinterpret_cast<GWindow *>(data);
+        self->_Present();
         return FALSE;
     };
     g_timeout_add(0, present, this);
@@ -178,12 +159,9 @@ void GWindow::Present()
 
 void GWindow::_Present()
 {
-    _grid->Present();
-
-    auto renderer = _session->GetRenderer();
-    auto guard = renderer->Lock();
-
-    _CheckSize();
+    int width = gtk_widget_get_allocated_width(_scroll);
+    int height = gtk_widget_get_allocated_height(_scroll);
+    _grid->Present(width, height);
 }
 
 void GWindow::SessionEnd()

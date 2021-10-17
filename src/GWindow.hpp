@@ -34,11 +34,8 @@ private:
     GtkWidget *_scroll;
     std::unique_ptr<GGrid> _grid;
 
-    int _last_rows = 0, _last_cols = 0;
-
     void _SetupWindow();
     void _SetupWindowSignals();
-    void _SetupGrid();
     void _SetupStatusLabel();
 
     void _CheckSizeAsync();

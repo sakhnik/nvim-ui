@@ -112,7 +112,7 @@ void GGrid::UpdateStyle()
     MeasureCell();
 }
 
-void GGrid::Present()
+void GGrid::Present(int width, int height)
 {
     auto renderer = _session->GetRenderer();
     auto guard = renderer->Lock();
@@ -175,6 +175,7 @@ void GGrid::Present()
 
     _cursor->Move();
     _pointer.Update(renderer->IsBusy(), _grid);
+    _CheckSize(width, height);
 }
 
 void GGrid::Clear()
@@ -264,4 +265,34 @@ gboolean GGrid::_OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType 
         _menu_bar_toggler->MenuBarToggle();
     }
     return true;
+}
+
+void GGrid::_CheckSize(int width, int height)
+{
+    if (!_session)
+        return;
+
+    int cols = std::max(1, static_cast<int>(width / CalcX(1)));
+    int rows = std::max(1, static_cast<int>(height / CalcY(1)));
+    // Dejitter to request resizing only once
+    if (cols == _last_cols && rows == _last_rows)
+        return;
+    _last_cols = cols;
+    _last_rows = rows;
+    auto renderer = _session->GetRenderer();
+    if (renderer && (cols != renderer->GetWidth() || rows != renderer->GetHeight()))
+    {
+        Logger().info("Grid size change detected rows={} cols={}", rows, cols);
+        renderer->OnResized(rows, cols);
+    }
+}
+
+void GGrid::CheckSize(int width, int height)
+{
+    if (!_session)
+        return;
+
+    auto renderer = _session->GetRenderer();
+    auto guard = renderer->Lock();
+    _CheckSize(width, height);
 }

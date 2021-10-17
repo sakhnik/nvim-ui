@@ -23,8 +23,9 @@ public:
 
     void UpdateStyle();
     void MeasureCell();
-    void Present();
+    void Present(int width, int height);
     void Clear();
+    void CheckSize(int width, int height);
 
     struct Texture : IWindow::ITexture
     {
@@ -61,4 +62,7 @@ private:
     gboolean _OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType /*state*/);
     // Mark the Alt was pressed, show the menubar when the alt is released without any other key pressed.
     bool _alt_pending = false;
+
+    int _last_rows = 0, _last_cols = 0;
+    void _CheckSize(int width, int height);
 };
