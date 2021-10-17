@@ -13,13 +13,6 @@
               <object class="GtkFixed" id="grid">
                 <property name="can-focus">True</property>
                 <child>
-                  <object class="GtkDrawingArea" id="cursor">
-                    <property name="width-request">10</property>
-                    <property name="height-request">20</property>
-                    <property name="can-focus">False</property>
-                  </object>
-                </child>
-                <child>
                   <object class="GtkLabel" id="status">
                     <property name="width-request">100</property>
                     <property name="height-request">80</property>

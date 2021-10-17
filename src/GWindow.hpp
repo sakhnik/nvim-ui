@@ -4,7 +4,6 @@
 #include "Utils.hpp"
 #include "Session.hpp"
 #include "GGrid.hpp"
-#include "GCursor.hpp"
 #include <string>
 #include <memory>
 #include <gtk/gtk.h>
@@ -32,7 +31,6 @@ private:
     GtkWidget *_window;
     GtkWidget *_scroll;
     std::unique_ptr<GGrid> _grid;
-    std::unique_ptr<GCursor> _cursor;
 
     int _last_rows = 0, _last_cols = 0;
 

@@ -15,6 +15,8 @@ GGrid::GGrid(GtkWidget *grid, Session::PtrT &session)
             GTK_STYLE_PROVIDER(_css_provider.get()),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
+    GtkWidget *cursor = gtk_drawing_area_new();
+    _cursor.reset(new GCursor{cursor, this, _session});
 }
 
 void GGrid::MeasureCell()
@@ -33,6 +35,8 @@ void GGrid::MeasureCell()
     _cell_height = height;
     Logger().info("Measured cell: width={} height={}", static_cast<double>(_cell_width) / PANGO_SCALE, _cell_height);
     g_object_ref_sink(ruler);
+
+    _cursor->UpdateSize();
 }
 
 void GGrid::UpdateStyle()
@@ -150,6 +154,7 @@ void GGrid::Present()
 
     assert(texture_count == _textures.size() && "Texture count consistency");
 
+    _cursor->Move();
     _pointer.Update(renderer->IsBusy(), _grid);
 }
 
@@ -162,4 +167,5 @@ void GGrid::Clear()
             gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
     }
     _textures.clear();
+    _cursor->Hide();
 }

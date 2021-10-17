@@ -3,6 +3,7 @@
 #include "Session.hpp"
 #include "IWindow.hpp"
 #include "Utils.hpp"
+#include "GCursor.hpp"
 #include "GPointer.hpp"
 #include <vector>
 #include <gtk/gtk.h>
@@ -49,5 +50,6 @@ private:
     int _cell_height = 0;
     std::vector<IWindow::ITexture::PtrT> _textures;
 
+    std::unique_ptr<GCursor> _cursor;
     GPointer _pointer;
 };

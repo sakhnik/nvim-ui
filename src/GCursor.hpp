@@ -8,10 +8,11 @@ class GGrid;
 class GCursor
 {
 public:
-    GCursor(GtkWidget *, GGrid *, Session::PtrT &);
+    GCursor(GtkWidget *grid, GGrid *, Session::PtrT &);
 
     void Move();
     void Hide();
+    void UpdateSize();
 
 private:
     GtkWidget *_cursor;

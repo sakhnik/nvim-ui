@@ -6,9 +6,7 @@ GCursor::GCursor(GtkWidget *cursor, GGrid *grid, Session::PtrT &session)
     , _grid{grid}
     , _session{session}
 {
-    _grid->MeasureCell();
-    gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _grid->CalcX(1));
-    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _grid->CalcY(1));
+    //<property name="can-focus">False</property>
 
     auto drawCursor = [](GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data) {
         reinterpret_cast<GCursor *>(data)->_DrawCursor(da, cr, width, height);
@@ -54,7 +52,6 @@ void GCursor::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int /*width*/, int /*he
 void GCursor::Move()
 {
     auto renderer = _session->GetRenderer();
-    auto guard = renderer->Lock();
 
     // Move the cursor
     if (gtk_widget_get_parent(_cursor))
@@ -73,4 +70,10 @@ void GCursor::Move()
 void GCursor::Hide()
 {
     gtk_widget_hide(_cursor);
+}
+
+void GCursor::UpdateSize()
+{
+    gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _grid->CalcX(1));
+    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _grid->CalcY(1));
 }

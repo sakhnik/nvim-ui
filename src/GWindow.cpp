@@ -17,6 +17,7 @@ GWindow::GWindow(GtkApplication *app, Session::PtrT &session)
 
     _SetupWindow();
     _SetupGrid();
+
     _SetupStatusLabel();
 
     gtk_widget_show(_window);
@@ -29,9 +30,6 @@ GWindow::GWindow(GtkApplication *app, Session::PtrT &session)
         auto guard = _session->GetRenderer()->Lock();
         _grid->UpdateStyle();
     }
-
-    GtkWidget *cursor = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "cursor"));
-    _cursor.reset(new GCursor{cursor, _grid.get(), _session});
 
     // Adjust the grid size to the actual window size
     _CheckSizeAsync();
@@ -198,7 +196,6 @@ void GWindow::Present()
 void GWindow::_Present()
 {
     _grid->Present();
-    _cursor->Move();
 
     auto renderer = _session->GetRenderer();
     auto guard = renderer->Lock();
@@ -219,7 +216,6 @@ void GWindow::_SessionEnd()
 {
     Logger().info("Session end");
     _grid->Clear();
-    _cursor->Hide();
 
     gtk_window_set_deletable(GTK_WINDOW(_window), true);
 
