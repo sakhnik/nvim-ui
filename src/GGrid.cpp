@@ -1,11 +1,13 @@
 #include "GGrid.hpp"
 #include "Logger.hpp"
 #include "Renderer.hpp"
+#include "IMenuBarToggler.hpp"
 #include <sstream>
 
-GGrid::GGrid(GtkWidget *grid, Session::PtrT &session)
+GGrid::GGrid(GtkWidget *grid, Session::PtrT &session, IMenuBarToggler *menu_bar_toggler)
     : _grid{grid}
     , _session{session}
+    , _menu_bar_toggler{menu_bar_toggler}
 {
     gtk_widget_set_focusable(_grid, true);
 
@@ -17,6 +19,23 @@ GGrid::GGrid(GtkWidget *grid, Session::PtrT &session)
 
     GtkWidget *cursor = gtk_drawing_area_new();
     _cursor.reset(new GCursor{cursor, this, _session});
+
+    GtkEventController *controller = gtk_event_controller_key_new();
+    gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
+    using OnKeyPressedT = gboolean (*)(GtkEventControllerKey *,
+                                       guint                  keyval,
+                                       guint                  keycode,
+                                       GdkModifierType        state,
+                                       gpointer               data);
+    OnKeyPressedT onKeyPressed = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
+        return reinterpret_cast<GGrid *>(data)->_OnKeyPressed(keyval, keycode, state);
+    };
+    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-pressed", G_CALLBACK(onKeyPressed), this);
+    OnKeyPressedT onKeyReleased = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
+        return reinterpret_cast<GGrid *>(data)->_OnKeyReleased(keyval, keycode, state);
+    };
+    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-released", G_CALLBACK(onKeyReleased), this);
+    gtk_widget_add_controller(grid, controller);
 }
 
 void GGrid::MeasureCell()
@@ -168,4 +187,81 @@ void GGrid::Clear()
     }
     _textures.clear();
     _cursor->Hide();
+}
+
+gboolean GGrid::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType state)
+{
+    //string key = Gdk.keyval_name (keyval);
+    //print ("* key pressed %u (%s) %u\n", keyval, key, keycode);
+
+    if (keyval == GDK_KEY_Alt_L)
+    {
+        _alt_pending = true;
+        return true;
+    }
+    _alt_pending = false;
+    _menu_bar_toggler->MenuBarHide();
+
+    if (!_session)
+        return true;
+
+    gunichar uc = gdk_keyval_to_unicode(keyval);
+    auto input = MkPtr(g_string_append_unichar(g_string_new(nullptr), uc),
+                                               [](GString *s) { g_string_free(s, true); });
+    auto start_length = input->len;
+
+    // TODO: functional keys, shift etc
+    switch (keyval)
+    {
+    case GDK_KEY_Escape:        input.reset(g_string_new("esc"));   break;
+    case GDK_KEY_Return:        input.reset(g_string_new("cr"));    break;
+    case GDK_KEY_BackSpace:     input.reset(g_string_new("bs"));    break;
+    case GDK_KEY_Tab:           input.reset(g_string_new("tab"));   break;
+    case GDK_KEY_less:          input.reset(g_string_new("lt"));    break;
+    case GDK_KEY_Left:          input.reset(g_string_new("Left"));  break;
+    case GDK_KEY_Right:         input.reset(g_string_new("Right")); break;
+    case GDK_KEY_Up:            input.reset(g_string_new("Up"));    break;
+    case GDK_KEY_Down:          input.reset(g_string_new("Down"));  break;
+    }
+
+    auto remapForMeta = [](decltype(input) &in) -> auto& {
+        if (in->len != 1)
+            return in;
+        char &ch = in->str[0];
+        const char SHIFTS[] = ")!@#$%^&*(";
+        if (ch >= '0' && ch <= '9')
+            ch = SHIFTS[ch - '0'];
+        return in;
+    };
+
+    if (0 != (GDK_CONTROL_MASK & state))
+    {
+        input.reset(g_string_prepend(remapForMeta(input).release(), "c-"));
+    }
+    if (0 != (GDK_META_MASK & state) || 0 != (GDK_ALT_MASK & state))
+    {
+        input.reset(g_string_prepend(remapForMeta(input).release(), "m-"));
+    }
+    if (0 != (GDK_SUPER_MASK & state))
+    {
+        input.reset(g_string_prepend(remapForMeta(input).release(), "d-"));
+    }
+
+    if (input->len != start_length)
+    {
+        std::string raw{input->str};
+        g_string_printf(input.get(), "<%s>", raw.c_str());
+    }
+
+    _session->GetInput()->Accept(input->str);
+    return true;
+}
+
+gboolean GGrid::_OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType /*state*/)
+{
+    if (_alt_pending && keyval == GDK_KEY_Alt_L)
+    {
+        _menu_bar_toggler->MenuBarToggle();
+    }
+    return true;
 }

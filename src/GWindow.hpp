@@ -4,6 +4,7 @@
 #include "Utils.hpp"
 #include "Session.hpp"
 #include "GGrid.hpp"
+#include "IMenuBarToggler.hpp"
 #include <string>
 #include <memory>
 #include <gtk/gtk.h>
@@ -11,6 +12,7 @@
 
 class GWindow
     : public IWindow
+    , public IMenuBarToggler
 {
 public:
     GWindow(GtkApplication *, Session::PtrT &session);
@@ -42,11 +44,9 @@ private:
     void _CheckSizeAsync();
     void _CheckSize();
 
-    gboolean _OnKeyPressed(guint keyval, guint keycode, GdkModifierType state);
-    gboolean _OnKeyReleased(guint keyval, guint keycode, GdkModifierType state);
-    // Mark the Alt was pressed, show the menubar when the alt is released without any other key pressed.
-    bool _alt_pending = false;
-
     void _Present();
     void _SessionEnd();
+
+    void MenuBarToggle() override;
+    void MenuBarHide() override;
 };

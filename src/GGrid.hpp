@@ -6,12 +6,15 @@
 #include "GCursor.hpp"
 #include "GPointer.hpp"
 #include <vector>
+#include <functional>
 #include <gtk/gtk.h>
+
+struct IMenuBarToggler;
 
 class GGrid
 {
 public:
-    GGrid(GtkWidget *grid, Session::PtrT &session);
+    GGrid(GtkWidget *grid, Session::PtrT &session, IMenuBarToggler *);
 
     GtkStyleProvider* GetStyle() const
     {
@@ -44,6 +47,7 @@ public:
 private:
     GtkWidget *_grid;
     Session::PtrT &_session;
+    IMenuBarToggler *_menu_bar_toggler;
     PtrT<GtkCssProvider> _css_provider = NullPtr<GtkCssProvider>([](auto *p) { g_object_unref(p); });
 
     int _cell_width = 0;
@@ -52,4 +56,9 @@ private:
 
     std::unique_ptr<GCursor> _cursor;
     GPointer _pointer;
+
+    gboolean _OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType state);
+    gboolean _OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType /*state*/);
+    // Mark the Alt was pressed, show the menubar when the alt is released without any other key pressed.
+    bool _alt_pending = false;
 };

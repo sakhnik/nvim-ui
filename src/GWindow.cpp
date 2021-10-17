@@ -112,28 +112,11 @@ void GWindow::_SetupGrid()
 {
     // Grid
     GtkWidget *grid = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "grid"));
-    _grid.reset(new GGrid(grid, _session));
+    _grid.reset(new GGrid(grid, _session, this));
 
     // GTK wouldn't allow shrinking the window if there are widgets
     // placed in the grid. So the scroll view is required.
     _scroll = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "scrolled_window"));
-
-    GtkEventController *controller = gtk_event_controller_key_new();
-    gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
-    using OnKeyPressedT = gboolean (*)(GtkEventControllerKey *,
-                                       guint                  keyval,
-                                       guint                  keycode,
-                                       GdkModifierType        state,
-                                       gpointer               data);
-    OnKeyPressedT onKeyPressed = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
-        return reinterpret_cast<GWindow *>(data)->_OnKeyPressed(keyval, keycode, state);
-    };
-    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-pressed", G_CALLBACK(onKeyPressed), this);
-    OnKeyPressedT onKeyReleased = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
-        return reinterpret_cast<GWindow *>(data)->_OnKeyReleased(keyval, keycode, state);
-    };
-    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-released", G_CALLBACK(onKeyReleased), this);
-    gtk_widget_add_controller(grid, controller);
 }
 
 void GWindow::_SetupStatusLabel()
@@ -230,85 +213,6 @@ void GWindow::_SessionEnd()
     // TODO: change the style for some fancy background
 }
 
-gboolean GWindow::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType state)
-{
-    //string key = Gdk.keyval_name (keyval);
-    //print ("* key pressed %u (%s) %u\n", keyval, key, keycode);
-
-    if (keyval == GDK_KEY_Alt_L)
-    {
-        _alt_pending = true;
-        return true;
-    }
-    _alt_pending = false;
-    gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(_window), false);
-
-    if (!_session)
-        return true;
-
-    gunichar uc = gdk_keyval_to_unicode(keyval);
-    auto input = MkPtr(g_string_append_unichar(g_string_new(nullptr), uc),
-                                               [](GString *s) { g_string_free(s, true); });
-    auto start_length = input->len;
-
-    // TODO: functional keys, shift etc
-    switch (keyval)
-    {
-    case GDK_KEY_Escape:        input.reset(g_string_new("esc"));   break;
-    case GDK_KEY_Return:        input.reset(g_string_new("cr"));    break;
-    case GDK_KEY_BackSpace:     input.reset(g_string_new("bs"));    break;
-    case GDK_KEY_Tab:           input.reset(g_string_new("tab"));   break;
-    case GDK_KEY_less:          input.reset(g_string_new("lt"));    break;
-    case GDK_KEY_Left:          input.reset(g_string_new("Left"));  break;
-    case GDK_KEY_Right:         input.reset(g_string_new("Right")); break;
-    case GDK_KEY_Up:            input.reset(g_string_new("Up"));    break;
-    case GDK_KEY_Down:          input.reset(g_string_new("Down"));  break;
-    }
-
-    auto remapForMeta = [](decltype(input) &in) -> auto& {
-        if (in->len != 1)
-            return in;
-        char &ch = in->str[0];
-        const char SHIFTS[] = ")!@#$%^&*(";
-        if (ch >= '0' && ch <= '9')
-            ch = SHIFTS[ch - '0'];
-        return in;
-    };
-
-    if (0 != (GDK_CONTROL_MASK & state))
-    {
-        input.reset(g_string_prepend(remapForMeta(input).release(), "c-"));
-    }
-    if (0 != (GDK_META_MASK & state) || 0 != (GDK_ALT_MASK & state))
-    {
-        input.reset(g_string_prepend(remapForMeta(input).release(), "m-"));
-    }
-    if (0 != (GDK_SUPER_MASK & state))
-    {
-        input.reset(g_string_prepend(remapForMeta(input).release(), "d-"));
-    }
-
-    if (input->len != start_length)
-    {
-        std::string raw{input->str};
-        g_string_printf(input.get(), "<%s>", raw.c_str());
-    }
-
-    _session->GetInput()->Accept(input->str);
-    return true;
-}
-
-gboolean GWindow::_OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType /*state*/)
-{
-    if (_alt_pending && keyval == GDK_KEY_Alt_L)
-    {
-        // Toggle the menubar
-        gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(_window),
-            !gtk_application_window_get_show_menubar(GTK_APPLICATION_WINDOW(_window)));
-    }
-    return true;
-}
-
 void GWindow::SetError(const char *error)
 {
     std::string title = "nvim-ui";
@@ -318,4 +222,16 @@ void GWindow::SetError(const char *error)
         title += error;
     }
     gtk_window_set_title(GTK_WINDOW(_window), title.c_str());
+}
+
+void GWindow::MenuBarToggle()
+{
+    // Toggle the menubar
+    bool is_menu_visible = gtk_application_window_get_show_menubar(GTK_APPLICATION_WINDOW(_window));
+    gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(_window), !is_menu_visible);
+}
+
+void GWindow::MenuBarHide()
+{
+    gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(_window), false);
 }
