@@ -3,6 +3,7 @@
 #include "Session.hpp"
 #include "IWindow.hpp"
 #include "Utils.hpp"
+#include "GPointer.hpp"
 #include <vector>
 #include <gtk/gtk.h>
 
@@ -47,4 +48,6 @@ private:
     int _cell_width = 0;
     int _cell_height = 0;
     std::vector<IWindow::ITexture::PtrT> _textures;
+
+    GPointer _pointer;
 };

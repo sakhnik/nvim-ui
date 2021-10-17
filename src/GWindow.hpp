@@ -36,13 +36,9 @@ private:
 
     int _last_rows = 0, _last_cols = 0;
 
-    PtrT<GdkCursor> _active_cursor = NullPtr<GdkCursor>([](auto *c) { g_object_unref(c); });
-    PtrT<GdkCursor> _busy_cursor = NullPtr<GdkCursor>([](auto *c) { g_object_unref(c); });
-
     void _SetupWindow();
     void _SetupWindowSignals();
     void _SetupGrid();
-    void _SetupCursor();
     void _SetupStatusLabel();
 
     void _CheckSizeAsync();

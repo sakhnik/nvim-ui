@@ -149,6 +149,8 @@ void GGrid::Present()
     }
 
     assert(texture_count == _textures.size() && "Texture count consistency");
+
+    _pointer.Update(renderer->IsBusy(), _grid);
 }
 
 void GGrid::Clear()
