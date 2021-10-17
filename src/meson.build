@@ -36,6 +36,8 @@ nvim_ui_lib_dep = declare_dependency(
 
 nvim_ui_sources = [
   'main.cpp',
+  'GCursor.cpp',
+  'GCursor.hpp',
   'GGrid.hpp',
   'GGrid.cpp',
   'GWindow.cpp',

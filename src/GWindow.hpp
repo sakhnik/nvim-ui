@@ -4,6 +4,7 @@
 #include "Utils.hpp"
 #include "Session.hpp"
 #include "GGrid.hpp"
+#include "GCursor.hpp"
 #include <string>
 #include <memory>
 #include <gtk/gtk.h>
@@ -30,9 +31,8 @@ private:
     PtrT<GtkBuilder> _builder = NullPtr<GtkBuilder>([](auto *b) { g_object_unref(b); });
     GtkWidget *_window;
     GtkWidget *_scroll;
-    GtkWidget *_grid;
-    GtkWidget *_cursor;
-    std::unique_ptr<GGrid> _ggrid;
+    std::unique_ptr<GGrid> _grid;
+    std::unique_ptr<GCursor> _cursor;
 
     int _last_rows = 0, _last_cols = 0;
 
@@ -54,6 +54,5 @@ private:
     bool _alt_pending = false;
 
     void _Present();
-    void _DrawCursor(GtkDrawingArea *, cairo_t *, int width, int height);
     void _SessionEnd();
 };

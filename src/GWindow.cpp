@@ -27,10 +27,11 @@ GWindow::GWindow(GtkApplication *app, Session::PtrT &session)
     {
         // Initial style setup
         auto guard = _session->GetRenderer()->Lock();
-        _ggrid->UpdateStyle();
+        _grid->UpdateStyle();
     }
 
-    _SetupCursor();
+    GtkWidget *cursor = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "cursor"));
+    _cursor.reset(new GCursor{cursor, _grid.get(), _session});
 
     // Adjust the grid size to the actual window size
     _CheckSizeAsync();
@@ -112,12 +113,11 @@ void GWindow::_SetupWindowSignals()
 void GWindow::_SetupGrid()
 {
     // Grid
-    _grid = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "grid"));
-
-    _ggrid.reset(new GGrid(_grid, _session));
+    GtkWidget *grid = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "grid"));
+    _grid.reset(new GGrid(grid, _session));
 
     // GTK wouldn't allow shrinking the window if there are widgets
-    // placed in the _grid. So the scroll view is required.
+    // placed in the grid. So the scroll view is required.
     _scroll = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "scrolled_window"));
 
     GtkEventController *controller = gtk_event_controller_key_new();
@@ -135,7 +135,7 @@ void GWindow::_SetupGrid()
         return reinterpret_cast<GWindow *>(data)->_OnKeyReleased(keyval, keycode, state);
     };
     g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-released", G_CALLBACK(onKeyReleased), this);
-    gtk_widget_add_controller(_grid, controller);
+    gtk_widget_add_controller(grid, controller);
 }
 
 void GWindow::_SetupStatusLabel()
@@ -143,7 +143,7 @@ void GWindow::_SetupStatusLabel()
     GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "status"));
     gtk_style_context_add_provider(
             gtk_widget_get_style_context(status_label),
-            GTK_STYLE_PROVIDER(_ggrid->GetStyle()),
+            GTK_STYLE_PROVIDER(_grid->GetStyle()),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     gtk_widget_set_visible(status_label, false);
 }
@@ -156,19 +156,6 @@ void GWindow::_CheckSizeAsync()
         }, this);
 }
 
-void GWindow::_SetupCursor()
-{
-    _ggrid->MeasureCell();
-    _cursor = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "cursor"));
-    gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _ggrid->CalcX(1));
-    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _ggrid->CalcY(1));
-
-    auto drawCursor = [](GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data) {
-        reinterpret_cast<GWindow *>(data)->_DrawCursor(da, cr, width, height);
-    };
-    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_cursor), drawCursor, this, nullptr);
-}
-
 void GWindow::_CheckSize()
 {
     if (!_session)
@@ -177,8 +164,8 @@ void GWindow::_CheckSize()
     int width = gtk_widget_get_allocated_width(_scroll);
     int height = gtk_widget_get_allocated_height(_scroll);
 
-    int cols = std::max(1, static_cast<int>(width / _ggrid->CalcX(1)));
-    int rows = std::max(1, static_cast<int>(height / _ggrid->CalcY(1)));
+    int cols = std::max(1, static_cast<int>(width / _grid->CalcX(1)));
+    int rows = std::max(1, static_cast<int>(height / _grid->CalcY(1)));
     // Dejitter to request resizing only once
     if (cols == _last_cols && rows == _last_rows)
         return;
@@ -210,35 +197,24 @@ void GWindow::Present()
 
 void GWindow::_Present()
 {
-    _ggrid->Present();
+    _grid->Present();
+    _cursor->Move();
 
     auto renderer = _session->GetRenderer();
     auto guard = renderer->Lock();
 
-    // Move the cursor
-    if (gtk_widget_get_parent(_cursor))
-    {
-        g_object_ref(_cursor);
-        gtk_fixed_remove(GTK_FIXED(_grid), _cursor);
-    }
-    if (!renderer->IsBusy())
-    {
-        gtk_fixed_put(GTK_FIXED(_grid), _cursor,
-                _ggrid->CalcX(renderer->GetCursorCol()),
-                _ggrid->CalcY(renderer->GetCursorRow()));
-    }
-
+    GtkWidget *grid = GTK_WIDGET(_grid->GetFixed());
     if (renderer->IsBusy())
     {
         if (!_busy_cursor)
             _busy_cursor.reset(gdk_cursor_new_from_name("progress", nullptr));
-        gtk_widget_set_cursor(_grid, _busy_cursor.get());
+        gtk_widget_set_cursor(grid, _busy_cursor.get());
     }
     else
     {
         if (!_active_cursor)
             _active_cursor.reset(gdk_cursor_new_from_name("default", nullptr));
-        gtk_widget_set_cursor(_grid, _active_cursor.get());
+        gtk_widget_set_cursor(grid, _active_cursor.get());
     }
 
     _CheckSize();
@@ -256,8 +232,8 @@ void GWindow::SessionEnd()
 void GWindow::_SessionEnd()
 {
     Logger().info("Session end");
-    _ggrid->Clear();
-    gtk_widget_hide(_cursor);
+    _grid->Clear();
+    _cursor->Hide();
 
     gtk_window_set_deletable(GTK_WINDOW(_window), true);
 
@@ -270,41 +246,6 @@ void GWindow::_SessionEnd()
     _session.reset();
 
     // TODO: change the style for some fancy background
-}
-
-void GWindow::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int /*width*/, int /*height*/)
-{
-    if (!_session)
-        return;
-
-    auto renderer = _session->GetRenderer();
-    auto lock = renderer->Lock();
-    double cell_width = _ggrid->CalcX(1);
-    double cell_height = _ggrid->CalcY(1);
-
-    cairo_save(cr);
-    unsigned fg = renderer->GetFg();
-    cairo_set_source_rgba(cr,
-        static_cast<double>(fg >> 16) / 255,
-        static_cast<double>((fg >> 8) & 0xff) / 255,
-        static_cast<double>(fg & 0xff) / 255,
-        0.5);
-
-    const auto &mode = renderer->GetMode();
-    if (mode == "insert")
-    {
-        cairo_rectangle(cr, 0, 0, 0.2 * cell_width, cell_height);
-    }
-    else if (mode == "replace" || mode == "operator")
-    {
-        cairo_rectangle(cr, 0, 0.75 * cell_height, cell_width, 0.25 * cell_height);
-    }
-    else
-    {
-        cairo_rectangle(cr, 0, 0, cell_width, cell_height);
-    }
-    cairo_fill(cr);
-    cairo_restore(cr);
 }
 
 gboolean GWindow::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType state)

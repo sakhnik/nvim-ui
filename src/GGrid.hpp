@@ -37,6 +37,8 @@ public:
         return row * _cell_height;
     }
 
+    GtkFixed* GetFixed() const { return GTK_FIXED(_grid); }
+
 private:
     GtkWidget *_grid;
     Session::PtrT &_session;
