@@ -9,12 +9,12 @@
 #include <functional>
 #include <gtk/gtk.h>
 
-struct IMenuBarToggler;
+struct IWindowHandler;
 
 class GGrid
 {
 public:
-    GGrid(GtkWidget *grid, Session::PtrT &session, IMenuBarToggler *);
+    GGrid(GtkWidget *grid, Session::PtrT &session, IWindowHandler *);
 
     GtkStyleProvider* GetStyle() const
     {
@@ -48,7 +48,7 @@ public:
 private:
     GtkWidget *_grid;
     Session::PtrT &_session;
-    IMenuBarToggler *_menu_bar_toggler;
+    IWindowHandler *_window_handler;
     PtrT<GtkCssProvider> _css_provider = NullPtr<GtkCssProvider>([](auto *p) { g_object_unref(p); });
 
     int _cell_width = 0;
@@ -65,4 +65,6 @@ private:
 
     int _last_rows = 0, _last_cols = 0;
     void _CheckSize(int width, int height);
+
+    double _font_size_pt = 14;
 };

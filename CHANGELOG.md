@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Switched to gtk4 to get rid of texture noise. Chunks of texts are rendered as gtk labels.
 - Capture and display service output like --help or --version in the GUI window
 - TCP session that can be engaged by recompiling currently
+- Font zoom using keyboard shortcuts `^+`, `^-`, `^0`
 
 ### Fixed
 

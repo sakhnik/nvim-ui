@@ -44,6 +44,7 @@ nvim_ui_sources = [
   'GPointer.hpp',
   'GWindow.cpp',
   'GWindow.hpp',
+  'IWindowHandler.hpp',
   gtk_res,
   win_res,
 ]

@@ -4,7 +4,7 @@
 #include "Utils.hpp"
 #include "Session.hpp"
 #include "GGrid.hpp"
-#include "IMenuBarToggler.hpp"
+#include "IWindowHandler.hpp"
 #include <string>
 #include <memory>
 #include <gtk/gtk.h>
@@ -12,7 +12,7 @@
 
 class GWindow
     : public IWindow
-    , public IMenuBarToggler
+    , public IWindowHandler
 {
 public:
     GWindow(GtkApplication *, Session::PtrT &session);
@@ -38,7 +38,7 @@ private:
     void _SetupWindowSignals();
     void _SetupStatusLabel();
 
-    void _CheckSizeAsync();
+    void CheckSizeAsync() override;
     void _CheckSize();
 
     void _Present();

@@ -1,13 +1,13 @@
 #include "GGrid.hpp"
 #include "Logger.hpp"
 #include "Renderer.hpp"
-#include "IMenuBarToggler.hpp"
+#include "IWindowHandler.hpp"
 #include <sstream>
 
-GGrid::GGrid(GtkWidget *grid, Session::PtrT &session, IMenuBarToggler *menu_bar_toggler)
+GGrid::GGrid(GtkWidget *grid, Session::PtrT &session, IWindowHandler *window_handler)
     : _grid{grid}
     , _session{session}
-    , _menu_bar_toggler{menu_bar_toggler}
+    , _window_handler{window_handler}
 {
     gtk_widget_set_focusable(_grid, true);
 
@@ -86,7 +86,7 @@ void GGrid::UpdateStyle()
 
     oss << "* {\n";
     oss << "font-family: Fira Code;\n";
-    oss << "font-size: 14pt;\n";
+    oss << "font-size: " << _font_size_pt << "pt;\n";
     mapAttr(renderer->GetDefAttr(), renderer->GetDefAttr());
     oss << "}\n";
 
@@ -110,6 +110,7 @@ void GGrid::UpdateStyle()
     gtk_css_provider_load_from_data(_css_provider.get(), style.data(), -1);
 
     MeasureCell();
+    _window_handler->CheckSizeAsync();
 }
 
 void GGrid::Present(int width, int height)
@@ -201,10 +202,28 @@ gboolean GGrid::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType s
         return true;
     }
     _alt_pending = false;
-    _menu_bar_toggler->MenuBarHide();
+    _window_handler->MenuBarHide();
 
     if (!_session)
         return true;
+
+    if (0 != (GDK_CONTROL_MASK & state))
+    {
+        double font_size_pt = _font_size_pt;
+        if (keyval == GDK_KEY_equal)
+            font_size_pt *= 1.1;
+        else if (keyval == GDK_KEY_minus)
+            font_size_pt /= 1.1;
+        else if (keyval == GDK_KEY_0)
+            font_size_pt = 14;
+        if (font_size_pt != _font_size_pt)
+        {
+            auto guard = _session->GetRenderer()->Lock();
+            _font_size_pt = font_size_pt;
+            UpdateStyle();
+            return true;
+        }
+    }
 
     gunichar uc = gdk_keyval_to_unicode(keyval);
     auto input = MkPtr(g_string_append_unichar(g_string_new(nullptr), uc),
@@ -262,7 +281,7 @@ gboolean GGrid::_OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType 
 {
     if (_alt_pending && keyval == GDK_KEY_Alt_L)
     {
-        _menu_bar_toggler->MenuBarToggle();
+        _window_handler->MenuBarToggle();
     }
     return true;
 }

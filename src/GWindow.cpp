@@ -39,7 +39,7 @@ GWindow::GWindow(GtkApplication *app, Session::PtrT &session)
     }
 
     // Adjust the grid size to the actual window size
-    _CheckSizeAsync();
+    CheckSizeAsync();
 }
 
 GWindow::~GWindow()
@@ -83,7 +83,7 @@ void GWindow::_SetupWindowSignals()
 {
     using SizeChangedT = gboolean (*)(GObject *, GParamSpec *, gpointer data);
     SizeChangedT sizeChanged = [](auto *, auto *, gpointer data) {
-        reinterpret_cast<GWindow *>(data)->_CheckSizeAsync();
+        reinterpret_cast<GWindow *>(data)->CheckSizeAsync();
         return FALSE;
     };
 
@@ -92,7 +92,7 @@ void GWindow::_SetupWindowSignals()
 
     using OnShowT = void (*)(GtkWidget *, gpointer);
     OnShowT onShow = [](auto *, gpointer data) {
-        reinterpret_cast<GWindow *>(data)->_CheckSizeAsync();
+        reinterpret_cast<GWindow *>(data)->CheckSizeAsync();
     };
     g_signal_connect(_window, "show", G_CALLBACK(onShow), this);
 
@@ -125,7 +125,7 @@ void GWindow::_SetupStatusLabel()
     gtk_widget_set_visible(status_label, false);
 }
 
-void GWindow::_CheckSizeAsync()
+void GWindow::CheckSizeAsync()
 {
     g_timeout_add(0, [](gpointer data) {
             reinterpret_cast<GWindow *>(data)->_CheckSize();
