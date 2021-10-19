@@ -131,7 +131,10 @@ void GGrid::Present(int width, int height)
         {
             Texture *texture = static_cast<Texture *>(it2->get());
             if (texture->widget)
+            {
                 gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
+                texture->widget = nullptr;
+            }
         }
         _textures.erase(it, _textures.end());
     };
