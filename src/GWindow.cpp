@@ -58,10 +58,14 @@ void GWindow::_SetupWindow()
     ActionCbT action_cb = [](GSimpleAction *action, GVariant *, gpointer) {
         Logger().info("Action {}", g_action_get_name(G_ACTION(action)));
     };
+    ActionCbT quit_cb = [](GSimpleAction *, GVariant *, gpointer data) {
+        reinterpret_cast<GWindow*>(data)->_OnQuitAction();
+    };
+
     const GActionEntry actions[] = {
         { "spawn", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
         { "connect", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
-        { "quit", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "quit", quit_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
     };
     g_action_map_add_action_entries(G_ACTION_MAP(_window), actions, G_N_ELEMENTS(actions), this);
 
@@ -77,6 +81,8 @@ void GWindow::_SetupWindow()
     gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller),
             gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_q, GDK_CONTROL_MASK),
                              gtk_named_action_new("win.quit")));
+
+    _UpdateActions();
 }
 
 void GWindow::_SetupWindowSignals()
@@ -188,6 +194,8 @@ void GWindow::_SessionEnd()
     }
     _session.reset();
 
+    _UpdateActions();
+
     // TODO: change the style for some fancy background
 }
 
@@ -212,4 +220,26 @@ void GWindow::MenuBarToggle()
 void GWindow::MenuBarHide()
 {
     gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(_window), false);
+}
+
+void GWindow::_UpdateActions()
+{
+    bool session_active = _session.get() != nullptr;
+    _EnableAction("spawn", !session_active);
+    _EnableAction("connect", !session_active);
+    _EnableAction("quit", !session_active);
+}
+
+void GWindow::_EnableAction(const char *name, bool enable)
+{
+    GAction *a = g_action_map_lookup_action(G_ACTION_MAP(_window), name);
+    g_simple_action_set_enabled(G_SIMPLE_ACTION(a), enable);
+}
+
+void GWindow::_OnQuitAction()
+{
+    Logger().info("Bye!");
+    GtkApplication *app = gtk_window_get_application(GTK_WINDOW(_window));
+    gtk_window_destroy(GTK_WINDOW(_window));
+    g_application_quit(G_APPLICATION(app));
 }

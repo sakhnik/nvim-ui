@@ -46,4 +46,8 @@ private:
 
     void MenuBarToggle() override;
     void MenuBarHide() override;
+
+    void _UpdateActions();
+    void _EnableAction(const char *name, bool enable);
+    void _OnQuitAction();
 };
