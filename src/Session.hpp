@@ -40,10 +40,12 @@ protected:
     std::unique_ptr<RedrawHandler> _redraw_handler;
     std::unique_ptr<Input> _input;
 
+    uv_loop_t _loop;
     std::unique_ptr<std::thread> _thread;
     std::atomic<bool> _nvim_exited = false;
     IWindow *_window = nullptr;
 
+    Session();
     void _Init(uv_stream_t *in, uv_stream_t *out);
     void _OnError(const char *);
     void _Exit();

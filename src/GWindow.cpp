@@ -2,6 +2,7 @@
 #include "Logger.hpp"
 #include "Input.hpp"
 #include "Renderer.hpp"
+#include "SessionSpawn.hpp"
 
 #include <sstream>
 #include <spdlog/fmt/fmt.h>
@@ -61,9 +62,12 @@ void GWindow::_SetupWindow()
     ActionCbT quit_cb = [](GSimpleAction *, GVariant *, gpointer data) {
         reinterpret_cast<GWindow*>(data)->_OnQuitAction();
     };
+    ActionCbT spawn_cb = [](GSimpleAction *, GVariant *, gpointer data) {
+        reinterpret_cast<GWindow*>(data)->_OnSpawnAction();
+    };
 
     const GActionEntry actions[] = {
-        { "spawn", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "spawn", spawn_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
         { "connect", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
         { "quit", quit_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
     };
@@ -242,4 +246,22 @@ void GWindow::_OnQuitAction()
     GtkApplication *app = gtk_window_get_application(GTK_WINDOW(_window));
     gtk_window_destroy(GTK_WINDOW(_window));
     g_application_quit(G_APPLICATION(app));
+}
+
+void GWindow::_OnSpawnAction()
+{
+    Logger().info("Spawn new");
+    std::string error;
+    try
+    {
+        SetError(nullptr);
+        _session.reset(new SessionSpawn(0, nullptr));
+        _session->SetWindow(this);
+        _session->RunAsync();
+    }
+    catch (std::exception &ex)
+    {
+        Logger().error("Failed to spawn: {}", ex.what());
+        SetError(ex.what());
+    }
 }

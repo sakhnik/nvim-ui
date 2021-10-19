@@ -50,4 +50,5 @@ private:
     void _UpdateActions();
     void _EnableAction(const char *name, bool enable);
     void _OnQuitAction();
+    void _OnSpawnAction();
 };

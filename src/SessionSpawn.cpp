@@ -13,8 +13,6 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
         args.push_back(argv[i]);
     args.push_back(nullptr);
 
-    auto loop = uv_default_loop();
-
     //auto signal = loop->resource<uvw::SignalHandle>();
     //signal->once<uvw::SignalEvent>([&loop](const uvw::SignalEvent &ev, const auto &handle) {
     //    if (ev.signum == SIGINT || ev.signum == SIGTERM)
@@ -38,8 +36,8 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
     options.flags = UV_PROCESS_WINDOWS_HIDE | UV_PROCESS_WINDOWS_HIDE_CONSOLE;
 #endif //_WIN32
 
-    uv_pipe_init(loop, &_stdin_pipe, 0);
-    uv_pipe_init(loop, &_stdout_pipe, 0);
+    uv_pipe_init(&_loop, &_stdin_pipe, 0);
+    uv_pipe_init(&_loop, &_stdout_pipe, 0);
 
     uv_stdio_container_t child_stdio[3];
     child_stdio[0].flags = static_cast<uv_stdio_flags>(UV_CREATE_PIPE | UV_READABLE_PIPE);
@@ -52,7 +50,7 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
     options.stdio = child_stdio;
 
     _child_req.data = this;
-    if (int r = ::uv_spawn(loop, &_child_req, &options))
+    if (int r = ::uv_spawn(&_loop, &_child_req, &options))
     {
         std::string message = "Failed to spawn: ";
         message += uv_strerror(r);

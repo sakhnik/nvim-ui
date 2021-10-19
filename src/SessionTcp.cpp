@@ -4,7 +4,7 @@
 
 SessionTcp::SessionTcp(const char *addr, int port)
 {
-    uv_tcp_init(uv_default_loop(), &_socket);
+    uv_tcp_init(&_loop, &_socket);
     uv_tcp_nodelay(&_socket, 1);
 
     sockaddr_in req_addr;
