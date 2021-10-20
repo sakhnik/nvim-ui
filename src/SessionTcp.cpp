@@ -4,11 +4,14 @@
 
 SessionTcp::SessionTcp(const char *addr, int port)
 {
-    uv_tcp_init(&_loop, &_socket);
-    uv_tcp_nodelay(&_socket, 1);
+    if (int err = uv_tcp_init(&_loop, &_socket))
+        throw std::runtime_error(fmt::format("Failed to init tcp: {}", uv_strerror(err)));
+    if (int err = uv_tcp_nodelay(&_socket, 1))
+        Logger().warn(fmt::format("Failed to set tcp nodelay: {}", uv_strerror(err)));
 
     sockaddr_in req_addr;
-    uv_ip4_addr(addr, port, &req_addr);
+    if (int err = uv_ip4_addr(addr, port, &req_addr))
+        throw std::runtime_error(fmt::format("Failed to parse the IP address: {}", uv_strerror(err)));
 
     auto on_connect = [](uv_connect_t *req, int status) {
         Logger().info("Connected");
@@ -22,7 +25,8 @@ SessionTcp::SessionTcp(const char *addr, int port)
     };
 
     _connect.data = this;
-    uv_tcp_connect(&_connect, &_socket, reinterpret_cast<const sockaddr*>(&req_addr), on_connect);
+    if (int err = uv_tcp_connect(&_connect, &_socket, reinterpret_cast<const sockaddr*>(&req_addr), on_connect))
+        throw std::runtime_error(fmt::format("Failed to connect: {}", uv_strerror(err)));
 }
 
 void SessionTcp::SetWindow(IWindow *window)

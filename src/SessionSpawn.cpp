@@ -36,8 +36,10 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
     options.flags = UV_PROCESS_WINDOWS_HIDE | UV_PROCESS_WINDOWS_HIDE_CONSOLE;
 #endif //_WIN32
 
-    uv_pipe_init(&_loop, &_stdin_pipe, 0);
-    uv_pipe_init(&_loop, &_stdout_pipe, 0);
+    if (int err = uv_pipe_init(&_loop, &_stdin_pipe, 0))
+        throw std::runtime_error(fmt::format("Failed to init pipe: {}", uv_strerror(err)));
+    if (int err = uv_pipe_init(&_loop, &_stdout_pipe, 0))
+        throw std::runtime_error(fmt::format("Failed to init pipe: {}", uv_strerror(err)));
 
     uv_stdio_container_t child_stdio[3];
     child_stdio[0].flags = static_cast<uv_stdio_flags>(UV_CREATE_PIPE | UV_READABLE_PIPE);
@@ -50,13 +52,8 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
     options.stdio = child_stdio;
 
     _child_req.data = this;
-    if (int r = ::uv_spawn(&_loop, &_child_req, &options))
-    {
-        std::string message = "Failed to spawn: ";
-        message += uv_strerror(r);
-        Logger().error(message.c_str());
-        throw std::runtime_error(message.c_str());
-    }
+    if (int err = ::uv_spawn(&_loop, &_child_req, &options))
+        throw std::runtime_error(fmt::format("Failed to spawn: {}", uv_strerror(err)));
 
     _Init(reinterpret_cast<uv_stream_t*>(&_stdin_pipe), reinterpret_cast<uv_stream_t*>(&_stdout_pipe));
 }
