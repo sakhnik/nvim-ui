@@ -1,5 +1,6 @@
 #include "UvLoop.hpp"
 #include "Logger.hpp"
+#include "AsyncExec.hpp"
 
 UvLoop::UvLoop()
 {
@@ -10,6 +11,11 @@ UvLoop::UvLoop()
 UvLoop::~UvLoop()
 {
     uv_stop(&_loop);
+    {
+        // Make sure to cause some io for the loop to quit
+        AsyncExec async{&_loop};
+        async.Post([]{});
+    }
     if (_thread && _thread->joinable())
         _thread->join();
     switch (int err = uv_loop_close(&_loop))

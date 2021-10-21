@@ -60,7 +60,7 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
 
 SessionSpawn::~SessionSpawn()
 {
-    auto nop = [](uv_handle_t *) { Logger().info("closed"); };
+    auto nop = [](uv_handle_t *) { };
     uv_close(reinterpret_cast<uv_handle_t*>(&_stdin_pipe), nop);
     uv_close(reinterpret_cast<uv_handle_t*>(&_stdout_pipe), nop);
     uv_close(reinterpret_cast<uv_handle_t*>(&_child_req), nop);
