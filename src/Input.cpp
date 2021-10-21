@@ -10,6 +10,12 @@ Input::Input(uv_loop_t *loop, MsgPackRpc *rpc)
     _available.data = this;
 }
 
+Input::~Input()
+{
+    auto nop = [](uv_handle_t *) { };
+    uv_close(reinterpret_cast<uv_handle_t *>(&_available), nop);
+}
+
 void Input::_OnInput(uv_async_t *a)
 {
     reinterpret_cast<Input *>(a->data)->_OnInput2();

@@ -10,6 +10,7 @@ class Input
 {
 public:
     Input(uv_loop_t *loop, MsgPackRpc *);
+    ~Input();
 
     // Feed input keys
     void Accept(std::string_view input);

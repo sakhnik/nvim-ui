@@ -9,6 +9,7 @@ class AsyncExec
 {
 public:
     AsyncExec(uv_loop_t *);
+    ~AsyncExec();
 
     using TaskT = std::function<void(void)>;
 
