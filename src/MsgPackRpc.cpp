@@ -29,12 +29,14 @@ MsgPackRpc::MsgPackRpc(uv_stream_t *stdin_stream, uv_stream_t *stdout_stream,
         }
     };
 
-    ::uv_read_start(_stdout_stream, alloc_buffer, read_astream);
+    if (int err = ::uv_read_start(_stdout_stream, alloc_buffer, read_astream))
+        throw std::runtime_error(fmt::format("Failed to uv read start: {}", uv_strerror(err)));
 }
 
 MsgPackRpc::~MsgPackRpc()
 {
-    ::uv_read_stop(_stdout_stream);
+    if (int err = ::uv_read_stop(_stdout_stream))
+        Logger().error(fmt::format("Failed to stop uv read: {}", uv_strerror(err)));
 }
 
 void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
@@ -69,7 +71,8 @@ void MsgPackRpc::Request(PackRequestT pack_request, OnResponseT on_response)
     buf.base = w->buffer.data();
     buf.len = w->buffer.size();
 
-    uv_write(w.release(), _stdin_stream, &buf, 1, cb);
+    if (int err = uv_write(w.release(), _stdin_stream, &buf, 1, cb))
+        throw std::runtime_error(fmt::format("Failed to uv write: {}", uv_strerror(err)));
 }
 
 void MsgPackRpc::_handle_data(const char *data, size_t length)

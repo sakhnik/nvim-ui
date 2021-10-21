@@ -7,6 +7,7 @@ class SessionSpawn : public Session
 {
 public:
     SessionSpawn(int argc, char *argv[]);
+    ~SessionSpawn();
 
 private:
     uv_pipe_t _stdin_pipe, _stdout_pipe;

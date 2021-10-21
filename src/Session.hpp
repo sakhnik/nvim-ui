@@ -1,24 +1,24 @@
 #pragma once
 
+#include "UvLoop.hpp"
 #include "MsgPackRpc.hpp"
 #include "Renderer.hpp"
 #include "RedrawHandler.hpp"
 #include "Input.hpp"
 #include <memory>
 #include <atomic>
-#include <thread>
 #include <uv.h>
 
 struct IWindow;
 
 class Session
+    : public UvLoop
 {
 public:
     using PtrT = std::unique_ptr<Session>;
 
-    virtual ~Session();
+    virtual ~Session() = default;
 
-    void RunAsync();
     virtual void SetWindow(IWindow *);
 
     Renderer* GetRenderer() { return _renderer.get(); }
@@ -40,12 +40,10 @@ protected:
     std::unique_ptr<RedrawHandler> _redraw_handler;
     std::unique_ptr<Input> _input;
 
-    uv_loop_t _loop;
-    std::unique_ptr<std::thread> _thread;
     std::atomic<bool> _nvim_exited = false;
     IWindow *_window = nullptr;
 
-    Session();
+    Session() = default;
     void _Init(uv_stream_t *in, uv_stream_t *out);
     void _OnError(const char *);
     void _Exit();

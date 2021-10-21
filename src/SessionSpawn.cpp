@@ -57,3 +57,11 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
 
     _Init(reinterpret_cast<uv_stream_t*>(&_stdin_pipe), reinterpret_cast<uv_stream_t*>(&_stdout_pipe));
 }
+
+SessionSpawn::~SessionSpawn()
+{
+    auto nop = [](uv_handle_t *) { Logger().info("closed"); };
+    uv_close(reinterpret_cast<uv_handle_t*>(&_stdin_pipe), nop);
+    uv_close(reinterpret_cast<uv_handle_t*>(&_stdout_pipe), nop);
+    uv_close(reinterpret_cast<uv_handle_t*>(&_child_req), nop);
+}

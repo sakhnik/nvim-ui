@@ -1,9 +1,13 @@
 
 nvim_ui_lib_sources = [
-  'MsgPackRpc.cpp',
-  'MsgPackRpc.hpp',
   'AsyncExec.cpp',
   'AsyncExec.hpp',
+  'Input.cpp',
+  'Input.hpp',
+  'Logger.cpp',
+  'Logger.hpp',
+  'MsgPackRpc.cpp',
+  'MsgPackRpc.hpp',
   'RedrawHandler.cpp',
   'RedrawHandler.hpp',
   'Renderer.cpp',
@@ -18,10 +22,8 @@ nvim_ui_lib_sources = [
   'TextureCache.hpp',
   'Timer.cpp',
   'Timer.hpp',
-  'Logger.cpp',
-  'Logger.hpp',
-  'Input.cpp',
-  'Input.hpp',
+  'UvLoop.cpp',
+  'UvLoop.hpp',
 ]
 
 nvim_ui_lib = static_library('nvim-ui-lib',
