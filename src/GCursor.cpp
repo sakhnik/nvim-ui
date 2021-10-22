@@ -53,14 +53,10 @@ void GCursor::Move()
 {
     auto renderer = _session->GetRenderer();
 
-    // Move the cursor
-    if (gtk_widget_get_parent(_cursor))
-    {
-        g_object_ref(_cursor);
-        gtk_fixed_remove(_grid->GetFixed(), _cursor);
-    }
+    Hide();
     if (!renderer->IsBusy())
     {
+        // Move the cursor
         gtk_fixed_put(_grid->GetFixed(), _cursor,
                 _grid->CalcX(renderer->GetCursorCol()),
                 _grid->CalcY(renderer->GetCursorRow()));
@@ -69,7 +65,11 @@ void GCursor::Move()
 
 void GCursor::Hide()
 {
-    gtk_widget_hide(_cursor);
+    if (gtk_widget_get_parent(_cursor))
+    {
+        g_object_ref(_cursor);
+        gtk_fixed_remove(_grid->GetFixed(), _cursor);
+    }
 }
 
 void GCursor::UpdateSize()
