@@ -3,6 +3,7 @@
 #include <vector>
 #include <functional>
 #include <mutex>
+#include <fmt/format.h>
 #include <uv.h>
 
 class AsyncExec
@@ -20,7 +21,8 @@ public:
             std::lock_guard<std::mutex> guard{_mut};
             _tasks.push_back(std::forward<T>(task));
         }
-        uv_async_send(&_async);
+        if (int err = uv_async_send(&_async))
+            throw std::runtime_error(fmt::format("Failed to send async: {}", uv_strerror(err)));
     }
 
 private:

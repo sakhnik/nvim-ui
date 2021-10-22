@@ -2,7 +2,8 @@
 
 AsyncExec::AsyncExec(uv_loop_t *loop)
 {
-    uv_async_init(loop, &_async, _Execute);
+    if (int err = uv_async_init(loop, &_async, _Execute))
+        throw std::runtime_error(fmt::format("Failed to init async: {}", uv_strerror(err)));
     _async.data = this;
 }
 
