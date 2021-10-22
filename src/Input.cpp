@@ -5,23 +5,11 @@
 
 Input::Input(uv_loop_t *loop, MsgPackRpc *rpc)
     : _rpc{rpc}
+    , _available{loop}
 {
-    uv_async_init(loop, &_available, _OnInput);
-    _available.data = this;
 }
 
-Input::~Input()
-{
-    auto nop = [](uv_handle_t *) { };
-    uv_close(reinterpret_cast<uv_handle_t *>(&_available), nop);
-}
-
-void Input::_OnInput(uv_async_t *a)
-{
-    reinterpret_cast<Input *>(a->data)->_OnInput2();
-}
-
-void Input::_OnInput2()
+void Input::_OnInput()
 {
     std::lock_guard<std::mutex> guard{_mutex};
     std::string input{std::move(_input)};
@@ -52,5 +40,5 @@ void Input::Accept(std::string_view input)
         std::lock_guard<std::mutex> guard{_mutex};
         _input += input;
     }
-    uv_async_send(&_available);
+    _available.Post([this] { _OnInput(); });
 }

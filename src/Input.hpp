@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AsyncExec.hpp"
 #include <string>
 #include <mutex>
 #include <uv.h>
@@ -9,18 +10,16 @@ class MsgPackRpc;
 class Input
 {
 public:
-    Input(uv_loop_t *loop, MsgPackRpc *);
-    ~Input();
+    Input(uv_loop_t *, MsgPackRpc *);
 
     // Feed input keys
     void Accept(std::string_view input);
 
 private:
     MsgPackRpc *_rpc;
-    uv_async_t _available;
+    AsyncExec _available;
     std::string _input;
     std::mutex _mutex;
 
-    static void _OnInput(uv_async_t *);
-    void _OnInput2();
+    void _OnInput();
 };
