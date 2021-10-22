@@ -83,6 +83,7 @@ void GGrid::UpdateStyle()
     };
 
     auto renderer = _session->GetRenderer();
+    assert(renderer);
 
     oss << "* {\n";
     oss << "font-family: Fira Code;\n";
@@ -116,6 +117,7 @@ void GGrid::UpdateStyle()
 void GGrid::Present(int width, int height)
 {
     auto renderer = _session->GetRenderer();
+    assert(renderer);
     auto guard = renderer->Lock();
 
     if (renderer->IsAttrMapModified())
@@ -209,6 +211,9 @@ gboolean GGrid::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType s
 
     if (!_session)
         return true;
+    auto renderer = _session->GetRenderer();
+    if (!renderer)
+        return false;;
 
     if (0 != (GDK_CONTROL_MASK & state))
     {
@@ -221,7 +226,7 @@ gboolean GGrid::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType s
             font_size_pt = 14;
         if (font_size_pt != _font_size_pt)
         {
-            auto guard = _session->GetRenderer()->Lock();
+            auto guard = renderer->Lock();
             _font_size_pt = font_size_pt;
             UpdateStyle();
             return true;
@@ -315,6 +320,9 @@ void GGrid::CheckSize(int width, int height)
         return;
 
     auto renderer = _session->GetRenderer();
+    if (!renderer)
+        return;
+
     auto guard = renderer->Lock();
     _CheckSize(width, height);
 }
