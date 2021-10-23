@@ -149,21 +149,21 @@ void GWindow::_CheckSize()
 
 IWindow::ITexture::PtrT
 GWindow::CreateTexture(int /*width*/, std::string_view /*text*/,
-                      const HlAttr &/*attr*/, const HlAttr &/*def_attr*/)
+                       const HlAttr &/*attr*/, const HlAttr &/*def_attr*/)
 {
     return ITexture::PtrT(new GGrid::Texture);
 }
 
-void GWindow::Present()
+void GWindow::Present(uint32_t token)
 {
-    _GtkTimer0<&GWindow::_Present>(0);
+    _GtkTimer(0, [this, token]() { _Present(token); });
 }
 
-void GWindow::_Present()
+void GWindow::_Present(uint32_t token)
 {
     int width = gtk_widget_get_allocated_width(_scroll);
     int height = gtk_widget_get_allocated_height(_scroll);
-    _grid->Present(width, height);
+    _grid->Present(width, height, token);
 }
 
 void GWindow::SessionEnd()

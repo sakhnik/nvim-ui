@@ -52,7 +52,7 @@ bool TextureCache::Scanner::EnsureNext(Texture &&texture, GeneratorT generator)
     {
         // The texture has just shifted
         _iter->col = texture.col;
-        _iter->texture->MarkToRedraw(true);
+        _iter->texture->MarkToRedraw(_redraw_token);
     }
 
     return false;
@@ -67,7 +67,7 @@ void TextureCache::Clear()
     _cache.clear();
 }
 
-void TextureCache::MoveFrom(TextureCache &o, int left, int right)
+void TextureCache::MoveFrom(TextureCache &o, int left, int right, uint32_t redraw_token)
 {
     // Find the beginning of the source cache
     auto it_from = o._cache.begin();
@@ -80,7 +80,7 @@ void TextureCache::MoveFrom(TextureCache &o, int left, int right)
         // Find a suitable place to insert to still maintaining the sorted order
         while (it != _cache.end() && it->col < it_from->col)
             ++it;
-        it_from->texture->MarkToRedraw(true);
+        it_from->texture->MarkToRedraw(redraw_token);
         _cache.splice(it++, o._cache, it_from++);
     }
 }

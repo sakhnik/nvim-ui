@@ -56,8 +56,9 @@ public:
         bool _started = false;
 
     public:
-        Scanner(_TextureListT &cache)
+        Scanner(_TextureListT &cache, uint32_t redraw_token)
             : _cache{cache}
+            , _redraw_token{redraw_token}
         {
         }
 
@@ -78,16 +79,19 @@ public:
         // The scanner cursor will point at either the newly created or the cached texture.
         // Return true if the generator was invoked.
         bool EnsureNext(Texture &&, GeneratorT);
+
+    private:
+        uint32_t _redraw_token;
     };
 
-    Scanner GetScanner()
+    Scanner GetScanner(uint32_t redraw_token)
     {
-        return Scanner{_cache};
+        return Scanner{_cache, redraw_token};
     }
 
     void Clear();
 
     // Move textures from the other cache in the given column limits
     // (used when scrolling)
-    void MoveFrom(TextureCache &o, int left, int right);
+    void MoveFrom(TextureCache &o, int left, int right, uint32_t redraw_token);
 };

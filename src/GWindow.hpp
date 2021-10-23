@@ -19,7 +19,7 @@ public:
     ~GWindow();
 
     ITexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) override;
-    void Present() override;
+    void Present(uint32_t token) override;
     void DrawCursor(cairo_t *, int row, int col, unsigned fg, std::string_view mode);
     void SessionEnd() override;
 
@@ -41,7 +41,7 @@ private:
     void CheckSizeAsync() override;
     void _CheckSize();
 
-    void _Present();
+    void _Present(uint32_t token);
     void _SessionEnd();
 
     void MenuBarToggle() override;
@@ -61,5 +61,17 @@ private:
             return FALSE;
         };
         g_timeout_add(ms, on_timeout, this);
+    }
+
+    static void _GtkTimer(int ms, std::function<void(void)> func)
+    {
+        using FuncT = decltype(func);
+        FuncT *boxed_func = new FuncT{func};
+        auto on_timeout = [](gpointer data) {
+            std::unique_ptr<FuncT> f{reinterpret_cast<FuncT*>(data)};
+            (*f.get())();
+            return FALSE;
+        };
+        g_timeout_add(ms, on_timeout, boxed_func);
     }
 };

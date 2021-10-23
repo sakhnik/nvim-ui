@@ -102,6 +102,10 @@ private:
     // Rendering is done asyncrhonously and concurrently, make sure only clean
     // state after Flush() is displayed.
     bool _is_clean = true;
+    // The textures may be updated asynchronously and concurrently to the Flush.
+    // For example, when lines are scrolled. We'd like to make sure the textures
+    // are redrawn when the respective Flush is received.
+    uint32_t _redraw_token = 0;
 
     void _DoFlush();
     void _AnticipateFlush();

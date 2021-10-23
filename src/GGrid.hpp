@@ -23,7 +23,7 @@ public:
 
     void UpdateStyle();
     void MeasureCell();
-    void Present(int width, int height);
+    void Present(int width, int height, uint32_t token);
     void Clear();
     void CheckSize(int width, int height);
 

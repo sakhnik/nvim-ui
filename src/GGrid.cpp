@@ -114,7 +114,7 @@ void GGrid::UpdateStyle()
     _window_handler->CheckSizeAsync();
 }
 
-void GGrid::Present(int width, int height)
+void GGrid::Present(int width, int height, uint32_t token)
 {
     auto renderer = _session->GetRenderer();
     assert(renderer);
@@ -169,10 +169,9 @@ void GGrid::Present(int width, int height)
                 _textures.push_back(texture.texture);
             }
 
-            if (t->ToBeRedrawn())
+            if (t->TakeRedrawToken(token))
             {
                 gtk_fixed_move(GTK_FIXED(_grid), t->widget, x, y);
-                t->MarkToRedraw(false);
             }
         }
     }

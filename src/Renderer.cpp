@@ -101,7 +101,7 @@ void Renderer::_DoFlush()
         };
 
         {
-            auto texture_cache_scanner = tex_cache.GetScanner();
+            auto texture_cache_scanner = tex_cache.GetScanner(_redraw_token);
 
             // Print and cache the chunks individually
             for (size_t i = 1; i < chunks.size(); ++i)
@@ -137,7 +137,10 @@ void Renderer::_DoFlush()
     }
 
     if (_window)
-        _window->Present();
+        _window->Present(_redraw_token);
+    // This flush has been handled, advance the token to start accepting
+    // handling new changes.
+    ++_redraw_token;
 
     auto end_time = ClockT::now();
     oss << " " << std::chrono::duration<double>(end_time - _last_flush_time).count();
@@ -228,7 +231,7 @@ void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
             line_to.text[col] = std::move(line_from.text[col]);
             line_to.hl_id[col] = std::move(line_from.hl_id[col]);
         }
-        line_to.texture_cache.MoveFrom(line_from.texture_cache, left, right);
+        line_to.texture_cache.MoveFrom(line_from.texture_cache, left, right, _redraw_token);
     };
 
     if (rows > 0)
