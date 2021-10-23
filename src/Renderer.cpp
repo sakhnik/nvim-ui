@@ -30,6 +30,9 @@ void Renderer::SetWindow(IWindow *window)
 
 void Renderer::Flush()
 {
+    // Neovim has indicated that the screen may be shown right at this time.
+    _is_clean = true;
+
     // It's worth limiting flush rate, a user wouldn't necessarily need
     // to observe the intermediate screen states. And the CPU consumption
     // is improved dramatically when limiting the flush rate.
@@ -62,6 +65,10 @@ void Renderer::_AnticipateFlush()
 
 void Renderer::_DoFlush()
 {
+    // Something has changed in the screen, wait for the next occasion.
+    if (!_is_clean)
+        return;
+
     _AnticipateFlush();
     std::ostringstream oss;
     oss << "";
@@ -187,6 +194,7 @@ void Renderer::GridLine(int row, int col, std::string_view chunk, unsigned hl_id
 {
     Logger().debug("Line row={} col={} text={} hl_id={} repeat={}", row, col, chunk, hl_id, repeat);
     _AnticipateFlush();
+    _is_clean = false;
 
     _Line &line = _lines[row];
     line.dirty = true;
@@ -210,6 +218,7 @@ void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
 {
     Logger().debug("Scroll top={} bot={} left={} right={} rows={}", top, bot, left, right, rows);
     _AnticipateFlush();
+    _is_clean = false;
     auto copy = [&](int row, int row_from) {
         auto &line_from = _lines[row_from];
         auto &line_to = _lines[row];
@@ -242,6 +251,7 @@ void Renderer::GridClear()
 {
     Logger().debug("Clear");
     _AnticipateFlush();
+    _is_clean = false;
     for (auto &line : _lines)
     {
         line.dirty = true;

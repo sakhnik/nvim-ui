@@ -1,4 +1,5 @@
 #include "TextureCache.hpp"
+#include "Logger.hpp"
 
 void TextureCache::ForEach(std::function<void(const Texture &)> action)
 {

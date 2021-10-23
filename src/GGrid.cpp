@@ -213,7 +213,7 @@ gboolean GGrid::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType s
         return true;
     auto renderer = _session->GetRenderer();
     if (!renderer)
-        return false;;
+        return false;
 
     if (0 != (GDK_CONTROL_MASK & state))
     {

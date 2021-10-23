@@ -99,6 +99,9 @@ private:
     // but cleanly.
     using ClockT = std::chrono::high_resolution_clock;
     ClockT::time_point _last_flush_time;
+    // Rendering is done asyncrhonously and concurrently, make sure only clean
+    // state after Flush() is displayed.
+    bool _is_clean = true;
 
     void _DoFlush();
     void _AnticipateFlush();
