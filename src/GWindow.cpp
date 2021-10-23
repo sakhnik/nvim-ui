@@ -137,10 +137,7 @@ void GWindow::_SetupStatusLabel()
 
 void GWindow::CheckSizeAsync()
 {
-    g_timeout_add(0, [](gpointer data) {
-            reinterpret_cast<GWindow *>(data)->_CheckSize();
-            return FALSE;
-        }, this);
+    _GtkTimer0<&GWindow::_CheckSize>(0);
 }
 
 void GWindow::_CheckSize()
@@ -159,12 +156,7 @@ GWindow::CreateTexture(int /*width*/, std::string_view /*text*/,
 
 void GWindow::Present()
 {
-    auto present = [](gpointer data) {
-        GWindow *self = reinterpret_cast<GWindow *>(data);
-        self->_Present();
-        return FALSE;
-    };
-    g_timeout_add(0, present, this);
+    _GtkTimer0<&GWindow::_Present>(0);
 }
 
 void GWindow::_Present()
@@ -176,11 +168,7 @@ void GWindow::_Present()
 
 void GWindow::SessionEnd()
 {
-    auto session_end = [](gpointer data) {
-        reinterpret_cast<GWindow *>(data)->_SessionEnd();
-        return FALSE;
-    };
-    g_timeout_add(0, session_end, this);
+    _GtkTimer0<&GWindow::_SessionEnd>(0);
 }
 
 void GWindow::_SessionEnd()

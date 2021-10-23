@@ -51,4 +51,15 @@ private:
     void _EnableAction(const char *name, bool enable);
     void _OnQuitAction();
     void _OnSpawnAction();
+
+    // A generic async pass to the Gtk thread.
+    template <void (GWindow::*func)()>
+    void _GtkTimer0(int ms)
+    {
+        auto on_timeout = [](gpointer data) {
+            (reinterpret_cast<GWindow *>(data)->*func)();
+            return FALSE;
+        };
+        g_timeout_add(ms, on_timeout, this);
+    }
 };
