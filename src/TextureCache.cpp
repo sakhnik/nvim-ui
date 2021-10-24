@@ -1,7 +1,7 @@
 #include "TextureCache.hpp"
 #include "Logger.hpp"
 
-void TextureCache::ForEach(std::function<void(const Texture &)> action)
+void TextureCache::ForEach(std::function<void(const Chunk &)> action)
 {
     for (auto &texture : _cache)
         action(texture);
@@ -19,39 +19,39 @@ TextureCache::Scanner::~Scanner()
     _cache.erase(_iter, _cache.end());
 }
 
-bool TextureCache::Scanner::EnsureNext(Texture &&texture, GeneratorT generator)
+bool TextureCache::Scanner::EnsureNext(Chunk &&chunk, GeneratorT generator)
 {
     if (_started)
         ++_iter;
     else
         _started = true;
 
-    // Remove potentially outdated cached textures
-    while (_iter != _cache.end() && _iter->col < texture.col)
+    // Remove potentially outdated cached chunks
+    while (_iter != _cache.end() && _iter->col < chunk.col)
     {
         _iter->texture->MarkToDestroy();
         _iter = _cache.erase(_iter);
     }
-    while (_iter != _cache.end() && _iter->col == texture.col
-        && (_iter->hl_id != texture.hl_id || _iter->text != texture.text))
+    while (_iter != _cache.end() && _iter->col == chunk.col
+        && (_iter->hl_id != chunk.hl_id || _iter->text != chunk.text))
     {
         _iter->texture->MarkToDestroy();
         _iter = _cache.erase(_iter);
     }
 
     if (_iter == _cache.end()
-        || _iter->hl_id != texture.hl_id
-        || _iter->text != texture.text)
+        || _iter->hl_id != chunk.hl_id
+        || _iter->text != chunk.text)
     {
-        texture.texture = generator(texture);
-        _iter = _cache.insert(_iter, std::move(texture));
+        chunk.texture = generator(chunk);
+        _iter = _cache.insert(_iter, std::move(chunk));
         return true;
     }
 
-    if (_iter->col != texture.col)
+    if (_iter->col != chunk.col)
     {
-        // The texture has just shifted
-        _iter->col = texture.col;
+        // The chunk has just shifted
+        _iter->col = chunk.col;
         _iter->texture->MarkToRedraw(_redraw_token);
     }
 

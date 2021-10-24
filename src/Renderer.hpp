@@ -42,7 +42,7 @@ public:
     void ModeChange(std::string_view mode);
     void SetBusy(bool is_busy);
 
-    using GridLineT = std::vector<TextureCache::Texture>;
+    using GridLineT = std::vector<TextureCache::Chunk>;
     using GridLinesT = std::vector<GridLineT>;
     const GridLinesT& GetGridLines() const { return _grid_lines; }
 
@@ -82,7 +82,7 @@ private:
     {
         std::vector<std::string> text;
         std::vector<unsigned> hl_id;
-        // Remember the previously rendered textures, high chance they're reusable.
+        // Remember the previously rendered chunks, high chance they're reusable.
         TextureCache texture_cache;
         // Is it necessary to redraw this line carefully or can just draw from the texture cache?
         bool dirty = true;

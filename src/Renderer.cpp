@@ -90,12 +90,12 @@ void Renderer::_DoFlush()
         // Split the cells into chunks by the same hl_id
         auto chunks = _SplitChunks(line);
 
-        auto texture_generator = [&](const TextureCache::Texture &tex) {
+        auto texture_generator = [&](const TextureCache::Chunk &chunk) {
             // Paint the text on the surface carefully
             if (!_window)
                 return BaseTexture::PtrT{};
-            auto hlit = _hl_attr.find(tex.hl_id);
-            return _window->CreateTexture(tex.width, tex.text,
+            auto hlit = _hl_attr.find(chunk.hl_id);
+            return _window->CreateTexture(chunk.width, chunk.text,
                     hlit != _hl_attr.end() ? hlit->second : _def_attr,
                     _def_attr);
         };
@@ -109,24 +109,24 @@ void Renderer::_DoFlush()
                 int col = chunks[i - 1];
                 int end = chunks[i];
                 int hl_id = line.hl_id[col];
-                TextureCache::Texture texture(col, end - col, hl_id, "");
+                TextureCache::Chunk chunk(col, end - col, hl_id, "");
                 while (col < end)
-                    texture.text += line.text[col++];
+                    chunk.text += line.text[col++];
 
                 const auto hlit = _hl_attr.find(hl_id);
                 unsigned def_bg = _def_attr.bg.value();
 
-                if (texture.IsSpace()
+                if (chunk.IsSpace()
                     && (hlit == _hl_attr.end()                                   // No highlighting
                         || (hlit->second.bg.value_or(def_bg) == def_bg           // Default background
                             && 0 == (hlit->second.flags & HlAttr::F_REVERSE))))  // No reverse (foreground becomes background)
                 {
-                    // No need to create empty textures coinciding with the background color
+                    // No need to create empty chunks coinciding with the background color
                     continue;
                 }
 
-                // Test whether the texture should be rendered again
-                if (texture_cache_scanner.EnsureNext(std::move(texture), texture_generator))
+                // Test whether the chunk should be rendered again
+                if (texture_cache_scanner.EnsureNext(std::move(chunk), texture_generator))
                     oss << "+";
                 else
                     oss << ".";
