@@ -128,7 +128,7 @@ void GGrid::Present(int width, int height, uint32_t token)
 
     // First remove outdated textures
     auto removeOutdated = [&] {
-        auto it = std::partition(_textures.begin(), _textures.end(), [](auto &t) { return !t->ToBeDestroyed(); });
+        auto it = std::partition(_textures.begin(), _textures.end(), [](auto &t) { return t->IsAlive(); });
         for (auto it2 = it; it2 != _textures.end(); ++it2)
         {
             Texture *texture = static_cast<Texture *>(it2->get());

@@ -31,9 +31,34 @@ public:
         }
     };
 
+    template <void (BaseTexture::*inc_ref)(bool)>
+    struct ChunkWrapper : Chunk
+    {
+        template <typename ChunkT>
+        ChunkWrapper(const ChunkT &c)
+            : Chunk{c}
+        {
+            (texture.get()->*inc_ref)(true);
+        }
+
+        ~ChunkWrapper()
+        {
+            (texture.get()->*inc_ref)(false);
+        }
+
+        template <typename ChunkT>
+        ChunkWrapper& operator=(const ChunkT &o)
+        {
+            static_cast<Chunk &>(*this) = o;
+            (texture.get()->*inc_ref)(true);
+            return *this;
+        }
+    };
+
 private:
     // Sorted list
-    using _ChunkListT = std::list<Chunk>;
+    using _ChunkT = ChunkWrapper<&BaseTexture::IncRef>;
+    using _ChunkListT = std::list<_ChunkT>;
     _ChunkListT _cache;
 
 public:
@@ -51,7 +76,7 @@ public:
     class Scanner
     {
         _ChunkListT &_cache;
-        using IterT = std::list<Chunk>::iterator;
+        using IterT = std::list<_ChunkT>::iterator;
         IterT _iter = _cache.begin();
         bool _started = false;
 

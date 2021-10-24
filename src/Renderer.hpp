@@ -42,7 +42,8 @@ public:
     void ModeChange(std::string_view mode);
     void SetBusy(bool is_busy);
 
-    using GridLineT = std::vector<TextureCache::Chunk>;
+    using GridChunkT = TextureCache::ChunkWrapper<&BaseTexture::SetVisible>;
+    using GridLineT = std::vector<GridChunkT>;
     using GridLinesT = std::vector<GridLineT>;
     const GridLinesT& GetGridLines() const { return _grid_lines; }
 
