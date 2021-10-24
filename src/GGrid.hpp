@@ -27,7 +27,7 @@ public:
     void Clear();
     void CheckSize(int width, int height);
 
-    struct Texture : IWindow::ITexture
+    struct Texture : BaseTexture
     {
         // Non-owning
         GtkWidget *widget = nullptr;
@@ -53,7 +53,7 @@ private:
 
     int _cell_width = 0;
     int _cell_height = 0;
-    std::vector<IWindow::ITexture::PtrT> _textures;
+    std::vector<BaseTexture::PtrT> _textures;
 
     std::unique_ptr<GCursor> _cursor;
     GPointer _pointer;

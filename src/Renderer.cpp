@@ -93,7 +93,7 @@ void Renderer::_DoFlush()
         auto texture_generator = [&](const TextureCache::Texture &tex) {
             // Paint the text on the surface carefully
             if (!_window)
-                return IWindow::ITexture::PtrT{};
+                return BaseTexture::PtrT{};
             auto hlit = _hl_attr.find(tex.hl_id);
             return _window->CreateTexture(tex.width, tex.text,
                     hlit != _hl_attr.end() ? hlit->second : _def_attr,

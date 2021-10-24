@@ -2,8 +2,11 @@
 nvim_ui_lib_sources = [
   'AsyncExec.cpp',
   'AsyncExec.hpp',
+  'BaseTexture.cpp',
+  'BaseTexture.hpp',
   'Input.cpp',
   'Input.hpp',
+  'IWindow.hpp',
   'Logger.cpp',
   'Logger.hpp',
   'MsgPackRpc.cpp',

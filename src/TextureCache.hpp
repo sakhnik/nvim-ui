@@ -15,7 +15,7 @@ public:
         int width = 0; // count of cells
         unsigned hl_id = 0;
         std::string text;
-        IWindow::ITexture::PtrT texture;
+        BaseTexture::PtrT texture;
 
         Texture(int col, int width, unsigned hl_id, std::string_view text)
             : col{col}
@@ -71,7 +71,7 @@ public:
         Texture& Get() const { return *_iter; }
 
         // Generator function to create texture to be stored in the cache.
-        using GeneratorT = std::function<IWindow::ITexture::PtrT(const Texture &)>;
+        using GeneratorT = std::function<BaseTexture::PtrT(const Texture &)>;
 
         // Ensure the subsequent texture is the given one.
         // If there is no suitable texture in the cache, the generator functor will be invoked

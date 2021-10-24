@@ -147,11 +147,11 @@ void GWindow::_CheckSize()
     _grid->CheckSize(width, height);
 }
 
-IWindow::ITexture::PtrT
+BaseTexture::PtrT
 GWindow::CreateTexture(int /*width*/, std::string_view /*text*/,
                        const HlAttr &/*attr*/, const HlAttr &/*def_attr*/)
 {
-    return ITexture::PtrT(new GGrid::Texture);
+    return BaseTexture::PtrT(new GGrid::Texture);
 }
 
 void GWindow::Present(uint32_t token)

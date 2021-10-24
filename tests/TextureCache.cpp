@@ -6,7 +6,7 @@ namespace {
 using namespace boost::ut;
 using namespace std::string_literals;
 
-struct Tex : IWindow::ITexture
+struct Tex : BaseTexture
 {
     std::string s;
     Tex(const std::string &s): s{s} {}
