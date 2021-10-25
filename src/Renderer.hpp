@@ -1,7 +1,7 @@
 #pragma once
 
 #include "HlAttr.hpp"
-#include "TextureCache.hpp"
+#include "GridLine.hpp"
 #include "AsyncExec.hpp"
 #include "Timer.hpp"
 
@@ -42,7 +42,7 @@ public:
     void ModeChange(std::string_view mode);
     void SetBusy(bool is_busy);
 
-    using GridChunkT = TextureCache::ChunkWrapper<&BaseTexture::SetVisible>;
+    using GridChunkT = GridLine::ChunkWrapper<&BaseTexture::SetVisible>;
     using GridLineT = std::vector<GridChunkT>;
     using GridLinesT = std::vector<GridLineT>;
     const GridLinesT& GetGridLines() const { return _grid_lines; }
@@ -84,7 +84,7 @@ private:
         std::vector<std::string> text;
         std::vector<unsigned> hl_id;
         // Remember the previously rendered chunks, high chance they're reusable.
-        TextureCache texture_cache;
+        class GridLine grid_line;
         // Is it necessary to redraw this line carefully or can just draw from the texture cache?
         bool dirty = true;
     };

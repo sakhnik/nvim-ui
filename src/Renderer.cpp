@@ -77,7 +77,7 @@ void Renderer::_DoFlush()
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
         auto &line = _lines[row];
-        auto &tex_cache = line.texture_cache;
+        auto &grid_line = line.grid_line;
 
         // Check if it's possible to just copy the prepared textures first
         if (!line.dirty)
@@ -90,7 +90,7 @@ void Renderer::_DoFlush()
         // Split the cells into chunks by the same hl_id
         auto chunks = _SplitChunks(line);
 
-        auto texture_generator = [&](const TextureCache::Chunk &chunk) {
+        auto texture_generator = [&](const GridLine::Chunk &chunk) {
             // Paint the text on the surface carefully
             if (!_window)
                 return BaseTexture::PtrT{};
@@ -101,7 +101,7 @@ void Renderer::_DoFlush()
         };
 
         {
-            auto texture_cache_scanner = tex_cache.GetScanner(_redraw_token);
+            auto grid_line_scanner = grid_line.GetScanner(_redraw_token);
 
             // Print and cache the chunks individually
             for (size_t i = 1; i < chunks.size(); ++i)
@@ -109,7 +109,7 @@ void Renderer::_DoFlush()
                 int col = chunks[i - 1];
                 int end = chunks[i];
                 int hl_id = line.hl_id[col];
-                TextureCache::Chunk chunk(col, end - col, hl_id, "");
+                GridLine::Chunk chunk(col, end - col, hl_id, "");
                 while (col < end)
                     chunk.text += line.text[col++];
 
@@ -126,14 +126,14 @@ void Renderer::_DoFlush()
                 }
 
                 // Test whether the chunk should be rendered again
-                if (texture_cache_scanner.EnsureNext(std::move(chunk), texture_generator))
+                if (grid_line_scanner.EnsureNext(std::move(chunk), texture_generator))
                     oss << "+";
                 else
                     oss << ".";
             }
         }
 
-        tex_cache.CopyTo(_grid_lines[row]);
+        grid_line.CopyTo(_grid_lines[row]);
     }
 
     if (_window)
@@ -231,7 +231,7 @@ void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
             line_to.text[col] = std::move(line_from.text[col]);
             line_to.hl_id[col] = std::move(line_from.hl_id[col]);
         }
-        line_to.texture_cache.MoveFrom(line_from.texture_cache, left, right, _redraw_token);
+        line_to.grid_line.MoveFrom(line_from.grid_line, left, right, _redraw_token);
     };
 
     if (rows > 0)
@@ -279,7 +279,7 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
     for (auto &line : _lines)
     {
         line.dirty = true;
-        line.texture_cache.Clear();
+        line.grid_line.Clear();
     }
 
     _def_attr.fg = fg;

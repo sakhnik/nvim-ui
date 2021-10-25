@@ -2,8 +2,8 @@ ut_proj = subproject('ut')
 ut_dep = ut_proj.get_variable('boostut_dep')
 
 tests_sources = [
+  'GridLine.cpp',
   'Renderer.cpp',
-  'TextureCache.cpp',
   'test.cpp',
 ]
 
