@@ -16,11 +16,15 @@ public:
     // Mark this texture to be redrawn with a redraw token.
     void MarkToRedraw(uint32_t token) { _redraw_tokens.push_back(token); }
 
+    // Increment/decrement the reference counter to keep the texture alive.
+    // Note that we can only create and manipulate Gtk widgets from the Gtk thread.
+    // So we'll keep track of the life time without actual butchery.
     void IncRef(bool inc)
     {
         _refcount += inc ? 1 : -1;
     }
 
+    // Increment/decrement the reference counter for the widget visibility.
     void SetVisible(bool visible)
     {
         _refcount += visible ? VISIBLE_INCREMENT : -VISIBLE_INCREMENT;
@@ -40,5 +44,5 @@ private:
     std::vector<uint32_t> _redraw_tokens;
     bool _destroy = false;
     int _refcount = 0;
-    static const int VISIBLE_INCREMENT = 0; //0x10000;
+    static const int VISIBLE_INCREMENT = 10000;
 };

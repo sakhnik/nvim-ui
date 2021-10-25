@@ -1,4 +1,5 @@
 #include "BaseTexture.hpp"
+#include "Logger.hpp"
 
 bool BaseTexture::TakeRedrawToken(uint32_t token)
 {

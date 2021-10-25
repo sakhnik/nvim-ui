@@ -133,6 +133,75 @@ suite s = [] {
             expect(eq("Hello"s, dump2(c)));
         };
     };
+
+    "GridLine::ChunkWrapper"_test = [&] {
+        using WrapperT = GridLine::ChunkWrapper<&BaseTexture::IncRef>;
+        GridLine::Chunk c{0, 1, 0, "test"};
+        c.texture = generator(c);
+        expect(!c.texture->IsAlive());
+        expect(!c.texture->IsVisible());
+
+        "wrapper"_test = [&] {
+            {
+                WrapperT w{c};
+                expect(c.texture->IsAlive());
+                expect(!c.texture->IsVisible());
+            }
+            expect(!c.texture->IsAlive());
+            expect(!c.texture->IsVisible());
+        };
+
+        "wrapper-copy"_test = [&] {
+            {
+                WrapperT w{c};
+                {
+                    WrapperT w2{w};
+                    expect(c.texture->IsAlive());
+                    expect(!c.texture->IsVisible());
+                }
+                expect(c.texture->IsAlive());
+                expect(!c.texture->IsVisible());
+            }
+
+            expect(!c.texture->IsAlive());
+            expect(!c.texture->IsVisible());
+        };
+
+        "wrapper-assign"_test = [&] {
+            {
+                WrapperT w{c};
+                {
+                    WrapperT w2{w};
+                    w = w2;
+                    expect(c.texture->IsAlive());
+                    expect(!c.texture->IsVisible());
+                }
+                expect(c.texture->IsAlive());
+                expect(!c.texture->IsVisible());
+            }
+
+            expect(!c.texture->IsAlive());
+            expect(!c.texture->IsVisible());
+        };
+
+        using ShowT = GridLine::ChunkWrapper<&BaseTexture::SetVisible>;
+
+        "show-copy"_test = [&] {
+            {
+                WrapperT w{c};
+                {
+                    ShowT w2{w};
+                    expect(c.texture->IsAlive());
+                    expect(c.texture->IsVisible());
+                }
+                expect(c.texture->IsAlive());
+                expect(!c.texture->IsVisible());
+            }
+
+            expect(!c.texture->IsAlive());
+            expect(!c.texture->IsVisible());
+        };
+    };
 };
 
 } //namespace;

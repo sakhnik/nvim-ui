@@ -34,6 +34,12 @@ public:
     template <void (BaseTexture::*inc_ref)(bool)>
     struct ChunkWrapper : Chunk
     {
+        ChunkWrapper(const ChunkWrapper &c)
+            : Chunk{c}
+        {
+            (texture.get()->*inc_ref)(true);
+        }
+
         template <typename ChunkT>
         ChunkWrapper(const ChunkT &c)
             : Chunk{c}
@@ -41,17 +47,17 @@ public:
             (texture.get()->*inc_ref)(true);
         }
 
-        ~ChunkWrapper()
+        ChunkWrapper& operator=(const ChunkWrapper &o)
         {
             (texture.get()->*inc_ref)(false);
-        }
-
-        template <typename ChunkT>
-        ChunkWrapper& operator=(const ChunkT &o)
-        {
             static_cast<Chunk &>(*this) = o;
             (texture.get()->*inc_ref)(true);
             return *this;
+        }
+
+        ~ChunkWrapper()
+        {
+            (texture.get()->*inc_ref)(false);
         }
     };
 

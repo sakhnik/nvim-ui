@@ -128,21 +128,37 @@ void GGrid::Present(int width, int height, uint32_t token)
 
     // First remove outdated textures
     auto removeOutdated = [&] {
-        auto it = std::partition(_textures.begin(), _textures.end(), [](auto &t) { return t->IsAlive(); });
-        for (auto it2 = it; it2 != _textures.end(); ++it2)
+        auto it_visible_end = std::partition(_textures.begin(), _textures.end(), [](auto &t) { return t->IsVisible(); });
+        auto it_alive_end = std::partition(it_visible_end, _textures.end(), [](auto &t) { return t->IsAlive(); });
+
+        for (auto it = it_visible_end; it != it_alive_end; ++it)
         {
-            Texture *texture = static_cast<Texture *>(it2->get());
+            Texture *texture = static_cast<Texture *>(it->get());
+            if (texture->widget && gtk_widget_get_parent(texture->widget) == _grid)
+            {
+                g_object_ref(G_OBJECT(texture->widget));
+                gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
+            }
+        }
+
+        for (auto it = it_alive_end; it != _textures.end(); ++it)
+        {
+            Texture *texture = static_cast<Texture *>(it->get());
             if (texture->widget)
             {
-                gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
+                if (gtk_widget_get_parent(texture->widget) == _grid)
+                    gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
+                else
+                    g_object_unref(G_OBJECT(texture->widget));
                 texture->widget = nullptr;
             }
         }
-        _textures.erase(it, _textures.end());
+
+        _textures.erase(it_alive_end, _textures.end());
     };
     removeOutdated();
 
-    size_t texture_count = 0;
+    ssize_t texture_count = 0;
 
     for (int row = 0, rowN = renderer->GetGridLines().size();
          row < rowN; ++row)
@@ -169,14 +185,15 @@ void GGrid::Present(int width, int height, uint32_t token)
                 _textures.push_back(texture.texture);
             }
 
-            if (t->TakeRedrawToken(token))
+            if (t->TakeRedrawToken(token) && t->IsVisible())
             {
                 gtk_fixed_move(GTK_FIXED(_grid), t->widget, x, y);
             }
         }
     }
 
-    assert(texture_count == _textures.size() && "Texture count consistency");
+    auto visible_texture_count = std::count_if(_textures.begin(), _textures.end(), [](auto &t) { return t->IsVisible(); });
+    assert(texture_count == visible_texture_count && "Texture count consistency");
 
     _cursor->Move();
     _pointer.Update(renderer->IsBusy(), _grid);

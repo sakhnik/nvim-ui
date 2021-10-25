@@ -42,6 +42,7 @@ public:
     void ModeChange(std::string_view mode);
     void SetBusy(bool is_busy);
 
+    // The snapshot of last consistent grid state
     using GridChunkT = GridLine::ChunkWrapper<&BaseTexture::SetVisible>;
     using GridLineT = std::vector<GridChunkT>;
     using GridLinesT = std::vector<GridLineT>;
@@ -89,6 +90,8 @@ private:
         bool dirty = true;
     };
 
+    // The volatile state of the grid, the changes are collected here first
+    // before going to _grid_lines;
     std::vector<_Line> _lines;
 
     GridLinesT _grid_lines;
