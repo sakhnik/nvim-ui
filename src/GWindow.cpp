@@ -56,8 +56,8 @@ void GWindow::_SetupWindow()
         gtk_window_set_deletable(GTK_WINDOW(_window), false);
 
     using ActionCbT = void (*)(GSimpleAction *, GVariant *, gpointer);
-    ActionCbT action_cb = [](GSimpleAction *action, GVariant *, gpointer) {
-        Logger().info("Action {}", g_action_get_name(G_ACTION(action)));
+    ActionCbT connect_cb = [](GSimpleAction *, GVariant *, gpointer data) {
+        reinterpret_cast<GWindow*>(data)->_OnConnectAction();
     };
     ActionCbT quit_cb = [](GSimpleAction *, GVariant *, gpointer data) {
         reinterpret_cast<GWindow*>(data)->_OnQuitAction();
@@ -68,7 +68,7 @@ void GWindow::_SetupWindow()
 
     const GActionEntry actions[] = {
         { "spawn", spawn_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
-        { "connect", action_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "connect", connect_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
         { "quit", quit_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
     };
     g_action_map_add_action_entries(G_ACTION_MAP(_window), actions, G_N_ELEMENTS(actions), this);
@@ -252,4 +252,11 @@ void GWindow::_OnSpawnAction()
         Logger().error("Failed to spawn: {}", ex.what());
         SetError(ex.what());
     }
+}
+
+void GWindow::_OnConnectAction()
+{
+    Logger().info("Connect TCP");
+    GtkWidget *dlg = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "connect_dlg"));
+    gtk_widget_show(dlg);
 }

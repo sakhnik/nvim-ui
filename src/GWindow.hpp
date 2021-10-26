@@ -51,6 +51,7 @@ private:
     void _EnableAction(const char *name, bool enable);
     void _OnQuitAction();
     void _OnSpawnAction();
+    void _OnConnectAction();
 
     // A generic async pass to the Gtk thread.
     template <void (GWindow::*func)()>
