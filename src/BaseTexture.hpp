@@ -42,7 +42,6 @@ public:
 
 private:
     std::vector<uint32_t> _redraw_tokens;
-    bool _destroy = false;
     int _refcount = 0;
     static const int VISIBLE_INCREMENT = 10000;
 };
