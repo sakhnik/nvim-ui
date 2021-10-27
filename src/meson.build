@@ -40,7 +40,7 @@ nvim_ui_lib_dep = declare_dependency(
 )
 
 nvim_ui_sources = [
-  'main.cpp',
+  'GCallbackAdaptor.hpp',
   'GCursor.cpp',
   'GCursor.hpp',
   'GGrid.cpp',
@@ -50,6 +50,7 @@ nvim_ui_sources = [
   'GWindow.cpp',
   'GWindow.hpp',
   'IWindowHandler.hpp',
+  'main.cpp',
   gtk_res,
   win_res,
 ]

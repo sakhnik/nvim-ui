@@ -55,21 +55,10 @@ void GWindow::_SetupWindow()
     if (_session)
         gtk_window_set_deletable(GTK_WINDOW(_window), false);
 
-    using ActionCbT = void (*)(GSimpleAction *, GVariant *, gpointer);
-    ActionCbT connect_cb = [](GSimpleAction *, GVariant *, gpointer data) {
-        reinterpret_cast<GWindow*>(data)->_OnConnectAction();
-    };
-    ActionCbT quit_cb = [](GSimpleAction *, GVariant *, gpointer data) {
-        reinterpret_cast<GWindow*>(data)->_OnQuitAction();
-    };
-    ActionCbT spawn_cb = [](GSimpleAction *, GVariant *, gpointer data) {
-        reinterpret_cast<GWindow*>(data)->_OnSpawnAction();
-    };
-
     const GActionEntry actions[] = {
-        { "spawn", spawn_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
-        { "connect", connect_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
-        { "quit", quit_cb, nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "spawn", MakeCallback<&GWindow::_OnSpawnAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "connect", MakeCallback<&GWindow::_OnConnectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "quit", MakeCallback<&GWindow::_OnQuitAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
     };
     g_action_map_add_action_entries(G_ACTION_MAP(_window), actions, G_N_ELEMENTS(actions), this);
 
@@ -228,7 +217,7 @@ void GWindow::_EnableAction(const char *name, bool enable)
     g_simple_action_set_enabled(G_SIMPLE_ACTION(a), enable);
 }
 
-void GWindow::_OnQuitAction()
+void GWindow::_OnQuitAction(GSimpleAction *, GVariant *)
 {
     Logger().info("Bye!");
     GtkApplication *app = gtk_window_get_application(GTK_WINDOW(_window));
@@ -236,7 +225,7 @@ void GWindow::_OnQuitAction()
     g_application_quit(G_APPLICATION(app));
 }
 
-void GWindow::_OnSpawnAction()
+void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
 {
     Logger().info("Spawn new");
     std::string error;
@@ -254,7 +243,7 @@ void GWindow::_OnSpawnAction()
     }
 }
 
-void GWindow::_OnConnectAction()
+void GWindow::_OnConnectAction(GSimpleAction *, GVariant *)
 {
     Logger().info("Connect TCP");
     GtkWidget *dlg = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "connect_dlg"));

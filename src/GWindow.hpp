@@ -5,6 +5,7 @@
 #include "Session.hpp"
 #include "GGrid.hpp"
 #include "IWindowHandler.hpp"
+#include "GCallbackAdaptor.hpp"
 #include <string>
 #include <memory>
 #include <gtk/gtk.h>
@@ -13,6 +14,7 @@
 class GWindow
     : public IWindow
     , public IWindowHandler
+    , private GCallbackAdaptor<GWindow>
 {
 public:
     GWindow(GtkApplication *, Session::PtrT &session);
@@ -49,9 +51,10 @@ private:
 
     void _UpdateActions();
     void _EnableAction(const char *name, bool enable);
-    void _OnQuitAction();
-    void _OnSpawnAction();
-    void _OnConnectAction();
+    void _OnQuitAction(GSimpleAction *, GVariant *);
+    void _OnSpawnAction(GSimpleAction *, GVariant *);
+    void _OnConnectAction(GSimpleAction *, GVariant *);
+
 
     // A generic async pass to the Gtk thread.
     template <void (GWindow::*func)()>
