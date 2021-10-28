@@ -28,6 +28,5 @@ int main(int argc, char *argv[])
     };
 #endif
 
-    expect(1_i == 1);
     return 0;
 }
