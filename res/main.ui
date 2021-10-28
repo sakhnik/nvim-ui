@@ -1,55 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated with glade 3.38.2 -->
 <interface>
-  <requires lib="gtk+" version="3.24"/>
-  <object class="GtkDialog" id="connect_dlg">
-    <property name="title" translatable="yes">Connect via TCP</property>
-    <property name="modal">True</property>
-    <child>
-      <object class="GtkBox">
-        <child>
-          <object class="GtkLabel">
-            <property name="label" translatable="yes">Address</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkEntry" id="address_entry">
-            <property name="text" translatable="yes">127.0.0.1</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkLabel">
-            <property name="label" translatable="yes">:</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkEntry" id="port_entry">
-            <property name="width-chars">5</property>
-            <property name="max-width-chars">5</property>
-            <property name="input-purpose">digits</property>
-          </object>
-        </child>
-      </object>
-    </child>
-
-    <child type="action">
-      <object class="GtkButton" id="button_cancel">
-        <property name="label">gtk-cancel</property>
-        <!--property name="use-stock">True</property-->
-      </object>
-    </child>
-    <child type="action">
-      <object class="GtkButton" id="button_connect">
-        <property name="label">gtk-connect</property>
-        <!--property name="use-stock">True</property-->
-        <property name="receives-default">True</property>
-      </object>
-    </child>
-    <action-widgets>
-      <action-widget response="cancel">button_cancel</action-widget>
-      <action-widget response="ok" default="true">button_connect</action-widget>
-    </action-widgets>
-  </object>
+  <requires lib="gtk+" version="4.0"/>
 
   <object class="GtkApplicationWindow" id="main_window">
     <property name="can-focus">True</property>

@@ -6,5 +6,6 @@
   <gresource prefix="/org/nvim-ui/gtk">
     <file>main.ui</file>
     <file>menus.ui</file>
+    <file>connect-dlg.ui</file>
   </gresource>
 </gresources>

@@ -246,6 +246,16 @@ void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
 void GWindow::_OnConnectAction(GSimpleAction *, GVariant *)
 {
     Logger().info("Connect TCP");
-    GtkWidget *dlg = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "connect_dlg"));
+    PtrT<GtkBuilder> builder(gtk_builder_new_from_resource("/org/nvim-ui/gtk/connect-dlg.ui"),
+                             [](auto *b) { g_object_unref(b); });
+    GtkWidget *dlg = GTK_WIDGET(gtk_builder_get_object(builder.get(), "connect_dlg"));
+    gtk_window_set_transient_for(GTK_WINDOW(dlg), GTK_WINDOW(_window));
+    g_signal_connect(dlg, "response", G_CALLBACK(MakeCallback<&GWindow::_OnConnectDlgResponse>()), this);
     gtk_widget_show(dlg);
+}
+
+void GWindow::_OnConnectDlgResponse(GtkDialog *dlg, gint response)
+{
+    gtk_window_destroy(GTK_WINDOW(dlg));
+    Logger().info("Response: {}", response);
 }

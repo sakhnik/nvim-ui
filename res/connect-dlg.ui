@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="4.0"/>
+
+  <object class="GtkDialog" id="connect_dlg">
+    <property name="title" translatable="yes">Connect via TCP</property>
+    <property name="modal">True</property>
+    <child internal-child="content_area">
+      <object class="GtkBox">
+        <child>
+          <object class="GtkBox">
+            <child>
+              <object class="GtkLabel">
+                <property name="label" translatable="yes">Address</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkEntry" id="address_entry">
+                <property name="text" translatable="yes">127.0.0.1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="label" translatable="yes">:</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkEntry" id="port_entry">
+                <property name="width-chars">5</property>
+                <property name="max-width-chars">5</property>
+                <property name="input-purpose">digits</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkBox">
+            <child type="action">
+              <object class="GtkButton" id="button_cancel">
+                <property name="label" translatable="yes">_Cancel</property>
+                <property name="use-underline">True</property>
+              </object>
+            </child>
+            <child type="action">
+              <object class="GtkButton" id="button_connect">
+                <property name="label" translatable="yes">Connect</property>
+                <property name="receives-default">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+
+    <action-widgets>
+      <action-widget response="cancel">button_cancel</action-widget>
+      <action-widget response="ok" default="true">button_connect</action-widget>
+    </action-widgets>
+  </object>
+</interface>
