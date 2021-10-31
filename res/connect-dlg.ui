@@ -16,7 +16,7 @@
             </child>
             <child>
               <object class="GtkEntry" id="address_entry">
-                <property name="text" translatable="yes">127.0.0.1</property>
+                <property name="text">127.0.0.1</property>
               </object>
             </child>
             <child>
@@ -26,6 +26,7 @@
             </child>
             <child>
               <object class="GtkEntry" id="port_entry">
+                <property name="text">12345</property>
                 <property name="width-chars">5</property>
                 <property name="max-width-chars">5</property>
                 <property name="input-purpose">digits</property>

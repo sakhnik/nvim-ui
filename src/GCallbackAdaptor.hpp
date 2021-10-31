@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 
 // Create a callback function matching a given member function
 // to be used as a GCallback.
@@ -30,4 +31,3 @@ public:
             return _Callback<func>(func);
         }
 };
-

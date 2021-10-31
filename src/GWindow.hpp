@@ -54,7 +54,7 @@ private:
     void _OnQuitAction(GSimpleAction *, GVariant *);
     void _OnSpawnAction(GSimpleAction *, GVariant *);
     void _OnConnectAction(GSimpleAction *, GVariant *);
-    void _OnConnectDlgResponse(GtkDialog *, gint response);
+    void _OnConnectDlgResponse(GtkDialog *, gint response, GtkBuilder *);
 
 
     // A generic async pass to the Gtk thread.

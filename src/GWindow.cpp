@@ -3,7 +3,10 @@
 #include "Input.hpp"
 #include "Renderer.hpp"
 #include "SessionSpawn.hpp"
+#include "SessionTcp.hpp"
 
+#include <iterator>
+#include <msgpack/v1/unpack.hpp>
 #include <sstream>
 #include <spdlog/fmt/fmt.h>
 
@@ -228,7 +231,6 @@ void GWindow::_OnQuitAction(GSimpleAction *, GVariant *)
 void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
 {
     Logger().info("Spawn new");
-    std::string error;
     try
     {
         SetError(nullptr);
@@ -241,21 +243,64 @@ void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
         Logger().error("Failed to spawn: {}", ex.what());
         SetError(ex.what());
     }
+    _UpdateActions();
 }
+
+namespace {
+
+struct ConnectCtx
+{
+    PtrT<GtkBuilder> builder;
+    GWindow *wnd{};
+};
+
+} //namespace;
 
 void GWindow::_OnConnectAction(GSimpleAction *, GVariant *)
 {
-    Logger().info("Connect TCP");
-    PtrT<GtkBuilder> builder(gtk_builder_new_from_resource("/org/nvim-ui/gtk/connect-dlg.ui"),
-                             [](auto *b) { g_object_unref(b); });
-    GtkWidget *dlg = GTK_WIDGET(gtk_builder_get_object(builder.get(), "connect_dlg"));
+    ConnectCtx *ctx = new ConnectCtx{
+        .builder{gtk_builder_new_from_resource("/org/nvim-ui/gtk/connect-dlg.ui"),
+                 [](auto *b) { g_object_unref(b); }},
+        .wnd = this,
+    };
+    GtkWidget *dlg = GTK_WIDGET(gtk_builder_get_object(ctx->builder.get(), "connect_dlg"));
     gtk_window_set_transient_for(GTK_WINDOW(dlg), GTK_WINDOW(_window));
-    g_signal_connect(dlg, "response", G_CALLBACK(MakeCallback<&GWindow::_OnConnectDlgResponse>()), this);
+
+    // TODO: generalize this technique
+    using OnResponseT = void(*)(GtkDialog *, gint response, gpointer);
+    OnResponseT on_response = [](GtkDialog *dlg, gint response, gpointer data) {
+        ConnectCtx *ctx = reinterpret_cast<ConnectCtx *>(data);
+        ctx->wnd->_OnConnectDlgResponse(dlg, response, ctx->builder.get());
+        delete ctx;
+    };
+
+    g_signal_connect(dlg, "response", G_CALLBACK(on_response), ctx);
     gtk_widget_show(dlg);
 }
 
-void GWindow::_OnConnectDlgResponse(GtkDialog *dlg, gint response)
+void GWindow::_OnConnectDlgResponse(GtkDialog *dlg, gint response, GtkBuilder *builder)
 {
     gtk_window_destroy(GTK_WINDOW(dlg));
-    Logger().info("Response: {}", response);
+    if (GTK_RESPONSE_OK != response)
+        return;
+    GtkEntry *address_entry = GTK_ENTRY(gtk_builder_get_object(builder, "address_entry"));
+    GtkEntry *port_entry = GTK_ENTRY(gtk_builder_get_object(builder, "port_entry"));
+
+    const char *address = gtk_editable_get_text(GTK_EDITABLE(address_entry));
+    int port = std::stoi(gtk_editable_get_text(GTK_EDITABLE(port_entry)));
+    Logger().info("Connect to {}:{}", address, port);
+
+    try
+    {
+        SetError(nullptr);
+        _session.reset(new SessionTcp(address, port));
+        _session->SetWindow(this);
+        _session->RunAsync();
+    }
+    catch (std::exception &ex)
+    {
+        Logger().error("Failed to spawn: {}", ex.what());
+        SetError(ex.what());
+    }
+    _UpdateActions();
 }
