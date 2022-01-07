@@ -1,3 +1,4 @@
+subdir('gtkpp')
 
 nvim_ui_lib_sources = [
   'AsyncExec.cpp',
@@ -58,7 +59,7 @@ nvim_ui_sources = [
 executable('nvim-ui',
   nvim_ui_sources,
   dependencies: [spdlog_dep, gtk4_dep],
-  link_with: [nvim_ui_lib],
+  link_with: [nvim_ui_lib, gtkpp_lib],
   cpp_pch: 'pch/all-gtk.hpp',
   win_subsystem: 'windows',
   install: true)
