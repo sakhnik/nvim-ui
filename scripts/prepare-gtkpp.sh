@@ -21,13 +21,17 @@ gtkpp_sources = [
 $(find out -name '*.*' -printf "  '%p',\n")
 ]
 
-gtkpp_lib_dep = declare_dependency(
-  include_directories: ['gir2cpp', 'out'],
-)
+incdir = include_directories(['gir2cpp', 'out'])
 
 gtkpp_lib = static_library('gtkpp-lib',
   gtkpp_sources,
-  dependencies: [gtkpp_lib_dep, gtk4_dep],
+  dependencies: [gtk4_dep],
+  include_directories: incdir,
   cpp_args: '-Wno-deprecated-declarations',
+)
+
+gtkpp_dep = declare_dependency(
+  link_with: gtkpp_lib,
+  include_directories: ['gir2cpp', 'out'],
 )
 END
