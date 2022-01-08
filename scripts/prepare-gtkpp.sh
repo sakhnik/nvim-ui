@@ -26,7 +26,11 @@ config.include = re.compile(r"""^(
         GObject::.*
         |
         Gtk::.*
-        )""", re.VERBOSE)
+        |
+        Gio::
+        |
+        Gio::Application
+        )$""", re.VERBOSE)
 config.ignore = re.compile(r"""^(
         Gtk::Print.*
         |
