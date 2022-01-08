@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+out_dir=cpp-generated
+
 virtualenv venv
 source venv/bin/activate
 
@@ -14,14 +16,38 @@ fi
 
 pip install -r gir2cpp/requirements.txt
 
-gir2cpp/main.py
+PYTHONPATH=gir2cpp python <<END
+import re
+from gir2cpp.repository import Repository
+from gir2cpp.config import Config
+
+config = Config()
+config.include = re.compile(r"""^(
+        GObject::.*
+        |
+        Gtk::.*
+        )""", re.VERBOSE)
+config.ignore = re.compile(r"""^(
+        Gtk::Print.*
+        |
+        GdkPixbuf::.*
+        |
+        Gtk::PageSetupUnixDialog
+        )$""", re.VERBOSE)
+config.gir_dir = '/usr/share/gir-1.0/'
+config.out_dir = '$out_dir'
+
+repository = Repository(config)
+repository.process('Gtk', '4.0')
+repository.output()
+END
 
 cat >|meson.build <<END
 gtkpp_sources = [
-$(find out -name '*.*' -printf "  '%p',\n")
+$(find $out_dir -name '*.*' -printf "  '%p',\n")
 ]
 
-incdir = include_directories(['gir2cpp', 'out'])
+incdir = include_directories(['gir2cpp', '$out_dir'])
 
 gtkpp_lib = static_library('gtkpp-lib',
   gtkpp_sources,
@@ -32,6 +58,6 @@ gtkpp_lib = static_library('gtkpp-lib',
 
 gtkpp_dep = declare_dependency(
   link_with: gtkpp_lib,
-  include_directories: ['gir2cpp', 'out'],
+  include_directories: ['gir2cpp', '$out_dir'],
 )
 END
