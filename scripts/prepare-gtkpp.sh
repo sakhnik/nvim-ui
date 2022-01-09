@@ -57,7 +57,6 @@ gtkpp_lib = static_library('gtkpp-lib',
   gtkpp_sources,
   dependencies: [gtk4_dep],
   include_directories: incdir,
-  cpp_args: ['-Wno-deprecated-declarations'],
 )
 
 gtkpp_dep = declare_dependency(
