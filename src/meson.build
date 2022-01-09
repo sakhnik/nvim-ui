@@ -58,6 +58,7 @@ nvim_ui_sources = [
 
 executable('nvim-ui',
   nvim_ui_sources,
+  cpp_args: ['-Wno-deprecated-declarations'],
   dependencies: [spdlog_dep, gtk4_dep, gtkpp_dep],
   link_with: [nvim_ui_lib],
   cpp_pch: 'pch/all-gtk.hpp',
