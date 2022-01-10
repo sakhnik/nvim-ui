@@ -25,7 +25,9 @@ config = Config()
 config.include = re.compile(r"""^(
         GObject::.*
         |
-        Gtk::.*
+        Gtk::
+        |
+        Gtk::Application.*
         |
         Gio::
         |

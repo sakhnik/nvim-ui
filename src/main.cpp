@@ -1,6 +1,8 @@
 #include "GWindow.hpp"
 #include "SessionSpawn.hpp"
 #include "Logger.hpp"
+#include "gir/Owned.hpp"
+#include "Gtk/Application.hpp"
 #include <spdlog/cfg/env.h>
 
 #include <uv.h>
@@ -26,8 +28,8 @@ int main(int argc, char* argv[])
     Logger().info("nvim-ui v{}", VERSION);
     try
     {
-        auto app = MkPtr(gtk_application_new("org.nvim-ui", G_APPLICATION_FLAGS_NONE), g_object_unref);
-        g_application_set_resource_base_path(G_APPLICATION(app.get()), "/org/nvim-ui");
+        auto app = gir::MakeOwned(gir::Gtk::Application::new_("org.nvim-ui", G_APPLICATION_FLAGS_NONE));
+        app.set_resource_base_path("/org/nvim-ui");
 
         using OnActivateT = void (*)(GtkApplication *);
         OnActivateT on_activate = [](auto *app) {
@@ -53,7 +55,7 @@ int main(int argc, char* argv[])
                 window->SetError(error.data());
             }
         };
-        g_signal_connect(app.get(), "activate", G_CALLBACK(on_activate), nullptr);
+        g_signal_connect(app.g_obj(), "activate", G_CALLBACK(on_activate), nullptr);
 
         using OnWindowRemovedT = void (*)(GtkApplication *, GtkWindow *, gpointer);
         OnWindowRemovedT on_window_removed = [](auto *app, auto *, gpointer) {
@@ -64,9 +66,9 @@ int main(int argc, char* argv[])
                 // TODO: give some hint to quit neovim properly
             }
         };
-        g_signal_connect(app.get(), "window-removed", G_CALLBACK(on_window_removed), nullptr);
+        g_signal_connect(app.g_obj(), "window-removed", G_CALLBACK(on_window_removed), nullptr);
 
-        g_application_run(G_APPLICATION(app.get()), 0, nullptr);
+        app.run(0, nullptr);
     }
     catch (std::exception& e)
     {
