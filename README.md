@@ -22,8 +22,7 @@ Turns out, it's quite easy to code after experiments with [SpyUI](https://github
 The required font DejaVuSansMono.ttf is ubiquitously available in Linux. 
 
 ```
-meson setup BUILD --buildtype=debugoptimized
-meson compile -C BUILD -j0
+./scripts/build.sh
 ```
 
 ### Windows
