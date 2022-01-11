@@ -2,6 +2,8 @@
 
 out_dir=cpp-generated
 
+cd $(dirname ${BASH_SOURCE[0]})/..
+
 virtualenv venv
 source venv/bin/activate
 
