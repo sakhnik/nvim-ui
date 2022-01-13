@@ -3,6 +3,7 @@
 #include "Logger.hpp"
 #include "gir/Owned.hpp"
 #include "Gtk/Application.hpp"
+#include "Gtk/Window.hpp"
 #include <spdlog/cfg/env.h>
 
 #include <uv.h>
@@ -56,8 +57,7 @@ int main(int argc, char* argv[])
         };
         app.on_activate(on_activate);
 
-        using OnWindowRemovedT = void (*)(GtkApplication *, GtkWindow *, gpointer);
-        OnWindowRemovedT on_window_removed = [](auto *app, auto *, gpointer) {
+        auto on_window_removed = [](GtkApplication *app, gir::Gtk::Window) {
             if (session)
             {
                 // Resurrect the window if the session is still active
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
                 // TODO: give some hint to quit neovim properly
             }
         };
-        g_signal_connect(app.g_obj(), "window-removed", G_CALLBACK(on_window_removed), nullptr);
+        app.on_window_removed(on_window_removed);
 
         app.run(0, nullptr);
     }
