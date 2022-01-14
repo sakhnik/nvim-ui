@@ -37,27 +37,32 @@ public:
         ChunkWrapper(const ChunkWrapper &c)
             : Chunk{c}
         {
-            (texture.get()->*inc_ref)(true);
+            if (texture)
+                (texture.get()->*inc_ref)(true);
         }
 
         template <typename ChunkT>
         ChunkWrapper(const ChunkT &c)
             : Chunk{c}
         {
-            (texture.get()->*inc_ref)(true);
+            if (texture)
+                (texture.get()->*inc_ref)(true);
         }
 
         ChunkWrapper& operator=(const ChunkWrapper &o)
         {
-            (texture.get()->*inc_ref)(false);
+            if (texture)
+                (texture.get()->*inc_ref)(false);
             static_cast<Chunk &>(*this) = o;
-            (texture.get()->*inc_ref)(true);
+            if (texture)
+                (texture.get()->*inc_ref)(true);
             return *this;
         }
 
         ~ChunkWrapper()
         {
-            (texture.get()->*inc_ref)(false);
+            if (texture)
+                (texture.get()->*inc_ref)(false);
         }
     };
 

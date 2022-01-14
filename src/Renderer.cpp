@@ -25,6 +25,7 @@ Renderer::~Renderer()
 
 void Renderer::SetWindow(IWindow *window)
 {
+    auto lock = Lock();
     _window = window;
 }
 
