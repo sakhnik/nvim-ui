@@ -6,6 +6,7 @@
 #include "GGrid.hpp"
 #include "IWindowHandler.hpp"
 #include "GCallbackAdaptor.hpp"
+#include "Gtk/Application.hpp"
 #include <string>
 #include <memory>
 #include <gtk/gtk.h>
@@ -17,7 +18,7 @@ class GWindow
     , private GCallbackAdaptor<GWindow>
 {
 public:
-    GWindow(GtkApplication *, Session::PtrT &session);
+    GWindow(const gir::Gtk::Application &, Session::PtrT &session);
     ~GWindow();
 
     BaseTexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) override;
@@ -28,7 +29,7 @@ public:
     void SetError(const char *error) override;
 
 private:
-    GtkApplication *_app;
+    gir::Gtk::Application _app;
     Session::PtrT &_session;
 
     PtrT<GtkBuilder> _builder = NullPtr<GtkBuilder>([](auto *b) { g_object_unref(b); });

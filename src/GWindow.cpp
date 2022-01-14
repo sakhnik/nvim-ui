@@ -4,13 +4,14 @@
 #include "Renderer.hpp"
 #include "SessionSpawn.hpp"
 #include "SessionTcp.hpp"
+#include "Gtk/Window.hpp"
 
 #include <iterator>
 #include <msgpack/v1/unpack.hpp>
 #include <sstream>
 #include <spdlog/fmt/fmt.h>
 
-GWindow::GWindow(GtkApplication *app, Session::PtrT &session)
+GWindow::GWindow(const gir::Gtk::Application &app, Session::PtrT &session)
     : _app{app}
     , _session{session}
 {
@@ -54,7 +55,8 @@ GWindow::~GWindow()
 void GWindow::_SetupWindow()
 {
     _window = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "main_window"));
-    gtk_window_set_application(GTK_WINDOW(_window), _app);
+    gir::Gtk::Window wnd{reinterpret_cast<GObject *>(_window)};
+    wnd.set_application(_app);
     if (_session)
         gtk_window_set_deletable(GTK_WINDOW(_window), false);
 
@@ -108,9 +110,10 @@ void GWindow::_SetupWindowSignals()
         }
         else
         {
-            g_application_quit(G_APPLICATION(w->_app));
+            w->_app.quit();
         }
-        gtk_application_remove_window(w->_app, GTK_WINDOW(w->_window));
+        gir::Gtk::Window wnd{reinterpret_cast<GObject *>(w->_window)};
+        w->_app.remove_window(wnd);
         gtk_window_close(GTK_WINDOW(w->_window));
         return FALSE;
     };

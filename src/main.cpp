@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
             {
                 error = ex.what();
             }
-            window.reset(new GWindow{GTK_APPLICATION(app.g_obj()), session});
+            window.reset(new GWindow{gir::Gtk::Application{app.g_obj()}, session});
             if (session)
             {
                 window->SetError(nullptr);
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
             if (session)
             {
                 // Resurrect the window if the session is still active
-                window.reset(new GWindow{GTK_APPLICATION(app.g_obj()), session});
+                window.reset(new GWindow{app, session});
                 session->SetWindow(window.get());
                 // TODO: give some hint to quit neovim properly
             }
