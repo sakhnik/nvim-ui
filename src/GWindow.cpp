@@ -5,6 +5,9 @@
 #include "SessionSpawn.hpp"
 #include "SessionTcp.hpp"
 #include "Gtk/Window.hpp"
+#include "Gtk/ShortcutController.hpp"
+#include "Gtk/ShortcutScope.hpp"
+#include "Gtk/ApplicationWindow.hpp"
 
 #include <iterator>
 #include <msgpack/v1/unpack.hpp>
@@ -32,7 +35,7 @@ GWindow::GWindow(const gir::Gtk::Application &app, Session::PtrT &session)
 
     _SetupStatusLabel();
 
-    gtk_widget_show(_window);
+    _window.show();
 
     _SetupWindowSignals();
 
@@ -49,34 +52,33 @@ GWindow::GWindow(const gir::Gtk::Application &app, Session::PtrT &session)
 
 GWindow::~GWindow()
 {
-    gtk_window_destroy(GTK_WINDOW(_window));
+    _window.destroy();
 }
 
 void GWindow::_SetupWindow()
 {
-    _window = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "main_window"));
-    gir::Gtk::Window wnd{reinterpret_cast<GObject *>(_window)};
-    wnd.set_application(_app);
+    _window = gir::Gtk::Window{gtk_builder_get_object(_builder.get(), "main_window")};
+    _window.set_application(_app);
     if (_session)
-        gtk_window_set_deletable(GTK_WINDOW(_window), false);
+        _window.set_deletable(false);
 
     const GActionEntry actions[] = {
         { "spawn", MakeCallback<&GWindow::_OnSpawnAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "connect", MakeCallback<&GWindow::_OnConnectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "quit", MakeCallback<&GWindow::_OnQuitAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
     };
-    g_action_map_add_action_entries(G_ACTION_MAP(_window), actions, G_N_ELEMENTS(actions), this);
+    g_action_map_add_action_entries(G_ACTION_MAP(_window.g_obj()), actions, G_N_ELEMENTS(actions), this);
 
-    GtkEventController *controller = gtk_shortcut_controller_new();
-    gtk_shortcut_controller_set_scope(GTK_SHORTCUT_CONTROLLER(controller), GTK_SHORTCUT_SCOPE_GLOBAL);
-    gtk_widget_add_controller(_window, controller);
-    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller),
+    auto controller = gir::Gtk::ShortcutController::new_();
+    static_cast<gir::Gtk::ShortcutController &>(controller).set_scope(GTK_SHORTCUT_SCOPE_GLOBAL);
+    _window.add_controller(controller);
+    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller.g_obj()),
             gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_n, GDK_CONTROL_MASK),
                              gtk_named_action_new("win.spawn")));
-    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller),
+    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller.g_obj()),
             gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_t, GDK_CONTROL_MASK),
                              gtk_named_action_new("win.connect")));
-    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller),
+    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller.g_obj()),
             gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_q, GDK_CONTROL_MASK),
                              gtk_named_action_new("win.quit")));
 
@@ -91,33 +93,21 @@ void GWindow::_SetupWindowSignals()
         return FALSE;
     };
 
-    g_signal_connect(_window, "notify::default-width", G_CALLBACK(sizeChanged), this);
-    g_signal_connect(_window, "notify::default-height", G_CALLBACK(sizeChanged), this);
+    g_signal_connect(_window.g_obj(), "notify::default-width", G_CALLBACK(sizeChanged), this);
+    g_signal_connect(_window.g_obj(), "notify::default-height", G_CALLBACK(sizeChanged), this);
 
-    using OnShowT = void (*)(GtkWidget *, gpointer);
-    OnShowT onShow = [](auto *, gpointer data) {
-        reinterpret_cast<GWindow *>(data)->CheckSizeAsync();
-    };
-    g_signal_connect(_window, "show", G_CALLBACK(onShow), this);
+    _window.on_show([this](auto) { CheckSizeAsync(); });
 
-    using OnCloseT = gboolean (*)(GWindow *, gpointer);
-    OnCloseT on_close = [](auto *, gpointer data) {
+    _window.on_close_request([this](auto) {
         Logger().info("GWindow close request");
-        GWindow *w = reinterpret_cast<GWindow *>(data);
-        if (w->_session)
-        {
-            w->_session->SetWindow(nullptr);
-        }
+        if (_session)
+            _session->SetWindow(nullptr);
         else
-        {
-            w->_app.quit();
-        }
-        gir::Gtk::Window wnd{reinterpret_cast<GObject *>(w->_window)};
-        w->_app.remove_window(wnd);
-        gtk_window_close(GTK_WINDOW(w->_window));
-        return FALSE;
-    };
-    g_signal_connect(_window, "close-request", G_CALLBACK(on_close), this);
+            _app.quit();
+        _app.remove_window(_window);
+        _window.close();
+        return false;
+    });
 }
 
 void GWindow::_SetupStatusLabel()
@@ -171,7 +161,7 @@ void GWindow::_SessionEnd()
     Logger().info("Session end");
     _grid->Clear();
 
-    gtk_window_set_deletable(GTK_WINDOW(_window), true);
+    _window.set_deletable(true);
 
     GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "status"));
     if (_session && !_session->GetOutput().empty())
@@ -194,19 +184,21 @@ void GWindow::SetError(const char *error)
         title += " - ";
         title += error;
     }
-    gtk_window_set_title(GTK_WINDOW(_window), title.c_str());
+    _window.set_title(title.c_str());
 }
 
 void GWindow::MenuBarToggle()
 {
     // Toggle the menubar
-    bool is_menu_visible = gtk_application_window_get_show_menubar(GTK_APPLICATION_WINDOW(_window));
-    gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(_window), !is_menu_visible);
+    auto &app_window = static_cast<gir::Gtk::ApplicationWindow &>(_window);
+    bool is_menu_visible = app_window.get_show_menubar();
+    app_window.set_show_menubar(!is_menu_visible);
 }
 
 void GWindow::MenuBarHide()
 {
-    gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(_window), false);
+    auto &app_window = static_cast<gir::Gtk::ApplicationWindow &>(_window);
+    app_window.set_show_menubar(false);
 }
 
 void GWindow::_UpdateActions()
@@ -219,16 +211,16 @@ void GWindow::_UpdateActions()
 
 void GWindow::_EnableAction(const char *name, bool enable)
 {
-    GAction *a = g_action_map_lookup_action(G_ACTION_MAP(_window), name);
+    GAction *a = g_action_map_lookup_action(G_ACTION_MAP(_window.g_obj()), name);
     g_simple_action_set_enabled(G_SIMPLE_ACTION(a), enable);
 }
 
 void GWindow::_OnQuitAction(GSimpleAction *, GVariant *)
 {
     Logger().info("Bye!");
-    GtkApplication *app = gtk_window_get_application(GTK_WINDOW(_window));
-    gtk_window_destroy(GTK_WINDOW(_window));
-    g_application_quit(G_APPLICATION(app));
+    auto app = _window.get_application();
+    _window.destroy();
+    app.quit();
 }
 
 void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
@@ -267,7 +259,7 @@ void GWindow::_OnConnectAction(GSimpleAction *, GVariant *)
         .wnd = this,
     };
     GtkWidget *dlg = GTK_WIDGET(gtk_builder_get_object(ctx->builder.get(), "connect_dlg"));
-    gtk_window_set_transient_for(GTK_WINDOW(dlg), GTK_WINDOW(_window));
+    _window.set_transient_for(gir::Gtk::Window{reinterpret_cast<GObject *>(dlg)});
 
     // TODO: generalize this technique
     using OnResponseT = void(*)(GtkDialog *, gint response, gpointer);

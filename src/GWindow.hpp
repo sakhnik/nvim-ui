@@ -7,6 +7,7 @@
 #include "IWindowHandler.hpp"
 #include "GCallbackAdaptor.hpp"
 #include "Gtk/Application.hpp"
+#include "Gtk/Window.hpp"
 #include <string>
 #include <memory>
 #include <gtk/gtk.h>
@@ -33,7 +34,7 @@ private:
     Session::PtrT &_session;
 
     PtrT<GtkBuilder> _builder = NullPtr<GtkBuilder>([](auto *b) { g_object_unref(b); });
-    GtkWidget *_window;
+    gir::Gtk::Window _window;
     GtkWidget *_scroll;
     std::unique_ptr<GGrid> _grid;
 
