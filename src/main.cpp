@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
         auto app = gir::MakeOwned(gir::Gtk::Application::new_("org.nvim-ui", G_APPLICATION_FLAGS_NONE));
         app.set_resource_base_path("/org/nvim-ui");
 
-        auto on_activate = [](gir::Gio::Application app) {
+        auto on_activate = [](gir::Gtk::Application app) {
             std::string error;
             try
             {
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
             {
                 error = ex.what();
             }
-            window.reset(new GWindow{gir::Gtk::Application{app.g_obj()}, session});
+            window.reset(new GWindow{app.g_obj(), session});
             if (session)
             {
                 window->SetError(nullptr);
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
                 window->SetError(error.data());
             }
         };
-        app.on_activate(on_activate);
+        app.on_activate(app.get(), on_activate);
 
         auto on_window_removed = [](gir::Gtk::Application app, gir::Gtk::Window) {
             if (session)
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
                 // TODO: give some hint to quit neovim properly
             }
         };
-        app.on_window_removed(on_window_removed);
+        app.on_window_removed(app.get(), on_window_removed);
 
         app.run(0, nullptr);
     }

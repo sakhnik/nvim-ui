@@ -96,9 +96,9 @@ void GWindow::_SetupWindowSignals()
     g_signal_connect(_window.g_obj(), "notify::default-width", G_CALLBACK(sizeChanged), this);
     g_signal_connect(_window.g_obj(), "notify::default-height", G_CALLBACK(sizeChanged), this);
 
-    _window.on_show([this](auto) { CheckSizeAsync(); });
+    _window.on_show(_window, [this](auto) { CheckSizeAsync(); });
 
-    _window.on_close_request([this](auto) {
+    _window.on_close_request(_window, [this](auto) -> gboolean {
         Logger().info("GWindow close request");
         if (_session)
             _session->SetWindow(nullptr);
