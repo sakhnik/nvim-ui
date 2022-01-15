@@ -14,7 +14,7 @@
 #include <sstream>
 #include <spdlog/fmt/fmt.h>
 
-GWindow::GWindow(const gir::Gtk::Application &app, Session::PtrT &session)
+GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
     : _app{app}
     , _session{session}
 {
@@ -57,7 +57,7 @@ GWindow::~GWindow()
 
 void GWindow::_SetupWindow()
 {
-    _window = gir::Gtk::Window{gtk_builder_get_object(_builder.get(), "main_window")};
+    _window = Gtk::Window{gtk_builder_get_object(_builder.get(), "main_window")};
     _window.set_application(_app);
     if (_session)
         _window.set_deletable(false);
@@ -69,8 +69,8 @@ void GWindow::_SetupWindow()
     };
     g_action_map_add_action_entries(G_ACTION_MAP(_window.g_obj()), actions, G_N_ELEMENTS(actions), this);
 
-    auto controller = gir::Gtk::ShortcutController::new_();
-    static_cast<gir::Gtk::ShortcutController &>(controller).set_scope(GTK_SHORTCUT_SCOPE_GLOBAL);
+    auto controller = Gtk::ShortcutController::new_();
+    static_cast<Gtk::ShortcutController &>(controller).set_scope(GTK_SHORTCUT_SCOPE_GLOBAL);
     _window.add_controller(controller);
     gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller.g_obj()),
             gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_n, GDK_CONTROL_MASK),
@@ -190,14 +190,14 @@ void GWindow::SetError(const char *error)
 void GWindow::MenuBarToggle()
 {
     // Toggle the menubar
-    auto &app_window = static_cast<gir::Gtk::ApplicationWindow &>(_window);
+    auto &app_window = static_cast<Gtk::ApplicationWindow &>(_window);
     bool is_menu_visible = app_window.get_show_menubar();
     app_window.set_show_menubar(!is_menu_visible);
 }
 
 void GWindow::MenuBarHide()
 {
-    auto &app_window = static_cast<gir::Gtk::ApplicationWindow &>(_window);
+    auto &app_window = static_cast<Gtk::ApplicationWindow &>(_window);
     app_window.set_show_menubar(false);
 }
 
@@ -259,7 +259,7 @@ void GWindow::_OnConnectAction(GSimpleAction *, GVariant *)
         .wnd = this,
     };
     GtkWidget *dlg = GTK_WIDGET(gtk_builder_get_object(ctx->builder.get(), "connect_dlg"));
-    _window.set_transient_for(gir::Gtk::Window{reinterpret_cast<GObject *>(dlg)});
+    _window.set_transient_for(Gtk::Window{reinterpret_cast<GObject *>(dlg)});
 
     // TODO: generalize this technique
     using OnResponseT = void(*)(GtkDialog *, gint response, gpointer);

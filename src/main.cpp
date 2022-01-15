@@ -8,6 +8,8 @@
 
 #include <uv.h>
 
+namespace Gtk = gir::Gtk;
+
 namespace {
 
     Session::PtrT session;
@@ -29,10 +31,10 @@ int main(int argc, char* argv[])
     Logger().info("nvim-ui v{}", VERSION);
     try
     {
-        auto app = gir::MakeOwned(gir::Gtk::Application::new_("org.nvim-ui", G_APPLICATION_FLAGS_NONE));
+        auto app = gir::MakeOwned(Gtk::Application::new_("org.nvim-ui", G_APPLICATION_FLAGS_NONE));
         app.set_resource_base_path("/org/nvim-ui");
 
-        auto on_activate = [](gir::Gtk::Application app) {
+        auto on_activate = [](Gtk::Application app) {
             std::string error;
             try
             {
@@ -57,7 +59,7 @@ int main(int argc, char* argv[])
         };
         app.on_activate(app.get(), on_activate);
 
-        auto on_window_removed = [](gir::Gtk::Application app, gir::Gtk::Window) {
+        auto on_window_removed = [](Gtk::Application app, Gtk::Window) {
             if (session)
             {
                 // Resurrect the window if the session is still active

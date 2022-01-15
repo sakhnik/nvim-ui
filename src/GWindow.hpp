@@ -13,13 +13,15 @@
 #include <gtk/gtk.h>
 
 
+namespace Gtk = gir::Gtk;
+
 class GWindow
     : public IWindow
     , public IWindowHandler
     , private GCallbackAdaptor<GWindow>
 {
 public:
-    GWindow(const gir::Gtk::Application &, Session::PtrT &session);
+    GWindow(const Gtk::Application &, Session::PtrT &session);
     ~GWindow();
 
     BaseTexture::PtrT CreateTexture(int width, std::string_view text, const HlAttr &, const HlAttr &def_attr) override;
@@ -30,11 +32,11 @@ public:
     void SetError(const char *error) override;
 
 private:
-    gir::Gtk::Application _app;
+    Gtk::Application _app;
     Session::PtrT &_session;
 
     PtrT<GtkBuilder> _builder = NullPtr<GtkBuilder>([](auto *b) { g_object_unref(b); });
-    gir::Gtk::Window _window;
+    Gtk::Window _window;
     GtkWidget *_scroll;
     std::unique_ptr<GGrid> _grid;
 
