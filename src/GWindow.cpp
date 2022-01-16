@@ -8,6 +8,9 @@
 #include "Gtk/ShortcutController.hpp"
 #include "Gtk/ShortcutScope.hpp"
 #include "Gtk/ApplicationWindow.hpp"
+#include "Gtk/Label.hpp"
+#include "Gtk/StyleContext.hpp"
+#include "Gtk/StyleProvider.hpp"
 
 #include <iterator>
 #include <msgpack/v1/unpack.hpp>
@@ -17,21 +20,20 @@
 GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
     : _app{app}
     , _session{session}
+    , _builder{Gtk::Builder::new_from_resource("/org/nvim-ui/gtk/main.ui")}
 {
     GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
     gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
 
-    _builder.reset(gtk_builder_new_from_resource("/org/nvim-ui/gtk/main.ui"));
-
     _SetupWindow();
 
     // Grid
-    GtkWidget *grid = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "grid"));
+    GtkWidget *grid = GTK_WIDGET(_builder.get_object("grid").g_obj());
     _grid.reset(new GGrid(grid, _session, this));
 
     // GTK wouldn't allow shrinking the window if there are widgets
     // placed in the grid. So the scroll view is required.
-    _scroll = Gtk::Widget{gtk_builder_get_object(_builder.get(), "scrolled_window")};
+    _scroll = Gtk::Widget{_builder.get_object("scrolled_window").g_obj()};
 
     _SetupStatusLabel();
 
@@ -57,7 +59,7 @@ GWindow::~GWindow()
 
 void GWindow::_SetupWindow()
 {
-    _window = Gtk::Window{gtk_builder_get_object(_builder.get(), "main_window")};
+    _window = Gtk::Window{_builder.get_object("main_window").g_obj()};
     _window.set_application(_app);
     if (_session)
         _window.set_deletable(false);
@@ -112,12 +114,11 @@ void GWindow::_SetupWindowSignals()
 
 void GWindow::_SetupStatusLabel()
 {
-    GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "status"));
-    gtk_style_context_add_provider(
-            gtk_widget_get_style_context(status_label),
-            GTK_STYLE_PROVIDER(_grid->GetStyle()),
+    Gtk::Label status_label{_builder.get_object("status").g_obj()};
+    status_label.get_style_context().add_provider(
+            reinterpret_cast<::GObject *>(_grid->GetStyle()),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    gtk_widget_set_visible(status_label, false);
+    status_label.set_visible(false);
 }
 
 void GWindow::CheckSizeAsync()
@@ -163,11 +164,11 @@ void GWindow::_SessionEnd()
 
     _window.set_deletable(true);
 
-    GtkWidget *status_label = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "status"));
+    Gtk::Label status_label{_builder.get_object("status").g_obj()};
     if (_session && !_session->GetOutput().empty())
     {
-        gtk_widget_set_visible(status_label, true);
-        gtk_label_set_text(GTK_LABEL(status_label), _session->GetOutput().c_str());
+        status_label.set_text(_session->GetOutput().c_str());
+        status_label.set_visible(true);
     }
     _session.reset();
 

@@ -8,6 +8,8 @@
 #include "GCallbackAdaptor.hpp"
 #include "Gtk/Application.hpp"
 #include "Gtk/Window.hpp"
+#include "Gtk/Builder.hpp"
+#include "gir/Owned.hpp"
 #include <string>
 #include <memory>
 #include <gtk/gtk.h>
@@ -35,7 +37,7 @@ private:
     Gtk::Application _app;
     Session::PtrT &_session;
 
-    PtrT<GtkBuilder> _builder = NullPtr<GtkBuilder>([](auto *b) { g_object_unref(b); });
+    gir::Owned<Gtk::Builder> _builder;
     Gtk::Window _window;
     Gtk::Widget _scroll;
     std::unique_ptr<GGrid> _grid;
