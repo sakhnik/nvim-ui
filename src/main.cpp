@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
             {
                 error = ex.what();
             }
-            window.reset(new GWindow{app.g_obj(), session});
+            window.reset(new GWindow{app, session});
             if (session)
             {
                 window->SetError(nullptr);

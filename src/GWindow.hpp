@@ -37,7 +37,7 @@ private:
 
     PtrT<GtkBuilder> _builder = NullPtr<GtkBuilder>([](auto *b) { g_object_unref(b); });
     Gtk::Window _window;
-    GtkWidget *_scroll;
+    Gtk::Widget _scroll;
     std::unique_ptr<GGrid> _grid;
 
     void _SetupWindow();

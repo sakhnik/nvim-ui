@@ -31,7 +31,7 @@ GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
 
     // GTK wouldn't allow shrinking the window if there are widgets
     // placed in the grid. So the scroll view is required.
-    _scroll = GTK_WIDGET(gtk_builder_get_object(_builder.get(), "scrolled_window"));
+    _scroll = Gtk::Widget{gtk_builder_get_object(_builder.get(), "scrolled_window")};
 
     _SetupStatusLabel();
 
@@ -127,8 +127,8 @@ void GWindow::CheckSizeAsync()
 
 void GWindow::_CheckSize()
 {
-    int width = gtk_widget_get_allocated_width(_scroll);
-    int height = gtk_widget_get_allocated_height(_scroll);
+    int width = _scroll.get_allocated_width();
+    int height = _scroll.get_allocated_height();
     _grid->CheckSize(width, height);
 }
 
@@ -146,8 +146,8 @@ void GWindow::Present(uint32_t token)
 
 void GWindow::_Present(uint32_t token)
 {
-    int width = gtk_widget_get_allocated_width(_scroll);
-    int height = gtk_widget_get_allocated_height(_scroll);
+    int width = _scroll.get_allocated_width();
+    int height = _scroll.get_allocated_height();
     _grid->Present(width, height, token);
 }
 
