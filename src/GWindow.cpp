@@ -11,6 +11,9 @@
 #include "Gtk/Label.hpp"
 #include "Gtk/StyleContext.hpp"
 #include "Gtk/StyleProvider.hpp"
+#include "Gtk/Shortcut.hpp"
+#include "Gtk/KeyvalTrigger.hpp"
+#include "Gtk/NamedAction.hpp"
 
 #include <iterator>
 #include <msgpack/v1/unpack.hpp>
@@ -72,17 +75,19 @@ void GWindow::_SetupWindow()
     g_action_map_add_action_entries(G_ACTION_MAP(_window.g_obj()), actions, G_N_ELEMENTS(actions), this);
 
     auto controller = Gtk::ShortcutController::new_();
-    static_cast<Gtk::ShortcutController &>(controller).set_scope(GTK_SHORTCUT_SCOPE_GLOBAL);
-    _window.add_controller(controller);
-    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller.g_obj()),
-            gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_n, GDK_CONTROL_MASK),
-                             gtk_named_action_new("win.spawn")));
-    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller.g_obj()),
-            gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_t, GDK_CONTROL_MASK),
-                             gtk_named_action_new("win.connect")));
-    gtk_shortcut_controller_add_shortcut(GTK_SHORTCUT_CONTROLLER(controller.g_obj()),
-            gtk_shortcut_new(gtk_keyval_trigger_new(GDK_KEY_q, GDK_CONTROL_MASK),
-                             gtk_named_action_new("win.quit")));
+    auto &shortcut_controller = static_cast<Gtk::ShortcutController &>(controller);
+    shortcut_controller.set_scope(GTK_SHORTCUT_SCOPE_GLOBAL);
+    _window.add_controller(shortcut_controller);
+
+    shortcut_controller.add_shortcut(Gtk::Shortcut::new_(
+            Gtk::KeyvalTrigger::new_(GDK_KEY_n, GDK_CONTROL_MASK),
+            Gtk::NamedAction::new_("win.spawn")));
+    shortcut_controller.add_shortcut(Gtk::Shortcut::new_(
+            Gtk::KeyvalTrigger::new_(GDK_KEY_t, GDK_CONTROL_MASK),
+            Gtk::NamedAction::new_("win.connect")));
+    shortcut_controller.add_shortcut(Gtk::Shortcut::new_(
+            Gtk::KeyvalTrigger::new_(GDK_KEY_q, GDK_CONTROL_MASK),
+            Gtk::NamedAction::new_("win.quit")));
 
     _UpdateActions();
 }
