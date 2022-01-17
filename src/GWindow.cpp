@@ -76,7 +76,7 @@ void GWindow::_SetupWindow()
 
     auto controller = Gtk::ShortcutController::new_();
     auto &shortcut_controller = static_cast<Gtk::ShortcutController &>(controller);
-    shortcut_controller.set_scope(GTK_SHORTCUT_SCOPE_GLOBAL);
+    shortcut_controller.set_scope(Gtk::ShortcutScope::global);
     _window.add_controller(shortcut_controller);
 
     shortcut_controller.add_shortcut(Gtk::Shortcut::new_(
