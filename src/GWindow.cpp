@@ -4,16 +4,19 @@
 #include "Renderer.hpp"
 #include "SessionSpawn.hpp"
 #include "SessionTcp.hpp"
-#include "Gtk/Window.hpp"
+#include "Gtk/ApplicationWindow.hpp"
+#include "Gtk/Dialog.hpp"
+#include "Gtk/Entry.hpp"
+#include "Gtk/KeyvalTrigger.hpp"
+#include "Gtk/Label.hpp"
+#include "Gtk/NamedAction.hpp"
+#include "Gtk/ResponseType.hpp"
+#include "Gtk/Shortcut.hpp"
 #include "Gtk/ShortcutController.hpp"
 #include "Gtk/ShortcutScope.hpp"
-#include "Gtk/ApplicationWindow.hpp"
-#include "Gtk/Label.hpp"
 #include "Gtk/StyleContext.hpp"
 #include "Gtk/StyleProvider.hpp"
-#include "Gtk/Shortcut.hpp"
-#include "Gtk/KeyvalTrigger.hpp"
-#include "Gtk/NamedAction.hpp"
+#include "Gtk/Window.hpp"
 
 #include <iterator>
 #include <msgpack/v1/unpack.hpp>
@@ -247,48 +250,31 @@ void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
     _UpdateActions();
 }
 
-namespace {
-
-struct ConnectCtx
-{
-    PtrT<GtkBuilder> builder;
-    GWindow *wnd{};
-};
-
-} //namespace;
-
 void GWindow::_OnConnectAction(GSimpleAction *, GVariant *)
 {
-    ConnectCtx *ctx = new ConnectCtx{
-        .builder{gtk_builder_new_from_resource("/org/nvim-ui/gtk/connect-dlg.ui"),
-                 [](auto *b) { g_object_unref(b); }},
-        .wnd = this,
-    };
-    GtkWidget *dlg = GTK_WIDGET(gtk_builder_get_object(ctx->builder.get(), "connect_dlg"));
-    _window.set_transient_for(Gtk::Window{reinterpret_cast<GObject *>(dlg)});
+    auto builder = Gtk::Builder::new_from_resource("/org/nvim-ui/gtk/connect-dlg.ui");
+    Gtk::Dialog dlg{builder.get_object("connect_dlg").g_obj()};
+    dlg.set_transient_for(_window);
 
-    // TODO: generalize this technique
-    using OnResponseT = void(*)(GtkDialog *, gint response, gpointer);
-    OnResponseT on_response = [](GtkDialog *dlg, gint response, gpointer data) {
-        ConnectCtx *ctx = reinterpret_cast<ConnectCtx *>(data);
-        ctx->wnd->_OnConnectDlgResponse(dlg, response, ctx->builder.get());
-        delete ctx;
-    };
-
-    g_signal_connect(dlg, "response", G_CALLBACK(on_response), ctx);
-    gtk_widget_show(dlg);
+    // TODO: Simplify capturing the builder
+    dlg.on_response(dlg, [this, builder](Gtk::Dialog dlg, gint response) {
+        Gtk::Builder b{builder.g_obj()};
+        _OnConnectDlgResponse(dlg, response, b);
+        b.unref();
+    });
+    dlg.show();
 }
 
-void GWindow::_OnConnectDlgResponse(GtkDialog *dlg, gint response, GtkBuilder *builder)
+void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builder &builder)
 {
-    gtk_window_destroy(GTK_WINDOW(dlg));
-    if (GTK_RESPONSE_OK != response)
+    dlg.destroy();
+    if (Gtk::ResponseType::ok != response)
         return;
-    GtkEntry *address_entry = GTK_ENTRY(gtk_builder_get_object(builder, "address_entry"));
-    GtkEntry *port_entry = GTK_ENTRY(gtk_builder_get_object(builder, "port_entry"));
+    Gtk::Entry address_entry{builder.get_object("address_entry").g_obj()};
+    Gtk::Entry port_entry{builder.get_object("port_entry").g_obj()};
 
-    const char *address = gtk_editable_get_text(GTK_EDITABLE(address_entry));
-    int port = std::stoi(gtk_editable_get_text(GTK_EDITABLE(port_entry)));
+    const char *address = address_entry.get_text();
+    int port = std::stoi(port_entry.get_text());
     Logger().info("Connect to {}:{}", address, port);
 
     try

@@ -17,6 +17,10 @@
 
 namespace Gtk = gir::Gtk;
 
+namespace gir { namespace Gtk {
+class Dialog;
+}}
+
 class GWindow
     : public IWindow
     , public IWindowHandler
@@ -60,7 +64,7 @@ private:
     void _OnQuitAction(GSimpleAction *, GVariant *);
     void _OnSpawnAction(GSimpleAction *, GVariant *);
     void _OnConnectAction(GSimpleAction *, GVariant *);
-    void _OnConnectDlgResponse(GtkDialog *, gint response, GtkBuilder *);
+    void _OnConnectDlgResponse(Gtk::Dialog &, gint response, Gtk::Builder &);
 
 
     // A generic async pass to the Gtk thread.
