@@ -4,8 +4,13 @@
 #include "IWindowHandler.hpp"
 
 #include "Gtk/StyleContext.hpp"
+#include "Gtk/EventController.hpp"
+#include "Gtk/EventControllerKey.hpp"
+#include "Gtk/PropagationPhase.hpp"
 
 #include <sstream>
+
+namespace Gdk = gir::Gdk;
 
 GGrid::GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *window_handler)
     : _grid{grid}
@@ -23,22 +28,15 @@ GGrid::GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *window_han
     GtkWidget *cursor = gtk_drawing_area_new();
     _cursor.reset(new GCursor{cursor, this, _session});
 
-    GtkEventController *controller = gtk_event_controller_key_new();
-    gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_CAPTURE);
-    using OnKeyPressedT = gboolean (*)(GtkEventControllerKey *,
-                                       guint                  keyval,
-                                       guint                  keycode,
-                                       GdkModifierType        state,
-                                       gpointer               data);
-    OnKeyPressedT onKeyPressed = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
-        return reinterpret_cast<GGrid *>(data)->_OnKeyPressed(keyval, keycode, state);
-    };
-    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-pressed", G_CALLBACK(onKeyPressed), this);
-    OnKeyPressedT onKeyReleased = [](auto *, guint keyval, guint keycode, GdkModifierType state, gpointer data) {
-        return reinterpret_cast<GGrid *>(data)->_OnKeyReleased(keyval, keycode, state);
-    };
-    g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-released", G_CALLBACK(onKeyReleased), this);
-    gtk_widget_add_controller(GTK_WIDGET(grid.g_obj()), controller);
+    Gtk::EventControllerKey controller = Gtk::EventControllerKey::new_().g_obj();
+    controller.set_propagation_phase(Gtk::PropagationPhase::capture);
+    controller.on_key_pressed(controller, [this](Gtk::EventControllerKey, guint keyval, guint keycode, Gdk::ModifierType state) -> gboolean {
+        return _OnKeyPressed(keyval, keycode, state);
+    });
+    controller.on_key_released(controller, [this](Gtk::EventControllerKey, guint keyval, guint keycode, Gdk::ModifierType state) {
+        _OnKeyReleased(keyval, keycode, state);
+    });
+    grid.add_controller(controller);
 }
 
 void GGrid::MeasureCell()
@@ -305,13 +303,12 @@ gboolean GGrid::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType s
     return true;
 }
 
-gboolean GGrid::_OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType /*state*/)
+void GGrid::_OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType /*state*/)
 {
     if (_alt_pending && keyval == GDK_KEY_Alt_L)
     {
         _window_handler->MenuBarToggle();
     }
-    return true;
 }
 
 void GGrid::_CheckSize(int width, int height)

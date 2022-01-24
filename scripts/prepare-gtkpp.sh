@@ -32,6 +32,10 @@ config.include = re.compile(r"""^(
         Gio::
         |
         Gio::Application.*
+        |
+        Gdk::
+        |
+        Gdk::ModifierType.*
         )$""", re.VERBOSE)
 config.ignore = re.compile(r"""^(
         Gtk::Print.*
