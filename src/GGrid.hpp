@@ -5,16 +5,20 @@
 #include "Utils.hpp"
 #include "GCursor.hpp"
 #include "GPointer.hpp"
+
+#include "Gtk/Fixed.hpp"
+#include "Gtk/Label.hpp"
+
 #include <vector>
 #include <functional>
-#include <gtk/gtk.h>
 
+namespace Gtk = gir::Gtk;
 struct IWindowHandler;
 
 class GGrid
 {
 public:
-    GGrid(GtkWidget *grid, Session::PtrT &session, IWindowHandler *);
+    GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *);
 
     GtkStyleProvider* GetStyle() const
     {
@@ -30,7 +34,7 @@ public:
     struct Texture : BaseTexture
     {
         // Non-owning
-        GtkWidget *widget = nullptr;
+        Gtk::Label label;
     };
 
     double CalcX(int col) const
@@ -43,10 +47,10 @@ public:
         return row * _cell_height;
     }
 
-    GtkFixed* GetFixed() const { return GTK_FIXED(_grid); }
+    Gtk::Fixed GetFixed() const { return _grid; }
 
 private:
-    GtkWidget *_grid;
+    Gtk::Fixed _grid;
     Session::PtrT &_session;
     IWindowHandler *_window_handler;
     PtrT<GtkCssProvider> _css_provider = NullPtr<GtkCssProvider>([](auto *p) { g_object_unref(p); });

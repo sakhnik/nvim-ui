@@ -7,6 +7,7 @@
 #include "Gtk/ApplicationWindow.hpp"
 #include "Gtk/Dialog.hpp"
 #include "Gtk/Entry.hpp"
+#include "Gtk/Fixed.hpp"
 #include "Gtk/KeyvalTrigger.hpp"
 #include "Gtk/Label.hpp"
 #include "Gtk/NamedAction.hpp"
@@ -34,7 +35,7 @@ GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
     _SetupWindow();
 
     // Grid
-    GtkWidget *grid = GTK_WIDGET(_builder.get_object("grid").g_obj());
+    Gtk::Fixed grid{_builder.get_object("grid").g_obj()};
     _grid.reset(new GGrid(grid, _session, this));
 
     // GTK wouldn't allow shrinking the window if there are widgets

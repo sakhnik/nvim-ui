@@ -2,18 +2,21 @@
 #include "Logger.hpp"
 #include "Renderer.hpp"
 #include "IWindowHandler.hpp"
+
+#include "Gtk/StyleContext.hpp"
+
 #include <sstream>
 
-GGrid::GGrid(GtkWidget *grid, Session::PtrT &session, IWindowHandler *window_handler)
+GGrid::GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *window_handler)
     : _grid{grid}
     , _session{session}
     , _window_handler{window_handler}
 {
-    gtk_widget_set_focusable(_grid, true);
+    _grid.set_focusable(true);
 
     _css_provider.reset(gtk_css_provider_new());
     gtk_style_context_add_provider(
-            gtk_widget_get_style_context(_grid),
+            GTK_STYLE_CONTEXT(_grid.get_style_context().g_obj()),
             GTK_STYLE_PROVIDER(_css_provider.get()),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
@@ -35,7 +38,7 @@ GGrid::GGrid(GtkWidget *grid, Session::PtrT &session, IWindowHandler *window_han
         return reinterpret_cast<GGrid *>(data)->_OnKeyReleased(keyval, keycode, state);
     };
     g_signal_connect(GTK_EVENT_CONTROLLER_KEY(controller), "key-released", G_CALLBACK(onKeyReleased), this);
-    gtk_widget_add_controller(grid, controller);
+    gtk_widget_add_controller(GTK_WIDGET(grid.g_obj()), controller);
 }
 
 void GGrid::MeasureCell()
@@ -134,23 +137,23 @@ void GGrid::Present(int width, int height, uint32_t token)
         for (auto it = it_visible_end; it != it_alive_end; ++it)
         {
             Texture *texture = static_cast<Texture *>(it->get());
-            if (texture->widget && gtk_widget_get_parent(texture->widget) == _grid)
+            if (texture->label.g_obj() && texture->label.get_parent().g_obj() == _grid.g_obj())
             {
-                g_object_ref(G_OBJECT(texture->widget));
-                gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
+                texture->label.ref();
+                _grid.remove(texture->label);
             }
         }
 
         for (auto it = it_alive_end; it != _textures.end(); ++it)
         {
             Texture *texture = static_cast<Texture *>(it->get());
-            if (texture->widget)
+            if (texture->label.g_obj())
             {
-                if (gtk_widget_get_parent(texture->widget) == _grid)
-                    gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
+                if (texture->label.get_parent().g_obj() == _grid.g_obj())
+                    _grid.remove(texture->label);
                 else
-                    g_object_unref(G_OBJECT(texture->widget));
-                texture->widget = nullptr;
+                    texture->label.unref();
+                texture->label = nullptr;
             }
         }
 
@@ -170,24 +173,24 @@ void GGrid::Present(int width, int height, uint32_t token)
             Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
             int x = texture.col * _cell_width / PANGO_SCALE;
             int y = row * _cell_height;
-            if (!t->widget)
+            if (!t->label.g_obj())
             {
-                t->widget = gtk_label_new(texture.text.c_str());
+                t->label = Gtk::Label::new_(texture.text.c_str()).g_obj();
 
                 gtk_style_context_add_provider(
-                        gtk_widget_get_style_context(t->widget),
+                        gtk_widget_get_style_context(GTK_WIDGET(t->label.g_obj())),
                         GTK_STYLE_PROVIDER(_css_provider.get()),
                         GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
                 std::string class_name = fmt::format("hl{}", texture.hl_id);
-                gtk_widget_add_css_class(t->widget, class_name.data());
+                t->label.add_css_class(class_name.data());
 
-                gtk_fixed_put(GTK_FIXED(_grid), t->widget, x, y);
+                _grid.put(t->label, x, y);
                 _textures.push_back(texture.texture);
             }
 
             if (t->TakeRedrawToken(token) && t->IsVisible())
             {
-                gtk_fixed_move(GTK_FIXED(_grid), t->widget, x, y);
+                _grid.move(t->label, x, y);
             }
         }
     }
@@ -196,7 +199,7 @@ void GGrid::Present(int width, int height, uint32_t token)
     assert(texture_count == visible_texture_count && "Texture count consistency");
 
     _cursor->Move();
-    _pointer.Update(renderer->IsBusy(), _grid);
+    _pointer.Update(renderer->IsBusy(), GTK_WIDGET(_grid.g_obj()));
     _CheckSize(width, height);
 }
 
@@ -205,8 +208,9 @@ void GGrid::Clear()
     for (auto &t : _textures)
     {
         Texture *texture = static_cast<Texture *>(t.get());
-        if (texture->widget)
-            gtk_fixed_remove(GTK_FIXED(_grid), texture->widget);
+        // TODO: Implement relation operators
+        if (texture->label.g_obj())
+            _grid.remove(texture->label);
     }
     _textures.clear();
     _cursor->Hide();
