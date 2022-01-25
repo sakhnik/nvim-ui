@@ -16,14 +16,14 @@ GGrid::GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *window_han
     : _grid{grid}
     , _session{session}
     , _window_handler{window_handler}
+    , _css_provider{Gtk::CssProvider::new_()}
 {
     _grid.set_focusable(true);
 
-    _css_provider.reset(gtk_css_provider_new());
-    gtk_style_context_add_provider(
-            GTK_STYLE_CONTEXT(_grid.get_style_context().g_obj()),
-            GTK_STYLE_PROVIDER(_css_provider.get()),
-            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    _grid.get_style_context().add_provider(
+        _css_provider,
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+        );
 
     GtkWidget *cursor = gtk_drawing_area_new();
     _cursor.reset(new GCursor{cursor, this, _session});
@@ -43,18 +43,18 @@ void GGrid::MeasureCell()
 {
     // Measure cell width and height
     const char *const RULER = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    GtkWidget *ruler = gtk_label_new(RULER);
-    gtk_style_context_add_provider(
-            gtk_widget_get_style_context(ruler),
-            GTK_STYLE_PROVIDER(_css_provider.get()),
-            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    Gtk::Widget ruler{Gtk::Label::new_(RULER)};
+    ruler.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
     int width, height;
-    gtk_widget_measure(ruler, GTK_ORIENTATION_HORIZONTAL, -1, &width, nullptr, nullptr, nullptr);
-    gtk_widget_measure(ruler, GTK_ORIENTATION_VERTICAL, -1, &height, nullptr, nullptr, nullptr);
+    gtk_widget_measure(GTK_WIDGET(ruler.g_obj()),
+            GTK_ORIENTATION_HORIZONTAL, -1, &width, nullptr, nullptr, nullptr);
+    gtk_widget_measure(GTK_WIDGET(ruler.g_obj()),
+            GTK_ORIENTATION_VERTICAL, -1, &height, nullptr, nullptr, nullptr);
     _cell_width = width * PANGO_SCALE / strlen(RULER);
     _cell_height = height;
     Logger().info("Measured cell: width={} height={}", static_cast<double>(_cell_width) / PANGO_SCALE, _cell_height);
-    g_object_ref_sink(ruler);
+    ruler.ref_sink();
 
     _cursor->UpdateSize();
 }
@@ -109,7 +109,7 @@ void GGrid::UpdateStyle()
 
     std::string style = oss.str();
     Logger().debug("Updated CSS Style:\n{}", style);
-    gtk_css_provider_load_from_data(_css_provider.get(), style.data(), -1);
+    _css_provider.load_from_data(style.data(), -1);
 
     MeasureCell();
     _window_handler->CheckSizeAsync();
@@ -175,10 +175,7 @@ void GGrid::Present(int width, int height, uint32_t token)
             {
                 t->label = Gtk::Label::new_(texture.text.c_str()).g_obj();
 
-                gtk_style_context_add_provider(
-                        gtk_widget_get_style_context(GTK_WIDGET(t->label.g_obj())),
-                        GTK_STYLE_PROVIDER(_css_provider.get()),
-                        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
                 std::string class_name = fmt::format("hl{}", texture.hl_id);
                 t->label.add_css_class(class_name.data());
 

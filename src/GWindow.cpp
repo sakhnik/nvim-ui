@@ -124,9 +124,7 @@ void GWindow::_SetupWindowSignals()
 void GWindow::_SetupStatusLabel()
 {
     Gtk::Label status_label{_builder.get_object("status").g_obj()};
-    status_label.get_style_context().add_provider(
-            reinterpret_cast<::GObject *>(_grid->GetStyle()),
-            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    status_label.get_style_context().add_provider(_grid->GetStyle(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     status_label.set_visible(false);
 }
 

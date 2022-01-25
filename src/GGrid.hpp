@@ -6,6 +6,8 @@
 #include "GCursor.hpp"
 #include "GPointer.hpp"
 
+#include "gir/Owned.hpp"
+#include "Gtk/CssProvider.hpp"
 #include "Gtk/Fixed.hpp"
 #include "Gtk/Label.hpp"
 
@@ -20,9 +22,9 @@ class GGrid
 public:
     GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *);
 
-    GtkStyleProvider* GetStyle() const
+    Gtk::StyleProvider GetStyle()
     {
-        return GTK_STYLE_PROVIDER(_css_provider.get());
+        return _css_provider.get();
     }
 
     void UpdateStyle();
@@ -53,7 +55,7 @@ private:
     Gtk::Fixed _grid;
     Session::PtrT &_session;
     IWindowHandler *_window_handler;
-    PtrT<GtkCssProvider> _css_provider = NullPtr<GtkCssProvider>([](auto *p) { g_object_unref(p); });
+    gir::Owned<Gtk::CssProvider> _css_provider;
 
     int _cell_width = 0;
     int _cell_height = 0;
