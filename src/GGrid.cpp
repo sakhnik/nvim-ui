@@ -3,10 +3,11 @@
 #include "Renderer.hpp"
 #include "IWindowHandler.hpp"
 
-#include "Gtk/StyleContext.hpp"
 #include "Gtk/EventController.hpp"
 #include "Gtk/EventControllerKey.hpp"
+#include "Gtk/Orientation.hpp"
 #include "Gtk/PropagationPhase.hpp"
+#include "Gtk/StyleContext.hpp"
 
 #include <sstream>
 
@@ -47,10 +48,8 @@ void GGrid::MeasureCell()
     ruler.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
     int width, height;
-    gtk_widget_measure(GTK_WIDGET(ruler.g_obj()),
-            GTK_ORIENTATION_HORIZONTAL, -1, &width, nullptr, nullptr, nullptr);
-    gtk_widget_measure(GTK_WIDGET(ruler.g_obj()),
-            GTK_ORIENTATION_VERTICAL, -1, &height, nullptr, nullptr, nullptr);
+    ruler.measure(Gtk::Orientation::horizontal, -1, &width, nullptr, nullptr, nullptr);
+    ruler.measure(Gtk::Orientation::vertical, -1, &height, nullptr, nullptr, nullptr);
     _cell_width = width * PANGO_SCALE / strlen(RULER);
     _cell_height = height;
     Logger().info("Measured cell: width={} height={}", static_cast<double>(_cell_width) / PANGO_SCALE, _cell_height);
