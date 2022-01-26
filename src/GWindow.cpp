@@ -4,10 +4,12 @@
 #include "Renderer.hpp"
 #include "SessionSpawn.hpp"
 #include "SessionTcp.hpp"
+
 #include "Gtk/ApplicationWindow.hpp"
 #include "Gtk/Dialog.hpp"
 #include "Gtk/Entry.hpp"
 #include "Gtk/Fixed.hpp"
+#include "Gtk/IconTheme.hpp"
 #include "Gtk/KeyvalTrigger.hpp"
 #include "Gtk/Label.hpp"
 #include "Gtk/NamedAction.hpp"
@@ -29,8 +31,8 @@ GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
     , _session{session}
     , _builder{Gtk::Builder::new_from_resource("/org/nvim-ui/gtk/main.ui")}
 {
-    GtkIconTheme *icon_theme = gtk_icon_theme_get_for_display(gdk_display_get_default());
-    gtk_icon_theme_add_resource_path(icon_theme, "/org/nvim-ui/icons");
+    Gtk::IconTheme icon_theme{gtk_icon_theme_get_for_display(gdk_display_get_default())};
+    icon_theme.add_resource_path("/org/nvim-ui/icons");
 
     _SetupWindow();
 

@@ -20,11 +20,7 @@ GGrid::GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *window_han
     , _css_provider{Gtk::CssProvider::new_()}
 {
     _grid.set_focusable(true);
-
-    _grid.get_style_context().add_provider(
-        _css_provider,
-        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
-        );
+    _grid.get_style_context().add_provider(_css_provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
     GtkWidget *cursor = gtk_drawing_area_new();
     _cursor.reset(new GCursor{cursor, this, _session});
