@@ -20,7 +20,7 @@ GGrid::GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *window_han
     , _css_provider{Gtk::CssProvider::new_()}
 {
     _grid.set_focusable(true);
-    _grid.get_style_context().add_provider(_css_provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    _grid.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
     GtkWidget *cursor = gtk_drawing_area_new();
     _cursor.reset(new GCursor{cursor, this, _session});
@@ -130,7 +130,7 @@ void GGrid::Present(int width, int height, uint32_t token)
         for (auto it = it_visible_end; it != it_alive_end; ++it)
         {
             Texture *texture = static_cast<Texture *>(it->get());
-            if (texture->label.g_obj() && texture->label.get_parent().g_obj() == _grid.g_obj())
+            if (texture->label && texture->label.get_parent() == _grid)
             {
                 texture->label.ref();
                 _grid.remove(texture->label);
@@ -140,9 +140,9 @@ void GGrid::Present(int width, int height, uint32_t token)
         for (auto it = it_alive_end; it != _textures.end(); ++it)
         {
             Texture *texture = static_cast<Texture *>(it->get());
-            if (texture->label.g_obj())
+            if (texture->label)
             {
-                if (texture->label.get_parent().g_obj() == _grid.g_obj())
+                if (texture->label.get_parent() == _grid)
                     _grid.remove(texture->label);
                 else
                     texture->label.unref();
@@ -166,7 +166,7 @@ void GGrid::Present(int width, int height, uint32_t token)
             Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
             int x = texture.col * _cell_width / PANGO_SCALE;
             int y = row * _cell_height;
-            if (!t->label.g_obj())
+            if (!t->label)
             {
                 t->label = Gtk::Label::new_(texture.text.c_str()).g_obj();
 
@@ -199,7 +199,7 @@ void GGrid::Clear()
     {
         Texture *texture = static_cast<Texture *>(t.get());
         // TODO: Implement relation operators
-        if (texture->label.g_obj())
+        if (texture->label)
             _grid.remove(texture->label);
     }
     _textures.clear();

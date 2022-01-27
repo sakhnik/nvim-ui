@@ -22,7 +22,7 @@ class GGrid
 public:
     GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *);
 
-    Gtk::StyleProvider GetStyle()
+    Gtk::StyleProvider& GetStyle()
     {
         return _css_provider.get();
     }
