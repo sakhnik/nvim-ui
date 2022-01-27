@@ -4,7 +4,6 @@
 #include "IWindow.hpp"
 #include "Utils.hpp"
 #include "GCursor.hpp"
-#include "GPointer.hpp"
 
 #include "gir/Owned.hpp"
 #include "Gtk/CssProvider.hpp"
@@ -62,7 +61,6 @@ private:
     std::vector<BaseTexture::PtrT> _textures;
 
     std::unique_ptr<GCursor> _cursor;
-    GPointer _pointer;
 
     gboolean _OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType state);
     void _OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType /*state*/);

@@ -189,7 +189,7 @@ void GGrid::Present(int width, int height, uint32_t token)
     assert(texture_count == visible_texture_count && "Texture count consistency");
 
     _cursor->Move();
-    _pointer.Update(renderer->IsBusy(), GTK_WIDGET(_grid.g_obj()));
+    _grid.set_cursor_from_name(renderer->IsBusy() ? "progress" : "default");
     _CheckSize(width, height);
 }
 

@@ -46,8 +46,6 @@ nvim_ui_sources = [
   'GCursor.hpp',
   'GGrid.cpp',
   'GGrid.hpp',
-  'GPointer.cpp',
-  'GPointer.hpp',
   'GWindow.cpp',
   'GWindow.hpp',
   'IWindowHandler.hpp',
