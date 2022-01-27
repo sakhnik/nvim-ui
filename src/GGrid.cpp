@@ -3,6 +3,7 @@
 #include "Renderer.hpp"
 #include "IWindowHandler.hpp"
 
+#include "Gtk/DrawingArea.hpp"
 #include "Gtk/EventController.hpp"
 #include "Gtk/EventControllerKey.hpp"
 #include "Gtk/Orientation.hpp"
@@ -22,7 +23,7 @@ GGrid::GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *window_han
     _grid.set_focusable(true);
     _grid.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-    GtkWidget *cursor = gtk_drawing_area_new();
+    Gtk::DrawingArea cursor = Gtk::DrawingArea::new_().g_obj();
     _cursor.reset(new GCursor{cursor, this, _session});
 
     Gtk::EventControllerKey controller = Gtk::EventControllerKey::new_().g_obj();

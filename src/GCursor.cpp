@@ -1,7 +1,7 @@
 #include "GCursor.hpp"
 #include "GGrid.hpp"
 
-GCursor::GCursor(GtkWidget *cursor, GGrid *grid, Session::PtrT &session)
+GCursor::GCursor(Gtk::DrawingArea cursor, GGrid *grid, Session::PtrT &session)
     : _cursor{cursor}
     , _grid{grid}
     , _session{session}
@@ -11,7 +11,7 @@ GCursor::GCursor(GtkWidget *cursor, GGrid *grid, Session::PtrT &session)
     auto drawCursor = [](GtkDrawingArea *da, cairo_t *cr, int width, int height, gpointer data) {
         reinterpret_cast<GCursor *>(data)->_DrawCursor(da, cr, width, height);
     };
-    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_cursor), drawCursor, this, nullptr);
+    cursor.set_draw_func(drawCursor, this, nullptr);
 }
 
 void GCursor::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int /*width*/, int /*height*/)
@@ -57,7 +57,7 @@ void GCursor::Move()
     if (!renderer->IsBusy())
     {
         // Move the cursor
-        gtk_fixed_put(GTK_FIXED(_grid->GetFixed().g_obj()), _cursor,
+        _grid->GetFixed().put(_cursor,
                 _grid->CalcX(renderer->GetCursorCol()),
                 _grid->CalcY(renderer->GetCursorRow()));
     }
@@ -65,15 +65,15 @@ void GCursor::Move()
 
 void GCursor::Hide()
 {
-    if (gtk_widget_get_parent(_cursor))
+    if (_cursor.get_parent())
     {
-        g_object_ref(_cursor);
-        gtk_fixed_remove(GTK_FIXED(_grid->GetFixed().g_obj()), _cursor);
+        _cursor.ref();
+        _grid->GetFixed().remove(_cursor);
     }
 }
 
 void GCursor::UpdateSize()
 {
-    gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(_cursor), _grid->CalcX(1));
-    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(_cursor), _grid->CalcY(1));
+    _cursor.set_content_width(_grid->CalcX(1));
+    _cursor.set_content_height(_grid->CalcY(1));
 }

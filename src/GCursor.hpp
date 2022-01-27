@@ -1,21 +1,23 @@
 #pragma once
 
 #include "Session.hpp"
-#include <gtk/gtk.h>
 
+#include <Gtk/DrawingArea.hpp>
+
+namespace Gtk = gir::Gtk;
 class GGrid;
 
 class GCursor
 {
 public:
-    GCursor(GtkWidget *grid, GGrid *, Session::PtrT &);
+    GCursor(Gtk::DrawingArea cursor, GGrid *, Session::PtrT &);
 
     void Move();
     void Hide();
     void UpdateSize();
 
 private:
-    GtkWidget *_cursor;
+    Gtk::DrawingArea _cursor;
     GGrid *_grid;
     Session::PtrT &_session;
 
