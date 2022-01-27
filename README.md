@@ -1,6 +1,8 @@
 # nvim-ui
 
 NeoVim UI implemented in C++ using gtk4.
+Gtk C++ wrappers are generated from [GObject introspection](https://gi.readthedocs.io/en/latest/).
+See the related project [sakhnik/gir2cpp](https://github.com/sakhnik/gir2cpp).
 
 ## Why yet another NeoVim GUI?
 
@@ -9,7 +11,6 @@ After evaluation of the available ones from the [related projects](https://githu
 I had to rule out almost every single one. The criteria were:
 
 - No Electron (show stopper)
-- Responsiveness ⇒ no fancy runtimes
 - Ability to run in [KVM](https://www.linux-kvm.org/page/Main_Page)
 - Proper text rendering, for instance, with combining characters: на́голос
 
