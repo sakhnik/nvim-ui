@@ -26,6 +26,21 @@
 #include <sstream>
 #include <spdlog/fmt/fmt.h>
 
+#ifdef GIR_INLINE
+#include "Gtk/Application.ipp"
+#include "Gtk/ApplicationWindow.ipp"
+#include "Gtk/Builder.ipp"
+#include "Gtk/Entry.ipp"
+#include "Gtk/IconTheme.ipp"
+#include "Gtk/KeyvalTrigger.ipp"
+#include "Gtk/Label.ipp"
+#include "Gtk/NamedAction.ipp"
+#include "Gtk/Shortcut.ipp"
+#include "Gtk/ShortcutController.ipp"
+#include "Gtk/StyleContext.ipp"
+#endif
+
+
 GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
     : _app{app}
     , _session{session}

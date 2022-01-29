@@ -12,6 +12,17 @@
 
 #include <sstream>
 
+#ifdef GIR_INLINE
+#include "Gtk/ApplicationWindow.ipp"
+#include "Gtk/CssProvider.ipp"
+#include "Gtk/DrawingArea.ipp"
+#include "Gtk/EventControllerKey.ipp"
+#include "Gtk/Fixed.ipp"
+#include "Gtk/Label.ipp"
+#include "Gtk/StyleContext.ipp"
+#endif
+
+
 namespace Gdk = gir::Gdk;
 
 GGrid::GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *window_handler)

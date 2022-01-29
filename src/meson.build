@@ -60,4 +60,5 @@ executable('nvim-ui',
   link_with: [nvim_ui_lib],
   cpp_pch: 'pch/all-gtk.hpp',
   win_subsystem: 'windows',
+  cpp_args: '-DGIR_INLINE',
   install: true)

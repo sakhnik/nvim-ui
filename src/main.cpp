@@ -2,11 +2,17 @@
 #include "SessionSpawn.hpp"
 #include "Logger.hpp"
 #include "gir/Owned.hpp"
+
 #include "Gtk/Application.hpp"
 #include "Gtk/Window.hpp"
+
 #include <spdlog/cfg/env.h>
 
 #include <uv.h>
+
+#ifdef GIR_INLINE
+#include "Gtk/Application.ipp"
+#endif
 
 namespace Gtk = gir::Gtk;
 

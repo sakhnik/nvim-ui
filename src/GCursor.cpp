@@ -1,6 +1,12 @@
 #include "GCursor.hpp"
 #include "GGrid.hpp"
 
+#ifdef GIR_INLINE
+#include <Gtk/DrawingArea.ipp>
+#include <Gtk/Fixed.ipp>
+#endif
+
+
 GCursor::GCursor(Gtk::DrawingArea cursor, GGrid *grid, Session::PtrT &session)
     : _cursor{cursor}
     , _grid{grid}

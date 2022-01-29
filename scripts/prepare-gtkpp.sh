@@ -54,7 +54,7 @@ END
 
 cat >|meson.build <<END
 gtkpp_sources = [
-$(find $out_dir -name '*.*' -printf "  '%p',\n")
+$(find $out_dir -name '*.[hi]pp' -printf "  '%p',\n")
 ]
 
 incdir = include_directories(['gir2cpp', '$out_dir'])
@@ -63,6 +63,7 @@ gtkpp_lib = static_library('gtkpp-lib',
   gtkpp_sources,
   dependencies: [gtk4_dep],
   include_directories: incdir,
+  cpp_args: '-DGIR_INLINE',
 )
 
 gtkpp_dep = declare_dependency(
