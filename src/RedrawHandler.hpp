@@ -28,6 +28,4 @@ private:
     void _HlAttrDefine(const msgpack::object_array &event);
     void _GridResize(const msgpack::object_array &event);
     void _ModeChange(const msgpack::object_array &event);
-
-    void _SetGuifont(std::string_view);
 };

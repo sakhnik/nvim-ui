@@ -36,6 +36,7 @@ public:
     void SessionEnd() override;
 
     void SetError(const char *error) override;
+    void SetGuiFont(const std::string &) override;
 
 private:
     Gtk::Application _app;

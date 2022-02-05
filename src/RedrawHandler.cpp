@@ -125,7 +125,7 @@ void RedrawHandler::_OnNotification(std::string_view method, const msgpack::obje
             const auto &inst = event.ptr[1].via.array;
             std::string_view name = inst.ptr[0].as<std::string_view>();
             if (name == "guifont")
-                _SetGuifont(inst.ptr[1].as<std::string_view>());
+                _renderer->SetGuiFont(inst.ptr[1].as<std::string_view>());
             else
                 Logger().warn("Ignoring set option {}", name);
         }
@@ -244,9 +244,4 @@ void RedrawHandler::_ModeChange(const msgpack::object_array &event)
 {
     auto mode = event.ptr[0].as<std::string_view>();
     _renderer->ModeChange(mode);
-}
-
-void RedrawHandler::_SetGuifont(std::string_view value)
-{
-    Logger().info("Set guifont {}", value);
 }

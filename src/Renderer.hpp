@@ -41,6 +41,7 @@ public:
     void DefaultColorSet(unsigned fg, unsigned bg);
     void ModeChange(std::string_view mode);
     void SetBusy(bool is_busy);
+    void SetGuiFont(std::string_view);
 
     // The snapshot of last consistent grid state
     using GridChunkT = GridLine::ChunkWrapper<&BaseTexture::SetVisible>;

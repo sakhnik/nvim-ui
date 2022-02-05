@@ -307,3 +307,10 @@ void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builde
     }
     _UpdateActions();
 }
+
+void GWindow::SetGuiFont(const std::string &value)
+{
+    _GtkTimer(0, [value]() {
+        Logger().info("SetGuiFont({})", value);
+    });
+}

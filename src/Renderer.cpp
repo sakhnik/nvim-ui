@@ -337,3 +337,9 @@ void Renderer::SetBusy(bool is_busy)
     Logger().debug("SetBusy {}", is_busy);
     _is_busy = is_busy;
 }
+
+void Renderer::SetGuiFont(std::string_view value)
+{
+    Logger().debug("SetGuiFont {}", value);
+    _window->SetGuiFont(std::string{value});
+}
