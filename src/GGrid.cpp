@@ -96,7 +96,7 @@ void GGrid::UpdateStyle()
     assert(renderer);
 
     oss << "* {\n";
-    oss << "font-family: " << _font.GetFace() << ";\n";
+    oss << "font-family: " << _font.GetFamily() << ";\n";
     oss << "font-size: " << _font.GetSizePt() << "pt;\n";
     mapAttr(renderer->GetDefAttr(), renderer->GetDefAttr());
     oss << "}\n";

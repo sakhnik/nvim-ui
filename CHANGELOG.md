@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Capture and display service output like --help or --version in the GUI window
 - TCP session that can be engaged by recompiling currently
 - Font zoom using keyboard shortcuts `^+`, `^-`, `^0`
+- Allowed choosing font with `set guifont=*`
 
 ### Fixed
 

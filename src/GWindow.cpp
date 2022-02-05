@@ -51,7 +51,13 @@ GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
 
     _SetupWindow();
 
-    _font.reset(new GFont);
+    // Font handler
+    _font.reset(new GFont{_window});
+    _font->Subscribe([this] {
+        // Update the style
+        auto guard = _session->GetRenderer()->Lock();
+        _grid->UpdateStyle();
+    });
 
     // Grid
     Gtk::Fixed grid{_builder.get_object("grid").g_obj()};
@@ -312,7 +318,7 @@ void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builde
 
 void GWindow::SetGuiFont(const std::string &value)
 {
-    _GtkTimer(0, [value]() {
-        Logger().info("SetGuiFont({})", value);
+    _GtkTimer(0, [this, value]() {
+        _font->SetGuiFont(value);
     });
 }
