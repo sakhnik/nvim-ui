@@ -16,10 +16,12 @@
 namespace Gtk = gir::Gtk;
 struct IWindowHandler;
 
+class GFont;
+
 class GGrid
 {
 public:
-    GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *);
+    GGrid(Gtk::Fixed grid, GFont &font, Session::PtrT &session, IWindowHandler *);
 
     Gtk::StyleProvider& GetStyle()
     {
@@ -52,6 +54,7 @@ public:
 
 private:
     Gtk::Fixed _grid;
+    GFont &_font;
     Session::PtrT &_session;
     IWindowHandler *_window_handler;
     gir::Owned<Gtk::CssProvider> _css_provider;
@@ -69,6 +72,4 @@ private:
 
     int _last_rows = 0, _last_cols = 0;
     void _CheckSize(int width, int height);
-
-    double _font_size_pt = 14;
 };

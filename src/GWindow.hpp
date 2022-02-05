@@ -4,12 +4,15 @@
 #include "Utils.hpp"
 #include "Session.hpp"
 #include "GGrid.hpp"
+#include "GFont.hpp"
 #include "IWindowHandler.hpp"
 #include "GCallbackAdaptor.hpp"
+
 #include "Gtk/Application.hpp"
 #include "Gtk/Window.hpp"
 #include "Gtk/Builder.hpp"
 #include "gir/Owned.hpp"
+
 #include <string>
 #include <memory>
 #include <gtk/gtk.h>
@@ -45,6 +48,7 @@ private:
     gir::Owned<Gtk::Builder> _builder;
     Gtk::Window _window;
     Gtk::Widget _scroll;
+    std::unique_ptr<GFont> _font;
     std::unique_ptr<GGrid> _grid;
 
     void _SetupWindow();

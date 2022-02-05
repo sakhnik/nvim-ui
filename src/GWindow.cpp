@@ -51,9 +51,11 @@ GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
 
     _SetupWindow();
 
+    _font.reset(new GFont);
+
     // Grid
     Gtk::Fixed grid{_builder.get_object("grid").g_obj()};
-    _grid.reset(new GGrid(grid, _session, this));
+    _grid.reset(new GGrid(grid, *_font.get(), _session, this));
 
     // GTK wouldn't allow shrinking the window if there are widgets
     // placed in the grid. So the scroll view is required.

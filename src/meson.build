@@ -44,6 +44,8 @@ nvim_ui_sources = [
   'GCallbackAdaptor.hpp',
   'GCursor.cpp',
   'GCursor.hpp',
+  'GFont.cpp',
+  'GFont.hpp',
   'GGrid.cpp',
   'GGrid.hpp',
   'GWindow.cpp',

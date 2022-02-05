@@ -2,6 +2,7 @@
 #include "Logger.hpp"
 #include "Renderer.hpp"
 #include "IWindowHandler.hpp"
+#include "GFont.hpp"
 
 #include "Gtk/DrawingArea.hpp"
 #include "Gtk/EventController.hpp"
@@ -25,8 +26,9 @@
 
 namespace Gdk = gir::Gdk;
 
-GGrid::GGrid(Gtk::Fixed grid, Session::PtrT &session, IWindowHandler *window_handler)
+GGrid::GGrid(Gtk::Fixed grid, GFont &font, Session::PtrT &session, IWindowHandler *window_handler)
     : _grid{grid}
+    , _font{font}
     , _session{session}
     , _window_handler{window_handler}
     , _css_provider{Gtk::CssProvider::new_()}
@@ -94,8 +96,8 @@ void GGrid::UpdateStyle()
     assert(renderer);
 
     oss << "* {\n";
-    oss << "font-family: Fira Code;\n";
-    oss << "font-size: " << _font_size_pt << "pt;\n";
+    oss << "font-family: " << _font.GetFace() << ";\n";
+    oss << "font-size: " << _font.GetSizePt() << "pt;\n";
     mapAttr(renderer->GetDefAttr(), renderer->GetDefAttr());
     oss << "}\n";
 
@@ -239,17 +241,17 @@ gboolean GGrid::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType s
 
     if (0 != (GDK_CONTROL_MASK & state))
     {
-        double font_size_pt = _font_size_pt;
+        double font_size_pt = _font.GetSizePt();
         if (keyval == GDK_KEY_equal)
             font_size_pt *= 1.1;
         else if (keyval == GDK_KEY_minus)
             font_size_pt /= 1.1;
         else if (keyval == GDK_KEY_0)
             font_size_pt = 14;
-        if (font_size_pt != _font_size_pt)
+        if (font_size_pt != _font.GetSizePt())
         {
             auto guard = renderer->Lock();
-            _font_size_pt = font_size_pt;
+            _font.SetSizePt(font_size_pt);
             UpdateStyle();
             return true;
         }
