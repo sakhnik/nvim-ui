@@ -4,6 +4,20 @@ out_dir=cpp-generated
 
 cd $(dirname ${BASH_SOURCE[0]})/..
 
+# Find out the path to GObject introspection before activating
+# the virtualenv
+gir_dir=$(python <<END
+import sys
+from pathlib import Path, PurePath
+
+root_dir = Path('/usr')
+if 'mingw64' in sys.executable:
+    root_dir = Path(sys.executable).parent.parent
+
+print(str(PurePath(root_dir, 'share/gir-1.0/')))
+END
+)
+
 virtualenv venv
 source venv/bin/activate
 
@@ -44,8 +58,8 @@ config.ignore = re.compile(r"""^(
         |
         Gtk::PageSetupUnixDialog
         )$""", re.VERBOSE)
-config.gir_dir = '/usr/share/gir-1.0/'
 config.out_dir = '$out_dir'
+config.gir_dir = '$gir_dir'
 
 repository = Repository(config)
 repository.process('Gtk', '4.0')

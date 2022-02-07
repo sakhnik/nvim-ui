@@ -24,7 +24,7 @@
 #include <iterator>
 #include <msgpack/v1/unpack.hpp>
 #include <sstream>
-#include <spdlog/fmt/fmt.h>
+#include <fmt/format.h>
 
 #ifdef GIR_INLINE
 #include "Gtk/Application.ipp"

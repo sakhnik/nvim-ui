@@ -1,6 +1,10 @@
 #include "SessionTcp.hpp"
 #include "Logger.hpp"
-#include <netinet/in.h>
+#ifdef _WIN32
+# include <ws2def.h>
+#else //_WIN32
+# include <netinet/in.h>
+#endif //_WIN32
 
 SessionTcp::SessionTcp(const char *addr, int port)
 {

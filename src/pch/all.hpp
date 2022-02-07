@@ -8,10 +8,9 @@
 #include <msgpack.hpp>
 #include <msgpack/object_fwd.hpp>
 #include <mutex>
-#include <netinet/in.h>
 #include <optional>
+#include <fmt/format.h>
 #include <spdlog/cfg/env.h>
-#include <spdlog/fmt/fmt.h>
 #include <spdlog/logger.h>
 #include <spdlog/sinks/msvc_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
