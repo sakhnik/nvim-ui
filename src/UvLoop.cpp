@@ -28,7 +28,8 @@ UvLoop::~UvLoop()
             auto walk_cb = [](uv_handle_t *h, void *) {
                 Logger().warn("Unclosed handle: {}", uv_handle_type_name(uv_handle_get_type(h)));
                 auto on_close = [](uv_handle_t *) { };
-                uv_close(h, on_close);
+                if (!uv_is_closing(h))
+                    uv_close(h, on_close);
             };
             uv_walk(&_loop, walk_cb, this);
         }

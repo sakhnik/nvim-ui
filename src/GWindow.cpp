@@ -155,7 +155,7 @@ void GWindow::_SetupStatusLabel()
 
 void GWindow::CheckSizeAsync()
 {
-    _GtkTimer0<&GWindow::_CheckSize>(0);
+    _GtkTimer0<&GWindow::_CheckSize>(1);
 }
 
 void GWindow::_CheckSize()
@@ -174,7 +174,7 @@ GWindow::CreateTexture(int /*width*/, std::string_view /*text*/,
 
 void GWindow::Present(uint32_t token)
 {
-    _GtkTimer(0, [this, token]() { _Present(token); });
+    _GtkTimer(1, [this, token]() { _Present(token); });
 }
 
 void GWindow::_Present(uint32_t token)
@@ -186,7 +186,7 @@ void GWindow::_Present(uint32_t token)
 
 void GWindow::SessionEnd()
 {
-    _GtkTimer0<&GWindow::_SessionEnd>(0);
+    _GtkTimer0<&GWindow::_SessionEnd>(1);
 }
 
 void GWindow::_SessionEnd()
@@ -318,7 +318,7 @@ void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builde
 
 void GWindow::SetGuiFont(const std::string &value)
 {
-    _GtkTimer(0, [this, value]() {
+    _GtkTimer(1, [this, value]() {
         _font->SetGuiFont(value);
     });
 }
