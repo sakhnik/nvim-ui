@@ -93,8 +93,6 @@ void GWindow::_SetupWindow()
 {
     _window = Gtk::Window{_builder.get_object("main_window").g_obj()};
     _window.set_application(_app);
-    if (_session)
-        _window.set_deletable(false);
 
     const GActionEntry actions[] = {
         { "spawn", MakeCallback<&GWindow::_OnSpawnAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
@@ -194,8 +192,6 @@ void GWindow::_SessionEnd()
     Logger().info("Session end");
     _grid->Clear();
 
-    _window.set_deletable(true);
-
     Gtk::Label status_label{_builder.get_object("status").g_obj()};
     if (_session && !_session->GetOutput().empty())
     {
@@ -240,6 +236,7 @@ void GWindow::_UpdateActions()
     _EnableAction("spawn", !session_active);
     _EnableAction("connect", !session_active);
     _EnableAction("quit", !session_active);
+    _window.set_deletable(!session_active);
 }
 
 void GWindow::_EnableAction(const char *name, bool enable)
