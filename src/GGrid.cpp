@@ -183,6 +183,9 @@ void GGrid::Present(int width, int height, uint32_t token)
             if (!t->label)
             {
                 t->label = Gtk::Label::new_(texture.text.c_str()).g_obj();
+                t->label.set_sensitive(false);
+                t->label.set_can_focus(false);
+                t->label.set_focus_on_click(false);
 
                 t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
                 std::string class_name = fmt::format("hl{}", texture.hl_id);
