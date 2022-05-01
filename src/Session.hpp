@@ -20,6 +20,7 @@ public:
     virtual ~Session() = default;
 
     virtual void SetWindow(IWindow *);
+    virtual const std::string& GetDescription() const = 0;
 
     Renderer* GetRenderer() { return _renderer.get(); }
     Input* GetInput() { return _input.get(); }

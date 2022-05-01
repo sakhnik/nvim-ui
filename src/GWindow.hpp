@@ -47,6 +47,7 @@ private:
 
     gir::Owned<Gtk::Builder> _builder;
     Gtk::Window _window;
+    std::string _title;
     Gtk::Widget _scroll;
     std::unique_ptr<GFont> _font;
     std::unique_ptr<GGrid> _grid;
@@ -54,6 +55,7 @@ private:
     void _SetupWindow();
     void _SetupWindowSignals();
     void _SetupStatusLabel();
+    void _UpdateTitle();
 
     void CheckSizeAsync() override;
     void _CheckSize();

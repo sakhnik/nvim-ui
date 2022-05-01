@@ -6,11 +6,17 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
     std::string nvim("nvim");
     std::string embed("--embed");
 
+    const char *space = "";
     std::vector<char *> args;
     args.push_back(nvim.data());
     args.push_back(embed.data());
     for (int i = 1; i < argc; ++i)
+    {
         args.push_back(argv[i]);
+        _description += space;
+        _description += argv[i];
+        space = " ";
+    }
     args.push_back(nullptr);
 
     //auto signal = loop->resource<uvw::SignalHandle>();
@@ -64,4 +70,9 @@ SessionSpawn::~SessionSpawn()
     uv_close(reinterpret_cast<uv_handle_t*>(&_stdin_pipe), nop);
     uv_close(reinterpret_cast<uv_handle_t*>(&_stdout_pipe), nop);
     uv_close(reinterpret_cast<uv_handle_t*>(&_child_req), nop);
+}
+
+const std::string& SessionSpawn::GetDescription() const
+{
+    return _description;
 }

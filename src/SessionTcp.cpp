@@ -8,6 +8,8 @@
 
 SessionTcp::SessionTcp(const char *addr, int port)
 {
+    _description = fmt::format("TCP {}:{}", addr, port);
+
     if (int err = uv_tcp_init(&_loop, &_socket))
         throw std::runtime_error(fmt::format("Failed to init tcp: {}", uv_strerror(err)));
     if (int err = uv_tcp_nodelay(&_socket, 1))
@@ -37,4 +39,9 @@ void SessionTcp::SetWindow(IWindow *window)
 {
     _window = window;
     // The window will be passed to the renderer upon successful connection
+}
+
+const std::string& SessionTcp::GetDescription() const
+{
+    return _description;
 }

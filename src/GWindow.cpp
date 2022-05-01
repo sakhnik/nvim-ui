@@ -207,13 +207,34 @@ void GWindow::_SessionEnd()
 
 void GWindow::SetError(const char *error)
 {
-    std::string title = "nvim-ui";
+    _title = "nvim-ui";
+    if (_session)
+    {
+        _title += " " + _session->GetDescription();
+    }
     if (error)
     {
-        title += " - ";
-        title += error;
+        _title += " (";
+        _title += error;
+        _title += ")";
     }
-    _window.set_title(title.c_str());
+    _UpdateTitle();
+}
+
+void GWindow::_UpdateTitle()
+{
+    auto &app_window = static_cast<Gtk::ApplicationWindow &>(_window);
+    bool is_menu_visible = app_window.get_show_menubar();
+    if (!is_menu_visible)
+    {
+        std::string title{_title};
+        title += " Press ALT to reach the menu.";
+        _window.set_title(title.c_str());
+    }
+    else
+    {
+        _window.set_title(_title.c_str());
+    }
 }
 
 void GWindow::MenuBarToggle()
@@ -222,12 +243,14 @@ void GWindow::MenuBarToggle()
     auto &app_window = static_cast<Gtk::ApplicationWindow &>(_window);
     bool is_menu_visible = app_window.get_show_menubar();
     app_window.set_show_menubar(!is_menu_visible);
+    _UpdateTitle();
 }
 
 void GWindow::MenuBarHide()
 {
     auto &app_window = static_cast<Gtk::ApplicationWindow &>(_window);
     app_window.set_show_menubar(false);
+    _UpdateTitle();
 }
 
 void GWindow::_UpdateActions()
@@ -258,8 +281,8 @@ void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
     Logger().info("Spawn new");
     try
     {
-        SetError(nullptr);
         _session.reset(new SessionSpawn(0, nullptr));
+        SetError(nullptr);
         _session->SetWindow(this);
         _session->RunAsync();
     }
@@ -300,8 +323,8 @@ void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builde
 
     try
     {
-        SetError(nullptr);
         _session.reset(new SessionTcp(address, port));
+        SetError(nullptr);
         _session->SetWindow(this);
         _session->RunAsync();
     }
