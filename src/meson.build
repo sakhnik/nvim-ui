@@ -1,6 +1,7 @@
 subdir('gtkpp')
 
 nvim_ui_lib_sources = [
+  'config.hpp',
   'AsyncExec.cpp',
   'AsyncExec.hpp',
   'BaseTexture.cpp',

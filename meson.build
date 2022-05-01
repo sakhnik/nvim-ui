@@ -6,6 +6,7 @@ project('nvim-ui', ['c', 'cpp'],
   version: '0.0.3',
   license: 'MIT')
 
+add_project_arguments('-DGETTEXT_PACKAGE="nvim-ui"', language:'cpp')
 add_global_arguments('-DVERSION="' + meson.project_version() + '"', language: ['c', 'cpp'])
 
 msgpack_dep = dependency('msgpack')
@@ -20,3 +21,4 @@ spdlog_dep = spdlog.dependency('spdlog')
 subdir('res')
 subdir('src')
 subdir('tests')
+subdir('po')

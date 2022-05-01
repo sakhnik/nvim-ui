@@ -1,3 +1,4 @@
+#include "config.hpp"
 #include "GWindow.hpp"
 #include "SessionSpawn.hpp"
 #include "Logger.hpp"
@@ -6,8 +7,8 @@
 #include "Gtk/Application.hpp"
 #include "Gtk/Window.hpp"
 
+#include <filesystem>
 #include <spdlog/cfg/env.h>
-
 #include <uv.h>
 
 #ifdef GIR_INLINE
@@ -18,8 +19,23 @@ namespace Gtk = gir::Gtk;
 
 namespace {
 
-    Session::PtrT session;
-    std::unique_ptr<GWindow> window;
+Session::PtrT session;
+std::unique_ptr<GWindow> window;
+
+std::string GetLocalePath(const char *exe)
+{
+    // If running from the build directory, use local translated messages.
+    namespace fs = std::filesystem;
+    auto root_dir = fs::weakly_canonical(fs::path(exe)).parent_path().parent_path();
+    if (fs::exists(root_dir / "build.ninja"))
+    {
+        auto po_dir = root_dir / "po";
+        if (fs::exists(po_dir) && fs::is_directory(po_dir))
+            return po_dir;
+    }
+    // Fallback to the system directory otherwise.
+    return "/usr/share/locale";
+}
 
 } //namespace;
 
@@ -32,9 +48,15 @@ int main(int argc, char* argv[])
     _argv = argv;
 
     setlocale(LC_CTYPE, "");
+    setlocale(LC_MESSAGES, "");
     spdlog::cfg::load_env_levels();
-
     Logger().info("nvim-ui v{}", VERSION);
+
+    auto locale_path = GetLocalePath(argv[0]);
+    Logger().info("Using locale path {}", locale_path);
+    bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str());
+    textdomain(GETTEXT_PACKAGE);
+
     try
     {
         auto app = gir::MakeOwned(Gtk::Application::new_("org.nvim-ui", G_APPLICATION_FLAGS_NONE));
