@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-01 18:58+0300\n"
+"POT-Creation-Date: 2022-05-01 19:08+0300\n"
 "PO-Revision-Date: 2022-05-01 18:33+0300\n"
 "Last-Translator: Anatolii Sakhnik <sakhnik@gmail.com>\n"
 "Language-Team: Ukrainian\n"
@@ -21,3 +21,19 @@ msgstr ""
 #: src/GWindow.cpp:232
 msgid " Press ALT to reach the menu."
 msgstr " Натисніть ALT щоб добратися до меню."
+
+#: res/menus.ui:5
+msgid "_Neovim"
+msgstr "_Neovim"
+
+#: res/menus.ui:7
+msgid "_Spawn"
+msgstr "Запустити"
+
+#: res/menus.ui:12
+msgid "_Connect TCP..."
+msgstr "З’єднатися з TCP..."
+
+#: res/menus.ui:17
+msgid "_Quit"
+msgstr "Вийти"
