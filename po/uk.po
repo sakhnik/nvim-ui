@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-01 19:08+0300\n"
+"POT-Creation-Date: 2022-05-01 21:02+0300\n"
 "PO-Revision-Date: 2022-05-01 18:33+0300\n"
 "Last-Translator: Anatolii Sakhnik <sakhnik@gmail.com>\n"
 "Language-Team: Ukrainian\n"
@@ -28,12 +28,28 @@ msgstr "_Neovim"
 
 #: res/menus.ui:7
 msgid "_Spawn"
-msgstr "Запустити"
+msgstr "_Запустити"
 
 #: res/menus.ui:12
 msgid "_Connect TCP..."
-msgstr "З’єднатися з TCP..."
+msgstr "З’єднатися з _TCP..."
 
 #: res/menus.ui:17
 msgid "_Quit"
-msgstr "Вийти"
+msgstr "Ви_йти"
+
+#: res/connect-dlg.ui:6
+msgid "Connect via TCP"
+msgstr "З’єднатися з TCP"
+
+#: res/connect-dlg.ui:14
+msgid "Address"
+msgstr "Адреса"
+
+#: res/connect-dlg.ui:41
+msgid "_Cancel"
+msgstr "_Скасувати"
+
+#: res/connect-dlg.ui:47
+msgid "C_onnect"
+msgstr "З’єднатися"

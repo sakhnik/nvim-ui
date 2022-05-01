@@ -21,7 +21,7 @@
             </child>
             <child>
               <object class="GtkLabel">
-                <property name="label" translatable="yes">:</property>
+                <property name="label">:</property>
               </object>
             </child>
             <child>
@@ -44,7 +44,7 @@
             </child>
             <child type="action">
               <object class="GtkButton" id="button_connect">
-                <property name="label" translatable="yes">Connect</property>
+                <property name="label" translatable="yes">C_onnect</property>
                 <property name="receives-default">True</property>
               </object>
             </child>

@@ -1,2 +1,3 @@
 src/GWindow.cpp
 res/menus.ui
+res/connect-dlg.ui

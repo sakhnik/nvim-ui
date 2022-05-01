@@ -23,7 +23,7 @@
                     <property name="width-request">100</property>
                     <property name="height-request">80</property>
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">status</property>
+                    <property name="label">status</property>
                     <style>
                       <class name="status"/>
                     </style>
