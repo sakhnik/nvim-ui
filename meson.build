@@ -18,6 +18,9 @@ cmake = import('cmake')
 spdlog = cmake.subproject('spdlog')
 spdlog_dep = spdlog.dependency('spdlog')
 
+msgpack_cxx = cmake.subproject('msgpack-c')
+msgpack_cxx_dep = msgpack_cxx.dependency('msgpackc-cxx')
+
 subdir('res')
 subdir('src')
 subdir('tests')

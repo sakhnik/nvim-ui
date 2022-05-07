@@ -4,3 +4,6 @@
 [submodule "subprojects/ut"]
 	path = subprojects/ut
 	url = https://github.com/boost-ext/ut
+[submodule "subprojects/msgpack-c"]
+	path = subprojects/msgpack-c
+	url = https://github.com/msgpack/msgpack-c
