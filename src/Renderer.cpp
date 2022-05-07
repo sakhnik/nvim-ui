@@ -259,6 +259,7 @@ void Renderer::GridClear()
     for (auto &line : _lines)
     {
         line.dirty = true;
+        line.grid_line.Clear();
         for (auto &t : line.text)
             t = ' ';
         for (auto &hl : line.hl_id)
