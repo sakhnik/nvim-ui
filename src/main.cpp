@@ -31,7 +31,7 @@ std::string GetLocalePath(const char *exe)
     {
         auto po_dir = root_dir / "po";
         if (fs::exists(po_dir) && fs::is_directory(po_dir))
-            return po_dir;
+            return po_dir.string();
     }
     // Fallback to the system directory otherwise.
     return "/usr/share/locale";
