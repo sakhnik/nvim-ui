@@ -46,7 +46,7 @@ jobs:
     - name: Package
       run: |
         .\scripts\run-sh.ps1 "package-nupkg.sh"
-        cd dist
+        cd BUILD\dist
         choco pack
         cd ..
       env:
@@ -55,7 +55,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: nvim-ui-nupkg
-        path: dist/nvim-ui*.nupkg
+        path: BUILD/dist/nvim-ui*.nupkg
         retention-days: 1
 
   publish:
