@@ -101,7 +101,8 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NVIM_UI_VERSION: ${{ needs.linux.outputs.version }}
+          NVIM_UI_VERSION: ${{ needs.prep.outputs.version }}
+          NVIM_UI_RELEASE: ${{ needs.prep.outputs.release }}
           DEBUG: api
         run: |
           envsubst < "$GITHUB_WORKSPACE/.github/workflows/notes.md" > "$RUNNER_TEMP/notes.md"

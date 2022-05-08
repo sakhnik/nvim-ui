@@ -1,5 +1,5 @@
 ```
-${NVIM_UI_VERSION}
+${NVIM_UI_RELEASE}
 ```
 
 ## Install
