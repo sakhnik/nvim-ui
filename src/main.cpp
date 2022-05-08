@@ -33,6 +33,12 @@ std::string GetLocalePath(const char *exe)
         if (fs::exists(po_dir) && fs::is_directory(po_dir))
             return po_dir.string();
     }
+
+    // Reach the locale files relative to the binary for Windows.
+    auto po_dir = root_dir / "share" / "locale";
+    if (fs::exists(po_dir) && fs::is_directory(po_dir))
+        return po_dir.string();
+
     // Fallback to the system directory otherwise.
     return "/usr/share/locale";
 }
@@ -56,6 +62,7 @@ int main(int argc, char* argv[])
     Logger().info("Using locale path {}", locale_path);
     bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str());
     textdomain(GETTEXT_PACKAGE);
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 
     try
     {
