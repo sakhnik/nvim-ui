@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Icon URL in chocolatey nuspec should point to a CDN
 - Don't allow closing the window if neovim session is still active, resurrect the window if necessary
 - Handle process crash or disconnection
+- Gtk4 C++ wrappers generation from GObject introspection repository using [gir2cpp](https://github.com/sakhnik/gir2cpp)
 
 ## [0.0.2] - 2021-04-27
 
