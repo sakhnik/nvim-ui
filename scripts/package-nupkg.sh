@@ -5,7 +5,7 @@ if [[ "$WORKSPACE_MSYS2" ]]; then
 fi
 
 mkdir -p dist/{bin,lib,share/glib-2.0}
-cp BUILD/src/nvim-ui.exe dist/bin
+DESTDIR=dist meson install --tags=runtime,i18n
 touch dist/bin/nvim-ui.exe.gui
 
 dlls=$(ntldd.exe -R BUILD/src/nvim-ui.exe | grep -Po "[^ ]+?msys64[^ ]+" | sort -u | grep -Po '[^\\]+$')
