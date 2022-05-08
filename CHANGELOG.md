@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TCP session that can be engaged by recompiling currently
 - Font zoom using keyboard shortcuts `^+`, `^-`, `^0`
 - Allowed choosing font with `set guifont=*`
+- Started internationalization, added Ukrainian translation
+- Hint in the title on how to reach the application menu
 
 ### Fixed
 
