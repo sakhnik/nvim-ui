@@ -3,7 +3,7 @@ project('nvim-ui', ['c', 'cpp'],
     'cpp_std=c++20',
     'warning_level=2',
   ],
-  version: '0.0.3',
+  version: '0.1.0',
   license: 'MIT')
 
 add_project_arguments('-DGETTEXT_PACKAGE="nvim-ui"', language:'cpp')
