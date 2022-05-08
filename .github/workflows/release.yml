@@ -60,50 +60,52 @@ jobs:
 
   publish:
     needs: [prep, windows]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    env:
+      GH_REPO: ${{ github.repository }}
+    permissions:
+      contents: write
     steps:
-    - uses: actions/download-artifact@v2
-    - if: github.event_name == 'workflow_dispatch'
-      run: echo "TAG_NAME=latest" >> $GITHUB_ENV
-    - if: github.event_name == 'push'
-      run: |
-        TAG_NAME=${{ github.ref }}
-        echo "TAG_NAME=${TAG_NAME#refs/tags/}" >> $GITHUB_ENV
-    - if: env.TAG_NAME == 'latest'
-      run: echo 'SUBJECT=nvim-ui development (prerelease) build' >> $GITHUB_ENV
-    - if: env.TAG_NAME != 'latest'
-      run: echo 'SUBJECT=nvim-ui release build' >> $GITHUB_ENV
-    - if: env.TAG_NAME == 'latest'
-      uses: dev-drprasad/delete-tag-and-release@v0.1.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        delete_release: true
-        tag_name: latest
-    - uses: meeDamian/github-release@2.0
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ env.TAG_NAME }}
-        name: ${{ needs.prep.outputs.release }}
-        prerelease: ${{ env.TAG_NAME == 'latest' }}
-        commitish: ${{ github.sha }}
-        gzip: false
-        allow_override: ${{ env.TAG_NAME == 'latest' }}
-        files: |
-          nvim-ui.${{ needs.prep.outputs.release }}.nupkg:nvim-ui-nupkg/nvim-ui.${{ needs.prep.outputs.release }}.nupkg
-        body: |
-          ${{ env.SUBJECT }}
-          ```
-          ${{ needs.prep.outputs.release }}
-          ```
+      # Must perform checkout first, since it deletes the target directory
+      # before running, and would therefore delete the downloaded artifacts
+      - uses: actions/checkout@v2
 
-          ## Install
+      - uses: actions/download-artifact@v2
 
-          ### Windows
-
-          1. Install with chocolatey `choco install nvim-ui -s .`
-          2. Run `nvim-ui.exe`
-
-          ### Linux (x64)
-
-          Download and build from source
+      - if: github.event_name == 'workflow_dispatch'
+        run: echo "TAG_NAME=latest" >> $GITHUB_ENV
+      - if: github.event_name == 'push'
+        run: |
+          TAG_NAME=${{ github.ref }}
+          echo "TAG_NAME=${TAG_NAME#refs/tags/}" >> $GITHUB_ENV
+      - if: env.TAG_NAME == 'latest'
+        run: echo 'SUBJECT=nvim-ui development (prerelease) build' >> $GITHUB_ENV
+      - if: env.TAG_NAME != 'latest'
+        run: echo 'SUBJECT=nvim-ui release build' >> $GITHUB_ENV
+      - if: env.TAG_NAME == 'latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          (echo 'SUBJECT=nvim-ui development (prerelease) build';
+           echo 'PRERELEASE=--prerelease') >> $GITHUB_ENV
+          gh release delete latest --yes || true
+          git push origin :latest || true
+      - if: env.TAG_NAME != 'latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          (echo 'SUBJECT=nvim-ui release build';
+           echo 'PRERELEASE=') >> $GITHUB_ENV
+          gh release delete stable --yes || true
+          git push origin :stable || true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NVIM_UI_VERSION: ${{ needs.linux.outputs.version }}
+          DEBUG: api
+        run: |
+          envsubst < "$GITHUB_WORKSPACE/.github/workflows/notes.md" > "$RUNNER_TEMP/notes.md"
+          gh release create $TAG_NAME $PRERELEASE --notes-file "$RUNNER_TEMP/notes.md" --title "$SUBJECT" --target $GITHUB_SHA nvim-ui-nupkg/*
+          if [ "$TAG_NAME" != "latest" ]; then
+            gh release create stable $PRERELEASE --notes-file "$RUNNER_TEMP/notes.md" --title "$SUBJECT" --target $GITHUB_SHA nvim-macos/* nvim-ui-nupkg/*
+          fi
