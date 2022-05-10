@@ -229,7 +229,9 @@ void GWindow::_UpdateTitle()
     if (!is_menu_visible)
     {
         std::string title{_title};
-        title += gettext(" Press ALT to reach the menu.");
+        title += " (";
+        title += gettext("Press ALT to reach the menu");
+        title += ")";
         _window.set_title(title.c_str());
     }
     else

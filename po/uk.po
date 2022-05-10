@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-01 21:02+0300\n"
+"POT-Creation-Date: 2022-05-10 10:46+0300\n"
 "PO-Revision-Date: 2022-05-01 18:33+0300\n"
 "Last-Translator: Anatolii Sakhnik <sakhnik@gmail.com>\n"
 "Language-Team: Ukrainian\n"
@@ -15,12 +15,12 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3;     plural=n%10==1 && n%100!=11 ? 0 :            n"
-"%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"Plural-Forms: nplurals=3;     plural=n%10==1 && n%100!=11 ? 0 :            "
+"n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
-#: src/GWindow.cpp:232
-msgid " Press ALT to reach the menu."
-msgstr " Натисніть ALT щоб добратися до меню."
+#: src/GWindow.cpp:233
+msgid "Press ALT to reach the menu"
+msgstr "Натисніть ALT щоб добратися до меню"
 
 #: res/menus.ui:5
 msgid "_Neovim"
