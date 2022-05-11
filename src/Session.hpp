@@ -32,7 +32,8 @@ public:
 
     const std::string& GetOutput() const
     {
-        return _rpc->GetOutput();
+        static const std::string NOTHING = "";
+        return _rpc ? _rpc->GetOutput() : NOTHING;
     }
 
 protected:

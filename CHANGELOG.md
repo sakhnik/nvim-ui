@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- TBD
+- Crash when failing to start a TCP session
 
 ## [0.0.3] - 2022-05-08
 
@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Switched to gtk4 to get rid of texture noise. Chunks of texts are rendered as gtk labels.
 - Capture and display service output like --help or --version in the GUI window
-- TCP session that can be engaged by recompiling currently
+- TCP session from the application menu
 - Font zoom using keyboard shortcuts `^+`, `^-`, `^0`
 - Choosing font with `set guifont=*`
 - Started internationalization, added Ukrainian translation

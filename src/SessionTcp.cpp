@@ -20,12 +20,14 @@ SessionTcp::SessionTcp(const char *addr, int port)
         throw std::runtime_error(fmt::format("Failed to parse the IP address: {}", uv_strerror(err)));
 
     auto on_connect = [](uv_connect_t *req, int status) {
-        Logger().info("Connected");
+        SessionTcp *session = reinterpret_cast<SessionTcp*>(req->data);
         if (status < 0) {
             Logger().error("Couldn't connect: {}", uv_strerror(status));
+            session->_window->SetError(uv_strerror(status));
+            session->_window->SessionEnd();
             return;
         }
-        SessionTcp *session = reinterpret_cast<SessionTcp*>(req->data);
+        Logger().info("Connected");
         session->_Init(req->handle, req->handle);
         session->_renderer->SetWindow(session->_window);
     };
