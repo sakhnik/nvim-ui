@@ -20,6 +20,14 @@ Turns out, it's quite easy to code after experiments with [SpyUI](https://github
 
 ### Linux
 
+Prerequisites:
+
+* [virtualenv](https://virtualenv.pypa.io/en/latest/)
+* [msgpack-c](https://github.com/msgpack/msgpack-c)
+* [libuv](https://libuv.org/)
+* [fmt](https://fmt.dev/latest/index.html)
+* [gtk4](https://docs.gtk.org/gtk4/getting_started.html)
+
 The required font DejaVuSansMono.ttf is ubiquitously available in Linux. 
 
 ```
