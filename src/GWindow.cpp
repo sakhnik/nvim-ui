@@ -230,7 +230,7 @@ void GWindow::_UpdateTitle()
     {
         std::string title{_title};
         title += " (";
-        title += gettext("Press ALT to reach the menu");
+        title += _("Press ALT to reach the menu");
         title += ")";
         _window.set_title(title.c_str());
     }
