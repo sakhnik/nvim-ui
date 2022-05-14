@@ -90,6 +90,16 @@ void GGrid::UpdateStyle()
             oss << "font-style: italic;\n";
         if ((attr.flags & HlAttr::F_BOLD))
             oss << "font-weight: bold;\n";
+
+        bool underline = attr.flags & HlAttr::F_UNDERLINE;
+        bool undercurl = attr.flags & HlAttr::F_UNDERCURL;
+        if (underline || undercurl)
+        {
+            oss << "text-decoration-line: underline;\n";
+            oss << "text-decoration-style: " << (undercurl ? "wavy" : "solid") << ";\n";
+            if (attr.special.has_value())
+                oss << fmt::format("text-decoration-color: #{:06x};\n", attr.special.value());
+        }
     };
 
     auto renderer = _session->GetRenderer();

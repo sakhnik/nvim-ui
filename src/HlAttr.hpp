@@ -15,4 +15,5 @@ struct HlAttr
     };
     std::optional<uint32_t> fg, bg;
     unsigned flags = 0;
+    std::optional<uint32_t> special{};
 };

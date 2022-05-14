@@ -212,6 +212,8 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
             attr.fg = rgb_attr.ptr[i].val.as<unsigned>();
         else if (key == "background")
             attr.bg = rgb_attr.ptr[i].val.as<unsigned>();
+        else if (key == "special")
+            attr.special = rgb_attr.ptr[i].val.as<unsigned>();
         // nvim api docs state that boolean keys here are only sent if true
         else if (key == "reverse")
             attr.flags |= HlAttr::F_REVERSE;
