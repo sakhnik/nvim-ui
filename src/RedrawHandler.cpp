@@ -229,6 +229,10 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
             attr.flags |= HlAttr::F_UNDERCURL;
         else if (key == "strikethrough")
             attr.flags |= HlAttr::F_STRIKETHROUGH;
+        //else if (key == "underdash")
+        //    attr.flags |= HlAttr::F_UNDERDASH;
+        //else if (key == "underdot")
+        //    attr.flags |= HlAttr::F_UNDERDOT;
         else
             Logger().warn("Unknown rgb attribute: {}", key);
     }
