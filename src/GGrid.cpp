@@ -91,14 +91,22 @@ void GGrid::UpdateStyle()
         if ((attr.flags & HlAttr::F_BOLD))
             oss << "font-weight: bold;\n";
 
-        bool underline = attr.flags & HlAttr::F_UNDERLINE;
-        bool undercurl = attr.flags & HlAttr::F_UNDERCURL;
-        if (underline || undercurl)
+        if ((attr.flags & HlAttr::F_SPECIAL_COLORED))
         {
             oss << "text-decoration-line: underline;\n";
-            oss << "text-decoration-style: " << (undercurl ? "wavy" : "solid") << ";\n";
+            const char *style = "solid";
+            if ((attr.flags & HlAttr::F_UNDERUNDERLINE))
+                style = "double";
+            if ((attr.flags & HlAttr::F_UNDERCURL))
+                style = "wavy";
+            oss << "text-decoration-style: " << style << ";\n";
             if (attr.special.has_value())
                 oss << fmt::format("text-decoration-color: #{:06x};\n", attr.special.value());
+        }
+        else if ((attr.flags & HlAttr::F_STRIKETHROUGH))
+        {
+            oss << "text-decoration-line: line-through;\n";
+            oss << "text-decoration-style: " << "solid" << ";\n";
         }
     };
 

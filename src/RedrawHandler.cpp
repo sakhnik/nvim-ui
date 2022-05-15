@@ -223,8 +223,12 @@ void RedrawHandler::_HlAttrDefine(const msgpack::object_array &event)
             attr.flags |= HlAttr::F_ITALIC;
         else if (key == "underline")
             attr.flags |= HlAttr::F_UNDERLINE;
+        else if (key == "underunderline")
+            attr.flags |= HlAttr::F_UNDERUNDERLINE;
         else if (key == "undercurl")
             attr.flags |= HlAttr::F_UNDERCURL;
+        else if (key == "strikethrough")
+            attr.flags |= HlAttr::F_STRIKETHROUGH;
         else
             Logger().warn("Unknown rgb attribute: {}", key);
     }
