@@ -80,6 +80,6 @@ void GCursor::Hide()
 
 void GCursor::UpdateSize()
 {
-    _cursor.set_content_width(_grid->CalcX(1));
+    _cursor.set_content_width(_grid->CalcX(1) + 0.5);
     _cursor.set_content_height(_grid->CalcY(1));
 }

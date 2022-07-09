@@ -42,7 +42,7 @@ public:
 
     double CalcX(int col) const
     {
-        return 1.0 * col * _cell_width / PANGO_SCALE;
+        return col * _cell_width;
     }
 
     double CalcY(int row) const
@@ -59,8 +59,8 @@ private:
     IWindowHandler *_window_handler;
     gir::Owned<Gtk::CssProvider> _css_provider;
 
-    int _cell_width = 0;
-    int _cell_height = 0;
+    double _cell_width{};
+    int _cell_height{};
     std::vector<BaseTexture::PtrT> _textures;
 
     std::unique_ptr<GCursor> _cursor;

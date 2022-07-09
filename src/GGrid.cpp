@@ -60,9 +60,9 @@ void GGrid::MeasureCell()
     int width, height;
     ruler.measure(Gtk::Orientation::horizontal, -1, &width, nullptr, nullptr, nullptr);
     ruler.measure(Gtk::Orientation::vertical, -1, &height, nullptr, nullptr, nullptr);
-    _cell_width = width * PANGO_SCALE / strlen(RULER);
+    _cell_width = 1.0 * width / strlen(RULER);
     _cell_height = height;
-    Logger().info("Measured cell: width={} height={}", static_cast<double>(_cell_width) / PANGO_SCALE, _cell_height);
+    Logger().info("Measured cell: width={} height={}", _cell_width, _cell_height);
     ruler.ref_sink();
 
     _cursor->UpdateSize();
