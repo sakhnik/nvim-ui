@@ -50,17 +50,30 @@ GGrid::GGrid(Gtk::Fixed grid, GFont &font, Session::PtrT &session, IWindowHandle
     grid.add_controller(controller);
 }
 
+namespace {
+
+std::string GetRuler()
+{
+    std::string str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    for (int i = 0; i < 5; ++i)
+        str += str;
+    return str;
+}
+
+} // namespace;
+
 void GGrid::MeasureCell()
 {
     // Measure cell width and height
-    const char *const RULER = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    Gtk::Widget ruler{Gtk::Label::new_(RULER)};
+    static std::string RULER = GetRuler();
+
+    Gtk::Widget ruler{Gtk::Label::new_(RULER.c_str())};
     ruler.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
     int width, height;
     ruler.measure(Gtk::Orientation::horizontal, -1, &width, nullptr, nullptr, nullptr);
     ruler.measure(Gtk::Orientation::vertical, -1, &height, nullptr, nullptr, nullptr);
-    _cell_width = 1.0 * width / strlen(RULER);
+    _cell_width = 1.0 * width / RULER.size();
     _cell_height = height;
     Logger().info("Measured cell: width={} height={}", _cell_width, _cell_height);
     ruler.ref_sink();
