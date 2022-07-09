@@ -65,7 +65,7 @@ std::string GetRuler()
 void GGrid::MeasureCell()
 {
     // Measure cell width and height
-    static std::string RULER = GetRuler();
+    static const std::string RULER = GetRuler();
 
     Gtk::Widget ruler{Gtk::Label::new_(RULER.c_str())};
     ruler.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
@@ -213,7 +213,7 @@ void GGrid::Present(int width, int height, uint32_t token)
         for (const auto &texture : line)
         {
             Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
-            int x = 0.5 + CalcX(texture.col);
+            int x = std::round(CalcX(texture.col));
             int y = row * _cell_height;
             if (!t->label)
             {
@@ -223,7 +223,7 @@ void GGrid::Present(int width, int height, uint32_t token)
                 t->label.set_focus_on_click(false);
                 // Specify the width of the widget manually to make sure it occupies
                 // the whole extent and isn't dependent on the font micro typing features.
-                t->label.set_size_request(0.5 + CalcX(texture.width), 0);
+                t->label.set_size_request(std::round(CalcX(texture.width)), 0);
 
                 t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
                 std::string class_name = fmt::format("hl{}", texture.hl_id);
