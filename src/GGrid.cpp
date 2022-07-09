@@ -208,6 +208,9 @@ void GGrid::Present(int width, int height, uint32_t token)
                 t->label.set_sensitive(false);
                 t->label.set_can_focus(false);
                 t->label.set_focus_on_click(false);
+                // Specify the width of the widget manually to make sure it occupies
+                // the whole extent and isn't dependent on the font micro typing features.
+                t->label.set_size_request(_cell_width * texture.width / PANGO_SCALE, 0);
 
                 t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
                 std::string class_name = fmt::format("hl{}", texture.hl_id);
