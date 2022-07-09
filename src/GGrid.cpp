@@ -165,11 +165,20 @@ void GGrid::Present(int width, int height, uint32_t token)
     assert(renderer);
     auto guard = renderer->Lock();
 
+    using ClockT = std::chrono::high_resolution_clock;
+    auto start_time = ClockT::now();
+
     if (renderer->IsAttrMapModified())
     {
         renderer->MarkAttrMapProcessed();
         UpdateStyle();
     }
+    auto style_time = ClockT::now();
+
+    // Count how many labels are going to be removed from the grid
+    int labels_removed{};
+    // Count how many textures are going to be destroyed
+    int textures_delete{};
 
     // First remove outdated textures
     auto removeOutdated = [&] {
@@ -183,6 +192,7 @@ void GGrid::Present(int width, int height, uint32_t token)
             {
                 texture->label.ref();
                 _grid.remove(texture->label);
+                ++labels_removed;
             }
         }
 
@@ -192,17 +202,27 @@ void GGrid::Present(int width, int height, uint32_t token)
             if (texture->label)
             {
                 if (texture->label.get_parent() == _grid)
+                {
                     _grid.remove(texture->label);
+                    ++labels_removed;
+                }
                 else
                     texture->label.unref();
                 texture->label = nullptr;
             }
         }
 
+        textures_delete = _textures.end() - it_alive_end;
         _textures.erase(it_alive_end, _textures.end());
     };
     removeOutdated();
+    auto remove_time = ClockT::now();
 
+    // Count how many new textures are going to be created
+    int textures_created{};
+    // Count how many textures are going to be moved
+    int textures_moved{};
+    // The active texture count
     ssize_t texture_count = 0;
 
     for (int row = 0, rowN = renderer->GetGridLines().size();
@@ -231,11 +251,13 @@ void GGrid::Present(int width, int height, uint32_t token)
 
                 _grid.put(t->label, x, y);
                 _textures.push_back(texture.texture);
+                ++textures_created;
             }
 
             if (t->TakeRedrawToken(token) && t->IsVisible())
             {
                 _grid.move(t->label, x, y);
+                ++textures_moved;
             }
         }
     }
@@ -246,6 +268,20 @@ void GGrid::Present(int width, int height, uint32_t token)
     _cursor->Move();
     _grid.set_cursor_from_name(renderer->IsBusy() ? "progress" : "default");
     _CheckSize(width, height);
+
+    auto end_time = ClockT::now();
+
+    // Report the statistical counts
+    Logger().debug("GGrid::Present labels_removed={} textures_deleted={} created={} moved={}",
+            labels_removed, textures_delete, textures_created, textures_moved);
+
+    // Report timings
+    auto style_duration = std::chrono::duration<double>(style_time - start_time).count();
+    auto remove_duration = std::chrono::duration<double>(remove_time - style_time).count();
+    auto redraw_duration = std::chrono::duration<double>(end_time - remove_time).count();
+    auto total_duration = std::chrono::duration<double>(end_time - start_time).count();
+    Logger().debug("GGrid::Present timings: style={} remove={} redraw={} total={}",
+            style_duration, remove_duration, redraw_duration, total_duration);
 }
 
 void GGrid::Clear()
