@@ -449,6 +449,47 @@ void GGrid::_MoveLabels(uint32_t token)
     Logger().debug("GGrid::_MoveLabels labels_moved={} in {} ms", labels_moved, duration);
 }
 
+namespace {
+
+class DebugTimer
+{
+public:
+    DebugTimer(const char *msg)
+        : _msg{msg}
+    {
+    }
+
+    void Check(int num)
+    {
+        auto now = ClockT::now();
+        _times[num] += std::chrono::duration<double>(now - _prev_time).count();
+        _prev_time = now;
+    }
+
+    ~DebugTimer()
+    {
+        std::ostringstream oss;
+        oss << _msg;
+        std::set<int> ids;
+        for (auto t : _times)
+            ids.insert(t.first);
+        const char *comma = "";
+        for (auto id : ids)
+        {
+            oss << comma << id << fmt::format(": {:.2f}ms", _times[id] * 1000);
+            comma = ", ";
+        }
+        Logger().debug(oss.str());
+    }
+
+private:
+    std::string _msg;
+    ClockT::time_point _prev_time = ClockT::now();
+    std::unordered_map<int, double> _times;
+};
+
+} //namespace
+
 int GGrid::_CreateLabels(int start_row)
 {
     auto start_time = ClockT::now();
