@@ -144,8 +144,8 @@ void Renderer::_DoFlush()
     ++_redraw_token;
 
     auto end_time = ClockT::now();
-    oss << " " << std::chrono::duration<double>(end_time - _last_flush_time).count();
-    Logger().debug("Flush {}", oss.str());
+    oss << " " << ToMs(end_time - _last_flush_time).count();
+    Logger().debug("Flush {} ms", oss.str());
 }
 
 std::vector<size_t> Renderer::_SplitChunks(const _Line &line)

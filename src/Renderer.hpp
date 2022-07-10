@@ -4,6 +4,7 @@
 #include "GridLine.hpp"
 #include "AsyncExec.hpp"
 #include "Timer.hpp"
+#include "Utils.hpp"
 
 #include <vector>
 #include <unordered_map>
@@ -102,7 +103,6 @@ private:
 
     // Make sure flush requests are executed not too frequently,
     // but cleanly.
-    using ClockT = std::chrono::high_resolution_clock;
     ClockT::time_point _last_flush_time;
     // Rendering is done asyncrhonously and concurrently, make sure only clean
     // state after Flush() is displayed.

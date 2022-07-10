@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <functional>
+#include <chrono>
 
 template <typename T, typename D = void(*)(T*)>
 using PtrT = std::unique_ptr<T, D>;
@@ -27,3 +28,11 @@ struct scope_exit
 private:
     FuncT _f;
 };
+
+// The clock for profiling
+using ClockT = std::chrono::high_resolution_clock;
+
+std::chrono::milliseconds ToMs(auto &&dur)
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(dur);
+}

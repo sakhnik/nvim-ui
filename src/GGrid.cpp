@@ -165,123 +165,27 @@ void GGrid::Present(int width, int height, uint32_t token)
     assert(renderer);
     auto guard = renderer->Lock();
 
-    using ClockT = std::chrono::high_resolution_clock;
-    auto start_time = ClockT::now();
-
     if (renderer->IsAttrMapModified())
     {
         renderer->MarkAttrMapProcessed();
         UpdateStyle();
     }
-    auto style_time = ClockT::now();
-
-    // Count how many labels are going to be removed from the grid
-    int labels_removed{};
-    // Count how many textures are going to be destroyed
-    int textures_delete{};
 
     // First remove outdated textures
-    auto removeOutdated = [&] {
-        auto it_visible_end = std::partition(_textures.begin(), _textures.end(), [](auto &t) { return t->IsVisible(); });
-        auto it_alive_end = std::partition(it_visible_end, _textures.end(), [](auto &t) { return t->IsAlive(); });
+    _RemoveOutdated();
 
-        for (auto it = it_visible_end; it != it_alive_end; ++it)
-        {
-            Texture *texture = static_cast<Texture *>(it->get());
-            if (texture->label && texture->label.get_parent() == _grid)
-            {
-                texture->label.ref();
-                _grid.remove(texture->label);
-                ++labels_removed;
-            }
-        }
+    // Then move the surviving labels to their new positions
+    _MoveLabels(token);
 
-        for (auto it = it_alive_end; it != _textures.end(); ++it)
-        {
-            Texture *texture = static_cast<Texture *>(it->get());
-            if (texture->label)
-            {
-                if (texture->label.get_parent() == _grid)
-                {
-                    _grid.remove(texture->label);
-                    ++labels_removed;
-                }
-                else
-                    texture->label.unref();
-                texture->label = nullptr;
-            }
-        }
+    // Create and place new labels
+    _CreateLabels();
 
-        textures_delete = _textures.end() - it_alive_end;
-        _textures.erase(it_alive_end, _textures.end());
-    };
-    removeOutdated();
-    auto remove_time = ClockT::now();
-
-    // Count how many new textures are going to be created
-    int textures_created{};
-    // Count how many textures are going to be moved
-    int textures_moved{};
-    // The active texture count
-    ssize_t texture_count = 0;
-
-    for (int row = 0, rowN = renderer->GetGridLines().size();
-         row < rowN; ++row)
-    {
-        const auto &line = renderer->GetGridLines()[row];
-        texture_count += line.size();
-        for (const auto &texture : line)
-        {
-            Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
-            int x = std::round(CalcX(texture.col));
-            int y = row * _cell_height;
-            if (!t->label)
-            {
-                t->label = Gtk::Label::new_(texture.text.c_str()).g_obj();
-                t->label.set_sensitive(false);
-                t->label.set_can_focus(false);
-                t->label.set_focus_on_click(false);
-                // Specify the width of the widget manually to make sure it occupies
-                // the whole extent and isn't dependent on the font micro typing features.
-                t->label.set_size_request(std::round(CalcX(texture.width)), 0);
-
-                t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-                std::string class_name = fmt::format("hl{}", texture.hl_id);
-                t->label.add_css_class(class_name.data());
-
-                _grid.put(t->label, x, y);
-                _textures.push_back(texture.texture);
-                ++textures_created;
-            }
-
-            if (t->TakeRedrawToken(token) && t->IsVisible())
-            {
-                _grid.move(t->label, x, y);
-                ++textures_moved;
-            }
-        }
-    }
-
-    auto visible_texture_count = std::count_if(_textures.begin(), _textures.end(), [](auto &t) { return t->IsVisible(); });
-    assert(texture_count == visible_texture_count && "Texture count consistency");
+    // Sanity check. Count the active textures.
+    _CheckConsistency();
 
     _cursor->Move();
     _grid.set_cursor_from_name(renderer->IsBusy() ? "progress" : "default");
     _CheckSize(width, height);
-
-    auto end_time = ClockT::now();
-
-    // Report the statistical counts
-    Logger().debug("GGrid::Present labels_removed={} textures_deleted={} created={} moved={}",
-            labels_removed, textures_delete, textures_created, textures_moved);
-
-    // Report timings
-    auto style_duration = std::chrono::duration<double>(style_time - start_time).count();
-    auto remove_duration = std::chrono::duration<double>(remove_time - style_time).count();
-    auto redraw_duration = std::chrono::duration<double>(end_time - remove_time).count();
-    auto total_duration = std::chrono::duration<double>(end_time - start_time).count();
-    Logger().debug("GGrid::Present timings: style={} remove={} redraw={} total={}",
-            style_duration, remove_duration, redraw_duration, total_duration);
 }
 
 void GGrid::Clear()
@@ -425,4 +329,142 @@ void GGrid::CheckSize(int width, int height)
 
     auto guard = renderer->Lock();
     _CheckSize(width, height);
+}
+
+void GGrid::_RemoveOutdated()
+{
+    auto start_time = ClockT::now();
+
+    // Count how many labels are going to be removed from the grid
+    int labels_removed{};
+    // Count how many textures are going to be destroyed
+    int textures_deleted{};
+
+    auto it_visible_end = std::partition(_textures.begin(), _textures.end(), [](auto &t) { return t->IsVisible(); });
+    auto it_alive_end = std::partition(it_visible_end, _textures.end(), [](auto &t) { return t->IsAlive(); });
+
+    for (auto it = it_visible_end; it != it_alive_end; ++it)
+    {
+        Texture *texture = static_cast<Texture *>(it->get());
+        if (texture->label && texture->label.get_parent() == _grid)
+        {
+            texture->label.ref();
+            _grid.remove(texture->label);
+            ++labels_removed;
+        }
+    }
+
+    for (auto it = it_alive_end; it != _textures.end(); ++it)
+    {
+        Texture *texture = static_cast<Texture *>(it->get());
+        if (texture->label)
+        {
+            if (texture->label.get_parent() == _grid)
+            {
+                _grid.remove(texture->label);
+                ++labels_removed;
+            }
+            else
+                texture->label.unref();
+            texture->label = nullptr;
+        }
+    }
+
+    textures_deleted = _textures.end() - it_alive_end;
+    _textures.erase(it_alive_end, _textures.end());
+
+    auto finish_time = ClockT::now();
+    auto duration = ToMs(finish_time - start_time).count();
+    Logger().debug("GGrid::_RemoveOutdated labels_removed={} textures_deleted={} in {} ms",
+            labels_removed, textures_deleted, duration);
+}
+
+void GGrid::_MoveLabels(uint32_t token)
+{
+    auto start_time = ClockT::now();
+
+    // Count how many textures are going to be moved
+    int labels_moved{};
+
+    auto renderer = _session->GetRenderer();
+    // Move the existing labels to their locations
+    for (int row = 0, rowN = renderer->GetGridLines().size();
+         row < rowN; ++row)
+    {
+        const auto &line = renderer->GetGridLines()[row];
+        for (const auto &texture : line)
+        {
+            Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
+            int x = std::round(CalcX(texture.col));
+            int y = row * _cell_height;
+
+            if (t->TakeRedrawToken(token) && t->IsVisible())
+            {
+                _grid.move(t->label, x, y);
+                ++labels_moved;
+            }
+        }
+    }
+
+    auto finish_time = ClockT::now();
+    auto duration = ToMs(finish_time - start_time).count();
+    Logger().debug("GGrid::_MoveLabels labels_moved={} in {} ms", labels_moved, duration);
+}
+
+void GGrid::_CreateLabels()
+{
+    auto start_time = ClockT::now();
+
+    // Count how many new textures are going to be created
+    int labels_created{};
+
+    // Create the newly appearing labels
+    auto renderer = _session->GetRenderer();
+    for (int row = 0, rowN = renderer->GetGridLines().size();
+         row < rowN; ++row)
+    {
+        const auto &line = renderer->GetGridLines()[row];
+        for (const auto &texture : line)
+        {
+            Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
+            int x = std::round(CalcX(texture.col));
+            int y = row * _cell_height;
+            if (!t->label)
+            {
+                t->label = Gtk::Label::new_(texture.text.c_str()).g_obj();
+                t->label.set_sensitive(false);
+                t->label.set_can_focus(false);
+                t->label.set_focus_on_click(false);
+                // Specify the width of the widget manually to make sure it occupies
+                // the whole extent and isn't dependent on the font micro typing features.
+                t->label.set_size_request(std::round(CalcX(texture.width)), 0);
+
+                t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                std::string class_name = fmt::format("hl{}", texture.hl_id);
+                t->label.add_css_class(class_name.data());
+
+                _grid.put(t->label, x, y);
+                _textures.push_back(texture.texture);
+                ++labels_created;
+            }
+        }
+    }
+
+    auto finish_time = ClockT::now();
+    auto duration = ToMs(finish_time - start_time).count();
+    Logger().debug("GGrid::_CreateLabels labels_created={} in {} ms", labels_created, duration);
+}
+
+void GGrid::_CheckConsistency()
+{
+    ssize_t texture_count = 0;
+    auto renderer = _session->GetRenderer();
+    for (int row = 0, rowN = renderer->GetGridLines().size();
+         row < rowN; ++row)
+    {
+        const auto &line = renderer->GetGridLines()[row];
+        texture_count += line.size();
+    }
+    auto visible_texture_count = std::count_if(_textures.begin(), _textures.end(), [](auto &t) { return t->IsVisible(); });
+    assert(texture_count == visible_texture_count && "Texture count consistency");
 }

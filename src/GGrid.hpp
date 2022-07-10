@@ -72,4 +72,8 @@ private:
 
     int _last_rows = 0, _last_cols = 0;
     void _CheckSize(int width, int height);
+    void _RemoveOutdated();
+    void _MoveLabels(uint32_t token);
+    void _CreateLabels();
+    void _CheckConsistency();
 };
