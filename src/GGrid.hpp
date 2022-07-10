@@ -72,8 +72,19 @@ private:
 
     int _last_rows = 0, _last_cols = 0;
     void _CheckSize(int width, int height);
+
+    // Presentation may take significant amount of time
+    // So some of the tasks need to be split into pieces.
+    // Then we need to order them properly for interrupted execution.
+    using _TaskT = std::function<void(void)>;
+    std::deque<_TaskT> _tasks;
+
+    void _ExecuteTasks();
+    void _Present(uint32_t token);
     void _RemoveOutdated();
     void _MoveLabels(uint32_t token);
-    void _CreateLabels();
+    // Return -1 if finished, or the row from which to continue the next time.
+    int _CreateLabels(int start_row);
+    int _CreateLabelsInterrupted(int start_row);
     void _CheckConsistency();
 };
