@@ -91,14 +91,10 @@ void Renderer::_DoFlush()
         // Split the cells into chunks by the same hl_id
         auto chunks = _SplitChunks(line);
 
-        auto texture_generator = [&](const GridLine::Chunk &chunk) {
-            // Paint the text on the surface carefully
+        auto texture_generator = [&](const GridLine::Chunk &/*chunk*/) {
             if (!_window)
                 return BaseTexture::PtrT{};
-            auto hlit = _hl_attr.find(chunk.hl_id);
-            return _window->CreateTexture(chunk.width, chunk.text,
-                    hlit != _hl_attr.end() ? hlit->second : _def_attr,
-                    _def_attr);
+            return _window->CreateTexture();
         };
 
         {

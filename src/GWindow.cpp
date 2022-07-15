@@ -165,8 +165,7 @@ void GWindow::_CheckSize()
 }
 
 BaseTexture::PtrT
-GWindow::CreateTexture(int /*width*/, std::string_view /*text*/,
-                       const HlAttr &/*attr*/, const HlAttr &/*def_attr*/)
+GWindow::CreateTexture()
 {
     return BaseTexture::PtrT(new GGrid::Texture);
 }
