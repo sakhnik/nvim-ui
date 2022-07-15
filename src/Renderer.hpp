@@ -7,7 +7,6 @@
 #include "Utils.hpp"
 
 #include <vector>
-#include <unordered_map>
 #include <string_view>
 #include <string>
 #include <mutex>
@@ -55,8 +54,7 @@ public:
         return std::lock_guard<std::mutex>{_mutex};
     }
 
-    using AttrMapT = std::unordered_map<unsigned, HlAttr>;
-    const AttrMapT& GetAttrMap() const { return _hl_attr; }
+    const HlAttr::MapT& GetAttrMap() const { return _hl_attr_map; }
     bool IsAttrMapModified() const { return _hl_attr_modified; }
     void MarkAttrMapProcessed() { _hl_attr_modified = false; }
     unsigned GetBg() const { return _def_attr.bg.value(); }
@@ -74,7 +72,7 @@ private:
     AsyncExec _async_exec;
     IWindow *_window = nullptr;
 
-    AttrMapT _hl_attr;
+    HlAttr::MapT _hl_attr_map;
     bool _hl_attr_modified = false;
     HlAttr _def_attr;
     int _cursor_row = 0;

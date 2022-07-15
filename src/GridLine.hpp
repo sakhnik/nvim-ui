@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IWindow.hpp"
+#include <compare>
 #include <string>
 #include <list>
 #include <functional>
@@ -8,26 +9,38 @@
 class GridLine
 {
 public:
+    struct Word
+    {
+        unsigned hl_id = 0;
+        std::string text;
+
+        auto operator<=>(const Word &) const = default;
+    };
+
     struct Chunk
     {
         // Start column of the chunk
         int col = 0;
         int width = 0; // count of cells
-        unsigned hl_id = 0;
-        std::string text;
+
+        using WordsT = std::vector<Word>;
+        WordsT words;
+
         BaseTexture::PtrT texture;
 
-        Chunk(int col, int width, unsigned hl_id, std::string_view text)
+        Chunk(int col, int width, WordsT &&words)
             : col{col}
             , width{width}
-            , hl_id{hl_id}
-            , text{text}
+            , words{std::forward<WordsT>(words)}
         {
         }
 
         bool IsSpace() const
         {
-            return text.rfind("  ", 0) == 0;
+            if (words.size() != 1)
+                return false;
+            const auto &word = words.front();
+            return word.text.rfind("  ", 0) == 0;
         }
     };
 

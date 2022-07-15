@@ -9,18 +9,23 @@ using namespace std::string_literals;
 struct Tex : BaseTexture
 {
     std::string s;
-    Tex(const std::string &s): s{s} {}
-    static PtrT n(const std::string &s) { return PtrT{new Tex(s)}; }
+    Tex(const auto &words)
+    {
+        for (const auto &w : words)
+            s += w.text;
+    }
+    static PtrT n(const GridLine::Chunk::WordsT &words) { return PtrT{new Tex(words)}; }
 };
 
 suite s = [] {
-    auto generator = [](const auto &t) { return Tex::n(t.text); };
-    auto no_generator = [](const auto &) { return Tex::n("*"); };
+    auto generator = [](const auto &t) { return Tex::n(t.words); };
+    auto no_generator = [](const auto &) { return Tex::n({{13u, "*"}}); };
 
     auto dump = [](GridLine &tc) {
         std::string buf;
         auto action = [&](const GridLine::Chunk &t) {
-            buf += t.text;
+            for (const auto &w : t.words)
+                buf += w.text;
         };
         tc.ForEach(action);
         return buf;
@@ -40,9 +45,9 @@ suite s = [] {
             GridLine c;
             auto s = c.GetScanner(0);
 
-            expect(s.EnsureNext(GridLine::Chunk(0, 1, 0, "He"), generator));
-            expect(s.EnsureNext(GridLine::Chunk(2, 1, 0, "llo"), generator));
-            expect(s.EnsureNext(GridLine::Chunk(3, 1, 0, " world"), generator));
+            expect(s.EnsureNext(GridLine::Chunk(0, 1, {{0u, "He"}}), generator));
+            expect(s.EnsureNext(GridLine::Chunk(2, 1, {{0u, "llo"}}), generator));
+            expect(s.EnsureNext(GridLine::Chunk(3, 1, {{0u, " world"}}), generator));
 
             expect(eq("Hello world"s, dump(c)));
             expect(eq("Hello world"s, dump2(c)));
@@ -52,16 +57,16 @@ suite s = [] {
             GridLine c;
             {
                 auto s = c.GetScanner(0);
-                expect(s.EnsureNext(GridLine::Chunk(0, 1, 0, "He"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(2, 1, 0, "llo"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(3, 1, 0, " world"), generator));
+                expect(s.EnsureNext(GridLine::Chunk(0, 1, {{0u, "He"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(2, 1, {{0u, "llo"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(3, 1, {{0u, " world"}}), generator));
             }
 
             {
                 auto s = c.GetScanner(0);
-                expect(!s.EnsureNext(GridLine::Chunk(0, 1, 0, "He"), no_generator));
-                expect(s.EnsureNext(GridLine::Chunk(2, 1, 0, "llo "), generator));
-                expect(s.EnsureNext(GridLine::Chunk(3, 1, 0, "again"), generator));
+                expect(!s.EnsureNext(GridLine::Chunk(0, 1, {{0u, "He"}}), no_generator));
+                expect(s.EnsureNext(GridLine::Chunk(2, 1, {{0u, "llo "}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(3, 1, {{0u, "again"}}), generator));
             }
             expect(eq("Hello again"s, dump(c)));
             expect(eq("Hello again"s, dump2(c)));
@@ -71,17 +76,17 @@ suite s = [] {
             GridLine c;
             {
                 auto s = c.GetScanner(0);
-                expect(s.EnsureNext(GridLine::Chunk(0, 1, 0, "T"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(1, 1, 0, "e"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(2, 1, 0, "s"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(3, 1, 0, "t"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(4, 1, 0, "2"), generator));
+                expect(s.EnsureNext(GridLine::Chunk(0, 1, {{0u, "T"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(1, 1, {{0u, "e"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(2, 1, {{0u, "s"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(3, 1, {{0u, "t"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(4, 1, {{0u, "2"}}), generator));
             }
             {
                 auto s = c.GetScanner(0);
-                expect(s.EnsureNext(GridLine::Chunk(0, 1, 0, "B"), generator));
-                expect(!s.EnsureNext(GridLine::Chunk(1, 1, 0, "e"), no_generator));
-                expect(!s.EnsureNext(GridLine::Chunk(3, 1, 0, "t"), no_generator));
+                expect(s.EnsureNext(GridLine::Chunk(0, 1, {{0u, "B"}}), generator));
+                expect(!s.EnsureNext(GridLine::Chunk(1, 1, {{0u, "e"}}), no_generator));
+                expect(!s.EnsureNext(GridLine::Chunk(3, 1, {{0u, "t"}}), no_generator));
             }
             expect(eq("Bet"s, dump(c)));
             expect(eq("Bet"s, dump2(c)));
@@ -91,19 +96,19 @@ suite s = [] {
             GridLine c1;
             {
                 auto s = c1.GetScanner(0);
-                expect(s.EnsureNext(GridLine::Chunk(0, 1, 0, "T"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(2, 1, 0, "e"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(4, 1, 0, "s"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(6, 1, 0, "t"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(8, 1, 0, "2"), generator));
+                expect(s.EnsureNext(GridLine::Chunk(0, 1, {{0u, "T"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(2, 1, {{0u, "e"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(4, 1, {{0u, "s"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(6, 1, {{0u, "t"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(8, 1, {{0u, "2"}}), generator));
             }
             GridLine c2;
             {
                 auto s = c2.GetScanner(0);
-                expect(s.EnsureNext(GridLine::Chunk(1, 1, 0, "Q"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(3, 1, 0, "W"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(5, 1, 0, "E"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(7, 1, 0, "R"), generator));
+                expect(s.EnsureNext(GridLine::Chunk(1, 1, {{0u, "Q"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(3, 1, {{0u, "W"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(5, 1, {{0u, "E"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(7, 1, {{0u, "R"}}), generator));
             }
 
             c1.MoveFrom(c2, 2, 7, 0xffffffff);
@@ -117,17 +122,17 @@ suite s = [] {
             GridLine c;
             {
                 auto s = c.GetScanner(0);
-                expect(s.EnsureNext(GridLine::Chunk(0, 2, 0, "He"), generator));
-                expect(s.EnsureNext(GridLine::Chunk(2, 1, 0, " "), generator));
-                expect(s.EnsureNext(GridLine::Chunk(3, 3, 0, "llo"), generator));
+                expect(s.EnsureNext(GridLine::Chunk(0, 2, {{0u, "He"}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(2, 1, {{0u, " "}}), generator));
+                expect(s.EnsureNext(GridLine::Chunk(3, 3, {{0u, "llo"}}), generator));
             }
             expect(eq("He llo"s, dump(c)));
             expect(eq("He llo"s, dump2(c)));
 
             {
                 auto s = c.GetScanner(0);
-                expect(!s.EnsureNext(GridLine::Chunk(0, 2, 0, "He"), no_generator));
-                expect(!s.EnsureNext(GridLine::Chunk(2, 3, 0, "llo"), no_generator));
+                expect(!s.EnsureNext(GridLine::Chunk(0, 2, {{0u, "He"}}), no_generator));
+                expect(!s.EnsureNext(GridLine::Chunk(2, 3, {{0u, "llo"}}), no_generator));
             }
             expect(eq("Hello"s, dump(c)));
             expect(eq("Hello"s, dump2(c)));
@@ -136,7 +141,7 @@ suite s = [] {
 
     "GridLine::ChunkWrapper"_test = [&] {
         using WrapperT = GridLine::ChunkWrapper<&BaseTexture::IncRef>;
-        GridLine::Chunk c{0, 1, 0, "test"};
+        GridLine::Chunk c{0, 1, {{0u, "test"}}};
         c.texture = generator(c);
         expect(!c.texture->IsAlive());
         expect(!c.texture->IsVisible());

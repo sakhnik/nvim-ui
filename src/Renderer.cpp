@@ -103,18 +103,19 @@ void Renderer::_DoFlush()
             // Print and cache the chunks individually
             for (size_t i = 1; i < chunks.size(); ++i)
             {
-                int col = chunks[i - 1];
+                int begin = chunks[i - 1];
                 int end = chunks[i];
-                int hl_id = line.hl_id[col];
-                GridLine::Chunk chunk(col, end - col, hl_id, "");
-                while (col < end)
-                    chunk.text += line.text[col++];
+                unsigned hl_id = line.hl_id[begin];
+                GridLine::Word word{hl_id, ""};
+                for (int i{begin}; i < end; ++i)
+                    word.text += line.text[i];
+                GridLine::Chunk chunk(begin, end - begin, {word});
 
-                const auto hlit = _hl_attr.find(hl_id);
+                const auto hlit = _hl_attr_map.find(hl_id);
                 unsigned def_bg = _def_attr.bg.value();
 
                 if (chunk.IsSpace()
-                    && (hlit == _hl_attr.end()                                   // No highlighting
+                    && (hlit == _hl_attr_map.end()                                   // No highlighting
                         || (hlit->second.bg.value_or(def_bg) == def_bg           // Default background
                             && 0 == (hlit->second.flags & HlAttr::F_REVERSE))))  // No reverse (foreground becomes background)
                 {
@@ -266,7 +267,7 @@ void Renderer::GridClear()
 void Renderer::HlAttrDefine(unsigned hl_id, HlAttr attr)
 {
     Logger().debug("HlAttrDefine {}", hl_id);
-    _hl_attr[hl_id] = attr;
+    _hl_attr_map[hl_id] = attr;
     _hl_attr_modified = true;
 }
 

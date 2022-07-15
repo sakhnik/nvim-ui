@@ -28,14 +28,12 @@ bool GridLine::Scanner::EnsureNext(Chunk &&chunk, GeneratorT generator)
         _iter = _chunks.erase(_iter);
     }
     while (_iter != _chunks.end() && _iter->col == chunk.col
-        && (_iter->hl_id != chunk.hl_id || _iter->text != chunk.text))
+        && _iter->words != chunk.words)
     {
         _iter = _chunks.erase(_iter);
     }
 
-    if (_iter == _chunks.end()
-        || _iter->hl_id != chunk.hl_id
-        || _iter->text != chunk.text)
+    if (_iter == _chunks.end() || _iter->words != chunk.words)
     {
         chunk.texture = generator(chunk);
         _iter = _chunks.insert(_iter, std::move(chunk));

@@ -522,7 +522,8 @@ int GGrid::_CreateLabels(int start_row)
             int y = row * _cell_height;
             if (!t->label)
             {
-                t->label = Gtk::Label::new_(texture.text.c_str()).g_obj();
+                const auto &w0 = texture.words.front();
+                t->label = Gtk::Label::new_(w0.text.c_str()).g_obj();
                 t->label.set_sensitive(false);
                 t->label.set_can_focus(false);
                 t->label.set_focus_on_click(false);
@@ -531,7 +532,7 @@ int GGrid::_CreateLabels(int start_row)
                 t->label.set_size_request(std::round(CalcX(texture.width)), 0);
 
                 t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-                std::string class_name = fmt::format("hl{}", texture.hl_id);
+                std::string class_name = fmt::format("hl{}", w0.hl_id);
                 t->label.add_css_class(class_name.data());
 
                 _grid.put(t->label, x, y);

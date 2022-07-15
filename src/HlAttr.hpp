@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <cstdint>
+#include <unordered_map>
 
 struct HlAttr
 {
@@ -22,4 +23,6 @@ struct HlAttr
     std::optional<uint32_t> fg, bg;
     unsigned flags = 0;
     std::optional<uint32_t> special{};
+
+    using MapT = std::unordered_map<unsigned, HlAttr>;
 };
