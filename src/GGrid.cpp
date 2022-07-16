@@ -13,6 +13,7 @@
 
 #include <sstream>
 #include <numeric>
+#include <boost/algorithm/string.hpp>
 
 #ifdef GIR_INLINE
 #include "Gtk/ApplicationWindow.ipp"
@@ -85,79 +86,101 @@ void GGrid::MeasureCell()
 void GGrid::UpdateStyle()
 {
     std::ostringstream oss;
-    auto mapAttr = [&](const HlAttr &attr, const HlAttr &def_attr) {
-        if ((attr.flags & HlAttr::F_REVERSE))
-        {
-            auto fg = attr.fg.value_or(def_attr.fg.value());
-            auto bg = attr.bg.value_or(def_attr.bg.value());
-            oss << fmt::format("background-color: #{:06x};\n", fg);
-            oss << fmt::format("color: #{:06x};\n", bg);
-        }
-        else
-        {
-            if (attr.bg.has_value())
-                oss << fmt::format("background-color: #{:06x};\n", attr.bg.value());
-            if (attr.fg.has_value())
-                oss << fmt::format("color: #{:06x};\n", attr.fg.value());
-        }
-        if ((attr.flags & HlAttr::F_ITALIC))
-            oss << "font-style: italic;\n";
-        if ((attr.flags & HlAttr::F_BOLD))
-            oss << "font-weight: bold;\n";
-
-        if ((attr.flags & HlAttr::F_TEXT_DECORATION))
-        {
-            oss << "text-decoration-line: underline;\n";
-            const char *style = "solid";
-            if ((attr.flags & HlAttr::F_UNDERUNDERLINE))
-                style = "double";
-            else if ((attr.flags & HlAttr::F_UNDERCURL))
-                style = "wavy";
-            //else if ((attr.flags & HlAttr::F_UNDERDASH))
-            //    style = "dashed";
-            //else if ((attr.flags & HlAttr::F_UNDERDOT))
-            //    style = "dotted";
-            oss << "text-decoration-style: " << style << ";\n";
-            if (attr.special.has_value())
-                oss << fmt::format("text-decoration-color: #{:06x};\n", attr.special.value());
-        }
-        else if ((attr.flags & HlAttr::F_STRIKETHROUGH))
-        {
-            oss << "text-decoration-line: line-through;\n";
-            oss << "text-decoration-style: " << "solid" << ";\n";
-        }
-    };
 
     auto renderer = _session->GetRenderer();
     assert(renderer);
+    const auto &attr = renderer->GetDefAttr();
 
     oss << "* {\n";
     oss << "font-family: " << _font.GetFamily() << ";\n";
     oss << "font-size: " << _font.GetSizePt() << "pt;\n";
-    mapAttr(renderer->GetDefAttr(), renderer->GetDefAttr());
+    if ((attr.flags & HlAttr::F_REVERSE))
+    {
+        if (attr.fg.has_value())
+            oss << fmt::format("background-color: #{:06x};\n", attr.fg.value());
+        if (attr.bg.has_value())
+            oss << fmt::format("color: #{:06x};\n", attr.bg.value());
+    }
+    else
+    {
+        if (attr.bg.has_value())
+            oss << fmt::format("background-color: #{:06x};\n", attr.bg.value());
+        if (attr.fg.has_value())
+            oss << fmt::format("color: #{:06x};\n", attr.fg.value());
+    }
     oss << "}\n";
 
     oss << "label.status {\n";
     oss << "color: #cccccc;";
     oss << "}\n";
 
-    for (const auto &id_attr : renderer->GetAttrMap())
-    {
-        int id = id_attr.first;
-        const auto &attr = id_attr.second;
-
-        oss << "\n";
-        oss << "label.hl" << id << " {\n";
-        mapAttr(attr, renderer->GetDefAttr());
-        oss << "}\n";
-    }
-
     std::string style = oss.str();
     Logger().debug("Updated CSS Style:\n{}", style);
     _css_provider.load_from_data(style.data(), -1);
 
+    _UpdatePangoStyles();
+
     MeasureCell();
     _window_handler->CheckSizeAsync();
+}
+
+std::string GGrid::_MakePangoStyle(const HlAttr &attr, const HlAttr &def_attr)
+{
+    std::ostringstream oss;
+    if ((attr.flags & HlAttr::F_REVERSE))
+    {
+        auto fg = attr.fg.value_or(def_attr.fg.value());
+        auto bg = attr.bg.value_or(def_attr.bg.value());
+        oss << fmt::format(" background=\"#{:06x}\"", fg);
+        oss << fmt::format(" color=\"#{:06x}\"", bg);
+    }
+    else
+    {
+        if (attr.bg.has_value())
+            oss << fmt::format(" background=\"#{:06x}\"", attr.bg.value());
+        if (attr.fg.has_value())
+            oss << fmt::format(" color=\"#{:06x}\"", attr.fg.value());
+    }
+    if ((attr.flags & HlAttr::F_ITALIC))
+        oss << " style=\"italic\"";
+    if ((attr.flags & HlAttr::F_BOLD))
+        oss << " weight=\"bold\"";
+
+    if ((attr.flags & HlAttr::F_TEXT_DECORATION))
+    {
+        if ((attr.flags & HlAttr::F_UNDERUNDERLINE))
+            oss << " underline=\"single\"";
+        else if ((attr.flags & HlAttr::F_UNDERCURL))
+            oss << " underline=\"error\"";
+        //else if ((attr.flags & HlAttr::F_UNDERDASH))
+        //    style = "dashed";
+        //else if ((attr.flags & HlAttr::F_UNDERDOT))
+        //    style = "dotted";
+        if (attr.special.has_value())
+            oss << fmt::format(" underline_color=\"#{:06x}\"", attr.special.value());
+    }
+    else if ((attr.flags & HlAttr::F_STRIKETHROUGH))
+    {
+        oss << " strikethrough=\"true\"";
+    }
+    return oss.str();
+}
+
+void GGrid::_UpdatePangoStyles()
+{
+    auto renderer = _session->GetRenderer();
+    assert(renderer);
+
+    auto def_attr = renderer->GetDefAttr();
+    _default_pango_style = _MakePangoStyle(def_attr, def_attr);
+
+    _pango_styles.clear();
+    for (const auto &id_attr : renderer->GetAttrMap())
+    {
+        int id = id_attr.first;
+        const auto &attr = id_attr.second;
+        _pango_styles[id] = _MakePangoStyle(attr, def_attr);
+    }
 }
 
 void GGrid::Present(int width, int height, uint32_t token)
@@ -489,6 +512,17 @@ private:
     std::unordered_map<int, double> _times;
 };
 
+std::string XmlEscape(std::string s)
+{
+    using boost::algorithm::replace_all;
+    replace_all(s, "&",  "&amp;");
+    replace_all(s, "\"", "&quot;");
+    replace_all(s, "\'", "&apos;");
+    replace_all(s, "<",  "&lt;");
+    replace_all(s, ">",  "&gt;");
+    return s;
+}
+
 } //namespace
 
 int GGrid::_CreateLabels(int start_row)
@@ -524,10 +558,16 @@ int GGrid::_CreateLabels(int start_row)
             if (!t->label)
             {
                 std::string text = std::accumulate(texture.words.begin(), texture.words.end(),
-                        std::string{}, [](const auto &a, const auto &b) {
-                            return a + b.text;
+                        std::string{},
+                        [&](const auto &a, const auto &b) {
+                            auto it = _pango_styles.find(b.hl_id);
+                            const std::string &pango_style = it == _pango_styles.end()
+                                ? _default_pango_style
+                                : it->second;
+                            return a + "<span" + pango_style + ">" + XmlEscape(b.text) + "</span>";
                         });
-                t->label = Gtk::Label::new_(text.c_str()).g_obj();
+                t->label = Gtk::Label::new_("").g_obj();
+                t->label.set_markup(text.c_str());
                 t->label.set_sensitive(false);
                 t->label.set_can_focus(false);
                 t->label.set_focus_on_click(false);
