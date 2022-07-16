@@ -12,6 +12,7 @@
 #include "Gtk/StyleContext.hpp"
 
 #include <sstream>
+#include <numeric>
 
 #ifdef GIR_INLINE
 #include "Gtk/ApplicationWindow.ipp"
@@ -522,8 +523,11 @@ int GGrid::_CreateLabels(int start_row)
             int y = row * _cell_height;
             if (!t->label)
             {
-                const auto &w0 = texture.words.front();
-                t->label = Gtk::Label::new_(w0.text.c_str()).g_obj();
+                std::string text = std::accumulate(texture.words.begin(), texture.words.end(),
+                        std::string{}, [](const auto &a, const auto &b) {
+                            return a + b.text;
+                        });
+                t->label = Gtk::Label::new_(text.c_str()).g_obj();
                 t->label.set_sensitive(false);
                 t->label.set_can_focus(false);
                 t->label.set_focus_on_click(false);
@@ -532,6 +536,7 @@ int GGrid::_CreateLabels(int start_row)
                 t->label.set_size_request(std::round(CalcX(texture.width)), 0);
 
                 t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                const auto &w0 = texture.words.front();
                 std::string class_name = fmt::format("hl{}", w0.hl_id);
                 t->label.add_css_class(class_name.data());
 
