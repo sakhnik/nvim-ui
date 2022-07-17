@@ -3,9 +3,7 @@
 #include "IWindow.hpp"
 #include <compare>
 #include <string>
-#include <list>
-#include <functional>
-#include <cassert>
+#include <vector>
 
 class GridLine
 {
@@ -77,19 +75,4 @@ public:
                 (texture.get()->*inc_ref)(false);
         }
     };
-
-private:
-    // Sorted list
-    using _ChunkT = ChunkWrapper<&BaseTexture::IncRef>;
-    using _ChunkListT = std::list<_ChunkT>;
-    _ChunkListT _chunks;
-
-public:
-    void ForEach(std::function<void(const Chunk &)> action);
-
-    void Clear();
-
-    // Move chunks from the other grid line in the given column limits
-    // (used when scrolling)
-    void MoveFrom(GridLine &o, int left, int right);
 };

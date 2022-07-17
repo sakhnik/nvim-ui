@@ -5,7 +5,6 @@ nvim_ui_lib_sources = [
   'AsyncExec.cpp',
   'AsyncExec.hpp',
   'BaseTexture.hpp',
-  'GridLine.cpp',
   'GridLine.hpp',
   'Input.cpp',
   'Input.hpp',
