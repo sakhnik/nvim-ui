@@ -467,7 +467,6 @@ void GGrid::_CreateLabels()
     {
         const auto &texture = renderer->GetGridLines()[row];
         Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
-        int x = std::round(CalcX(texture.col));
         int y = row * _cell_height;
         if (!t->label)
         {
@@ -491,7 +490,7 @@ void GGrid::_CreateLabels()
 
             t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-            _grid.put(t->label, x, y);
+            _grid.put(t->label, 0, y);
             _textures.push_back(texture.texture);
             ++labels_created;
         }

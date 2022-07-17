@@ -22,7 +22,7 @@ suite s = [] {
 
     "GridLine::ChunkWrapper"_test = [&] {
         using WrapperT = GridLine::ChunkWrapper<&BaseTexture::IncRef>;
-        GridLine::Chunk c{0, 1, {{0u, "test"}}};
+        GridLine::Chunk c{1, {{0u, "test"}}};
         c.texture = generator(c);
         expect(!c.texture->IsAlive());
         expect(!c.texture->IsVisible());

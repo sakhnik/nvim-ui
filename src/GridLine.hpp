@@ -23,9 +23,6 @@ public:
 
     struct Chunk
     {
-        // Start column of the chunk
-        // TODO: remove col as it's always 0
-        int col = 0;
         int width = 0; // count of cells
 
         using WordsT = std::vector<Word>;
@@ -33,9 +30,8 @@ public:
 
         BaseTexture::PtrT texture;
 
-        Chunk(int col, int width, WordsT &&words)
-            : col{col}
-            , width{width}
+        Chunk(int width, WordsT &&words)
+            : width{width}
             , words{std::forward<WordsT>(words)}
         {
         }

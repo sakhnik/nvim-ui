@@ -106,7 +106,7 @@ void Renderer::_DoFlush()
         };
 
         // Create grid line chunks
-        GridLine::Chunk line_chunk(0, 0, {});
+        GridLine::Chunk line_chunk(0, {});
 
         // Group the words into one big word
         for (size_t i = 1; i < chunks.size(); ++i)
@@ -307,7 +307,7 @@ void Renderer::GridResize(int width, int height)
         line.text.resize(width, " ");
     }
 
-    _grid_lines.resize(height, GridLine::Chunk{0, 0, {}});
+    _grid_lines.resize(height, GridLine::Chunk{0, {}});
 }
 
 void Renderer::ModeChange(std::string_view mode)
