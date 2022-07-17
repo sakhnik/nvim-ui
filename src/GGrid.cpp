@@ -526,9 +526,6 @@ void GGrid::_CreateLabels()
                 t->label.set_size_request(std::round(CalcX(texture.width)), 0);
 
                 t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-                const auto &w0 = texture.words.front();
-                std::string class_name = fmt::format("hl{}", w0.hl_id);
-                t->label.add_css_class(class_name.data());
 
                 _grid.put(t->label, x, y);
                 _textures.push_back(texture.texture);

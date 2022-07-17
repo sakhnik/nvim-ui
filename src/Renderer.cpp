@@ -91,25 +91,9 @@ void Renderer::_DoFlush()
         // Split the cells into chunks by the same hl_id
         auto chunks = _SplitChunks(line);
 
-        // Create grid line chunks
-        std::vector<GridLine::Chunk> words;
-
-        for (size_t i = 1; i < chunks.size(); ++i)
-        {
-            int begin = chunks[i - 1];
-            int end = chunks[i];
-            unsigned hl_id = line.hl_id[begin];
-            GridLine::Word word{hl_id, ""};
-            for (int i{begin}; i < end; ++i)
-                word.text += line.text[i];
-            GridLine::Chunk chunk(begin, end - begin, {word});
-            words.push_back(std::move(chunk));
-        }
-
-        auto isInvisibleSpace = [&](GridLine::Chunk &chunk) -> bool {
-            if (!chunk.IsSpace())
+        auto isInvisibleSpace = [&](const GridLine::Word &word) -> bool {
+            if (!word.IsSpace())
                 return false;
-            auto &word = chunk.words.front();
             const auto hlit = _hl_attr_map.find(word.hl_id);
             unsigned def_bg = _def_attr.bg.value();
 
@@ -122,16 +106,23 @@ void Renderer::_DoFlush()
             return false;
         };
 
-        // Instant optimization: ignore the tailing invisible space
-        if (isInvisibleSpace(words.back()))
-            words.pop_back();
+        // Create grid line chunks
+        GridLine::Chunk line_chunk(0, 0, {});
 
-        // Group words into one big word
-        while (words.size() > 1)
+        // Group the words into one big word
+        for (size_t i = 1; i < chunks.size(); ++i)
         {
-            auto b = std::move(words.back());
-            words.pop_back();
-            words.back().Merge(b);
+            int begin = chunks[i - 1];
+            int end = chunks[i];
+            unsigned hl_id = line.hl_id[begin];
+            GridLine::Word word{hl_id, ""};
+            for (int i{begin}; i < end; ++i)
+                word.text += line.text[i];
+            // Instant optimization: ignore the tailing invisible space
+            if (i == chunks.size() - 1 && isInvisibleSpace(word))
+                break;
+            line_chunk.width = end;
+            line_chunk.words.push_back(std::move(word));
         }
 
         auto texture_generator = [&](const GridLine::Chunk &/*chunk*/) {
@@ -142,16 +133,7 @@ void Renderer::_DoFlush()
 
         {
             auto grid_line_scanner = grid_line.GetScanner(_redraw_token);
-
-            // Print and cache the chunks individually
-            for (auto &word : words)
-            {
-                // Test whether the chunk should be rendered again
-                if (grid_line_scanner.EnsureNext(std::move(word), texture_generator))
-                    oss << "+";
-                else
-                    oss << ".";
-            }
+            grid_line_scanner.EnsureNext(std::move(line_chunk), texture_generator);
         }
 
         grid_line.CopyTo(_grid_lines[row]);

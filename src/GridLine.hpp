@@ -16,6 +16,11 @@ public:
         std::string text;
 
         auto operator<=>(const Word &) const = default;
+
+        bool IsSpace() const
+        {
+            return text.rfind("  ", 0) == 0;
+        }
     };
 
     struct Chunk
@@ -34,23 +39,6 @@ public:
             , width{width}
             , words{std::forward<WordsT>(words)}
         {
-        }
-
-        bool IsSpace() const
-        {
-            if (words.size() != 1)
-                return false;
-            const auto &word = words.front();
-            return word.text.rfind("  ", 0) == 0;
-        }
-
-        // Merge in the next adjacent chunk
-        void Merge(Chunk &next)
-        {
-            assert(col + width == next.col);
-            width += next.width;
-            for (auto &w : next.words)
-                words.push_back(std::move(w));
         }
     };
 
