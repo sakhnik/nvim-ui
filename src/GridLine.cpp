@@ -12,7 +12,7 @@ void GridLine::Clear()
     _chunks.clear();
 }
 
-void GridLine::MoveFrom(GridLine &o, int left, int right, uint32_t redraw_token)
+void GridLine::MoveFrom(GridLine &o, int left, int right)
 {
     // Find the beginning of the source cache
     auto it_from = o._chunks.begin();
@@ -25,7 +25,6 @@ void GridLine::MoveFrom(GridLine &o, int left, int right, uint32_t redraw_token)
         // Find a suitable place to insert to still maintaining the sorted order
         while (it != _chunks.end() && it->col < it_from->col)
             ++it;
-        it_from->texture->MarkToRedraw(redraw_token);
         _chunks.splice(it++, o._chunks, it_from++);
     }
 }

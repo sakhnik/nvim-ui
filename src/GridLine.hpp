@@ -91,5 +91,5 @@ public:
 
     // Move chunks from the other grid line in the given column limits
     // (used when scrolling)
-    void MoveFrom(GridLine &o, int left, int right, uint32_t redraw_token);
+    void MoveFrom(GridLine &o, int left, int right);
 };

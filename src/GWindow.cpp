@@ -170,16 +170,16 @@ GWindow::CreateTexture()
     return BaseTexture::PtrT(new GGrid::Texture);
 }
 
-void GWindow::Present(uint32_t token)
+void GWindow::Present()
 {
-    _GtkTimer(1, [this, token]() { _Present(token); });
+    _GtkTimer(1, [this]() { _Present(); });
 }
 
-void GWindow::_Present(uint32_t token)
+void GWindow::_Present()
 {
     int width = _scroll.get_allocated_width();
     int height = _scroll.get_allocated_height();
-    _grid->Present(width, height, token);
+    _grid->Present(width, height);
 }
 
 void GWindow::SessionEnd()

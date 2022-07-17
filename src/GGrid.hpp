@@ -30,7 +30,7 @@ public:
 
     void UpdateStyle();
     void MeasureCell();
-    void Present(int width, int height, uint32_t token);
+    void Present(int width, int height);
     void Clear();
     void CheckSize(int width, int height);
 
@@ -75,7 +75,6 @@ private:
     int _last_rows = 0, _last_cols = 0;
     void _CheckSize(int width, int height);
     void _RemoveOutdated();
-    void _MoveLabels(uint32_t token);
     void _CreateLabels();
     void _CheckConsistency();
     void _UpdatePangoStyles();

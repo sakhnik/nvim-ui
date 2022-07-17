@@ -129,10 +129,7 @@ void Renderer::_DoFlush()
     }
 
     if (_window)
-        _window->Present(_redraw_token);
-    // This flush has been handled, advance the token to start accepting
-    // handling new changes.
-    ++_redraw_token;
+        _window->Present();
 
     auto end_time = ClockT::now();
     oss << " " << ToMs(end_time - _last_flush_time).count();

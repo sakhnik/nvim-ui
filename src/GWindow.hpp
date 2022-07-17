@@ -34,7 +34,7 @@ public:
     ~GWindow();
 
     BaseTexture::PtrT CreateTexture() override;
-    void Present(uint32_t token) override;
+    void Present() override;
     void DrawCursor(cairo_t *, int row, int col, unsigned fg, std::string_view mode);
     void SessionEnd() override;
 
@@ -60,7 +60,7 @@ private:
     void CheckSizeAsync() override;
     void _CheckSize();
 
-    void _Present(uint32_t token);
+    void _Present();
     void _SessionEnd();
 
     void MenuBarToggle() override;

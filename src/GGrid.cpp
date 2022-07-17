@@ -183,7 +183,7 @@ void GGrid::_UpdatePangoStyles()
     }
 }
 
-void GGrid::Present(int width, int height, uint32_t token)
+void GGrid::Present(int width, int height)
 {
     auto renderer = _session->GetRenderer();
     assert(renderer);
@@ -197,10 +197,6 @@ void GGrid::Present(int width, int height, uint32_t token)
 
     // First remove outdated textures
     _RemoveOutdated();
-
-    // Then move the surviving labels to their new positions
-    // TODO remove this as labels are only destroyed and created, but not moved
-    _MoveLabels(token);
 
     // Create and place new labels
     _CreateLabels();
@@ -404,34 +400,6 @@ void GGrid::_RemoveOutdated()
             labels_removed, textures_deleted, duration);
 }
 
-void GGrid::_MoveLabels(uint32_t token)
-{
-    auto start_time = ClockT::now();
-
-    // Count how many textures are going to be moved
-    int labels_moved{};
-
-    auto renderer = _session->GetRenderer();
-    // Move the existing labels to their locations
-    for (int row = 0, rowN = renderer->GetGridLines().size();
-         row < rowN; ++row)
-    {
-        const auto &texture = renderer->GetGridLines()[row];
-        Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
-        int x = std::round(CalcX(texture.col));
-        int y = row * _cell_height;
-
-        if (t->TakeRedrawToken(token) && t->IsVisible())
-        {
-            _grid.move(t->label, x, y);
-            ++labels_moved;
-        }
-    }
-
-    auto finish_time = ClockT::now();
-    auto duration = ToMs(finish_time - start_time).count();
-    Logger().debug("GGrid::_MoveLabels labels_moved={} in {} ms", labels_moved, duration);
-}
 
 namespace {
 

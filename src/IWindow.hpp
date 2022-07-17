@@ -10,7 +10,7 @@ struct IWindow
 
     virtual BaseTexture::PtrT CreateTexture() = 0;
 
-    virtual void Present(uint32_t token) = 0;
+    virtual void Present() = 0;
     virtual void SessionEnd() = 0;
     virtual void SetError(const char *) = 0;
     virtual void SetGuiFont(const std::string &) = 0;
