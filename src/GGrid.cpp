@@ -111,7 +111,7 @@ void GGrid::UpdateStyle()
     oss << "}\n";
 
     oss << "label.status {\n";
-    oss << "color: #cccccc;";
+    oss << "color: #cccccc;\n";
     oss << "}\n";
 
     std::string style = oss.str();
