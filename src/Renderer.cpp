@@ -91,6 +91,49 @@ void Renderer::_DoFlush()
         // Split the cells into chunks by the same hl_id
         auto chunks = _SplitChunks(line);
 
+        // Create grid line chunks
+        std::vector<GridLine::Chunk> words;
+
+        for (size_t i = 1; i < chunks.size(); ++i)
+        {
+            int begin = chunks[i - 1];
+            int end = chunks[i];
+            unsigned hl_id = line.hl_id[begin];
+            GridLine::Word word{hl_id, ""};
+            for (int i{begin}; i < end; ++i)
+                word.text += line.text[i];
+            GridLine::Chunk chunk(begin, end - begin, {word});
+            words.push_back(std::move(chunk));
+        }
+
+        auto isInvisibleSpace = [&](GridLine::Chunk &chunk) -> bool {
+            if (!chunk.IsSpace())
+                return false;
+            auto &word = chunk.words.front();
+            const auto hlit = _hl_attr_map.find(word.hl_id);
+            unsigned def_bg = _def_attr.bg.value();
+
+            if (hlit == _hl_attr_map.end()                               // No highlighting
+                || (hlit->second.bg.value_or(def_bg) == def_bg           // Default background
+                    && 0 == (hlit->second.flags & HlAttr::F_REVERSE)))   // No reverse (foreground becomes background)
+            {
+                return true;
+            }
+            return false;
+        };
+
+        // Instant optimization: ignore the tailing invisible space
+        if (isInvisibleSpace(words.back()))
+            words.pop_back();
+
+        // Group words into one big word
+        while (words.size() > 1)
+        {
+            auto b = std::move(words.back());
+            words.pop_back();
+            words.back().Merge(b);
+        }
+
         auto texture_generator = [&](const GridLine::Chunk &/*chunk*/) {
             if (!_window)
                 return BaseTexture::PtrT{};
@@ -101,30 +144,10 @@ void Renderer::_DoFlush()
             auto grid_line_scanner = grid_line.GetScanner(_redraw_token);
 
             // Print and cache the chunks individually
-            for (size_t i = 1; i < chunks.size(); ++i)
+            for (auto &word : words)
             {
-                int begin = chunks[i - 1];
-                int end = chunks[i];
-                unsigned hl_id = line.hl_id[begin];
-                GridLine::Word word{hl_id, ""};
-                for (int i{begin}; i < end; ++i)
-                    word.text += line.text[i];
-                GridLine::Chunk chunk(begin, end - begin, {word});
-
-                const auto hlit = _hl_attr_map.find(hl_id);
-                unsigned def_bg = _def_attr.bg.value();
-
-                if (chunk.IsSpace()
-                    && (hlit == _hl_attr_map.end()                                   // No highlighting
-                        || (hlit->second.bg.value_or(def_bg) == def_bg           // Default background
-                            && 0 == (hlit->second.flags & HlAttr::F_REVERSE))))  // No reverse (foreground becomes background)
-                {
-                    // No need to create empty chunks coinciding with the background color
-                    continue;
-                }
-
                 // Test whether the chunk should be rendered again
-                if (grid_line_scanner.EnsureNext(std::move(chunk), texture_generator))
+                if (grid_line_scanner.EnsureNext(std::move(word), texture_generator))
                     oss << "+";
                 else
                     oss << ".";

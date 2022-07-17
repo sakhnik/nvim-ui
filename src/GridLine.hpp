@@ -5,6 +5,7 @@
 #include <string>
 #include <list>
 #include <functional>
+#include <cassert>
 
 class GridLine
 {
@@ -41,6 +42,15 @@ public:
                 return false;
             const auto &word = words.front();
             return word.text.rfind("  ", 0) == 0;
+        }
+
+        // Merge in the next adjacent chunk
+        void Merge(Chunk &next)
+        {
+            assert(col + width == next.col);
+            width += next.width;
+            for (auto &w : next.words)
+                words.push_back(std::move(w));
         }
     };
 
