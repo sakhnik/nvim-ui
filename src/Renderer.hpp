@@ -83,8 +83,6 @@ private:
     {
         std::vector<std::string> text;
         std::vector<unsigned> hl_id;
-        // Remember the previously rendered chunks, high chance they're reusable.
-        class GridLine grid_line;
         // Is it necessary to redraw this line carefully or can just draw from the texture cache?
         bool dirty = true;
     };

@@ -199,6 +199,7 @@ void GGrid::Present(int width, int height, uint32_t token)
     _RemoveOutdated();
 
     // Then move the surviving labels to their new positions
+    // TODO remove this as labels are only destroyed and created, but not moved
     _MoveLabels(token);
 
     // Create and place new labels

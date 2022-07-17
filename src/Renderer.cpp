@@ -249,7 +249,6 @@ void Renderer::GridClear()
     for (auto &line : _lines)
     {
         line.dirty = true;
-        line.grid_line.Clear();
         for (auto &t : line.text)
             t = ' ';
         for (auto &hl : line.hl_id)
@@ -269,10 +268,7 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
     Logger().debug("DefaultColorSet fg={} bg={}", fg, bg);
 
     for (auto &line : _lines)
-    {
         line.dirty = true;
-        line.grid_line.Clear();
-    }
 
     _def_attr.fg = fg;
     _def_attr.bg = bg;
