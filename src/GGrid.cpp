@@ -415,18 +415,15 @@ void GGrid::_MoveLabels(uint32_t token)
     for (int row = 0, rowN = renderer->GetGridLines().size();
          row < rowN; ++row)
     {
-        const auto &line = renderer->GetGridLines()[row];
-        for (const auto &texture : line)
-        {
-            Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
-            int x = std::round(CalcX(texture.col));
-            int y = row * _cell_height;
+        const auto &texture = renderer->GetGridLines()[row];
+        Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
+        int x = std::round(CalcX(texture.col));
+        int y = row * _cell_height;
 
-            if (t->TakeRedrawToken(token) && t->IsVisible())
-            {
-                _grid.move(t->label, x, y);
-                ++labels_moved;
-            }
+        if (t->TakeRedrawToken(token) && t->IsVisible())
+        {
+            _grid.move(t->label, x, y);
+            ++labels_moved;
         }
     }
 
@@ -499,38 +496,35 @@ void GGrid::_CreateLabels()
     for (int row = 0, rowN = renderer->GetGridLines().size();
          row < rowN; ++row)
     {
-        const auto &line = renderer->GetGridLines()[row];
-        for (const auto &texture : line)
+        const auto &texture = renderer->GetGridLines()[row];
+        Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
+        int x = std::round(CalcX(texture.col));
+        int y = row * _cell_height;
+        if (!t->label)
         {
-            Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
-            int x = std::round(CalcX(texture.col));
-            int y = row * _cell_height;
-            if (!t->label)
-            {
-                std::string text = std::accumulate(texture.words.begin(), texture.words.end(),
-                        std::string{},
-                        [&](const auto &a, const auto &b) {
-                            auto it = _pango_styles.find(b.hl_id);
-                            const std::string &pango_style = it == _pango_styles.end()
-                                ? _default_pango_style
-                                : it->second;
-                            return a + "<span" + pango_style + ">" + XmlEscape(b.text) + "</span>";
-                        });
-                t->label = Gtk::Label::new_("").g_obj();
-                t->label.set_markup(text.c_str());
-                t->label.set_sensitive(false);
-                t->label.set_can_focus(false);
-                t->label.set_focus_on_click(false);
-                // Specify the width of the widget manually to make sure it occupies
-                // the whole extent and isn't dependent on the font micro typing features.
-                t->label.set_size_request(std::round(CalcX(texture.width)), 0);
+            std::string text = std::accumulate(texture.words.begin(), texture.words.end(),
+                    std::string{},
+                    [&](const auto &a, const auto &b) {
+                    auto it = _pango_styles.find(b.hl_id);
+                    const std::string &pango_style = it == _pango_styles.end()
+                    ? _default_pango_style
+                    : it->second;
+                    return a + "<span" + pango_style + ">" + XmlEscape(b.text) + "</span>";
+                    });
+            t->label = Gtk::Label::new_("").g_obj();
+            t->label.set_markup(text.c_str());
+            t->label.set_sensitive(false);
+            t->label.set_can_focus(false);
+            t->label.set_focus_on_click(false);
+            // Specify the width of the widget manually to make sure it occupies
+            // the whole extent and isn't dependent on the font micro typing features.
+            t->label.set_size_request(std::round(CalcX(texture.width)), 0);
 
-                t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+            t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-                _grid.put(t->label, x, y);
-                _textures.push_back(texture.texture);
-                ++labels_created;
-            }
+            _grid.put(t->label, x, y);
+            _textures.push_back(texture.texture);
+            ++labels_created;
         }
     }
 
@@ -545,10 +539,7 @@ void GGrid::_CheckConsistency()
     auto renderer = _session->GetRenderer();
     for (int row = 0, rowN = renderer->GetGridLines().size();
          row < rowN; ++row)
-    {
-        const auto &line = renderer->GetGridLines()[row];
-        texture_count += line.size();
-    }
+        ++texture_count;
     auto visible_texture_count = std::count_if(_textures.begin(), _textures.end(), [](auto &t) { return t->IsVisible(); });
     assert(texture_count == visible_texture_count && "Texture count consistency");
 }

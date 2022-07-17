@@ -78,7 +78,6 @@ void Renderer::_DoFlush()
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
         auto &line = _lines[row];
-        auto &grid_line = line.grid_line;
 
         // Check if it's possible to just copy the prepared textures first
         if (!line.dirty)
@@ -125,18 +124,8 @@ void Renderer::_DoFlush()
             line_chunk.words.push_back(std::move(word));
         }
 
-        auto texture_generator = [&](const GridLine::Chunk &/*chunk*/) {
-            if (!_window)
-                return BaseTexture::PtrT{};
-            return _window->CreateTexture();
-        };
-
-        {
-            auto grid_line_scanner = grid_line.GetScanner(_redraw_token);
-            grid_line_scanner.EnsureNext(std::move(line_chunk), texture_generator);
-        }
-
-        grid_line.CopyTo(_grid_lines[row]);
+        line_chunk.texture = _window ? _window->CreateTexture() : BaseTexture::PtrT{};
+        _grid_lines[row] = line_chunk;
     }
 
     if (_window)
@@ -234,7 +223,6 @@ void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
             line_to.text[col] = std::move(line_from.text[col]);
             line_to.hl_id[col] = std::move(line_from.hl_id[col]);
         }
-        line_to.grid_line.MoveFrom(line_from.grid_line, left, right, _redraw_token);
     };
 
     if (rows > 0)
@@ -326,7 +314,7 @@ void Renderer::GridResize(int width, int height)
         line.text.resize(width, " ");
     }
 
-    _grid_lines.resize(height);
+    _grid_lines.resize(height, GridLine::Chunk{0, 0, {}});
 }
 
 void Renderer::ModeChange(std::string_view mode)

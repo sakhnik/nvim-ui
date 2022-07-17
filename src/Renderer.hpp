@@ -44,8 +44,7 @@ public:
     void SetGuiFont(std::string_view);
 
     // The snapshot of last consistent grid state
-    using GridChunkT = GridLine::ChunkWrapper<&BaseTexture::SetVisible>;
-    using GridLineT = std::vector<GridChunkT>;
+    using GridLineT = GridLine::ChunkWrapper<&BaseTexture::SetVisible>;
     using GridLinesT = std::vector<GridLineT>;
     const GridLinesT& GetGridLines() const { return _grid_lines; }
 
