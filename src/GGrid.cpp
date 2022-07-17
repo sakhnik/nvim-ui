@@ -185,42 +185,6 @@ void GGrid::_UpdatePangoStyles()
 
 void GGrid::Present(int width, int height, uint32_t token)
 {
-    _tasks.push_back([=, this] { _Present(token); });
-    _tasks.push_back([=, this] {
-        auto renderer = _session->GetRenderer();
-        if (!renderer)
-            return;
-        auto guard = renderer->Lock();
-        _CheckSize(width, height);
-    });
-
-    _ExecuteTasks();
-}
-
-void GGrid::_ExecuteTasks()
-{
-    // Take the task from the front of the queue.
-    if (_tasks.empty())
-        return;
-    _TaskT task = _tasks.front();
-    _tasks.pop_front();
-
-    // Execute the task
-    task();
-
-    // If there are more tasks, reschedule execution.
-    if (!_tasks.empty())
-    {
-        auto on_timeout = [](gpointer data) {
-            (reinterpret_cast<GGrid *>(data)->_ExecuteTasks)();
-            return FALSE;
-        };
-        g_timeout_add(1, on_timeout, this);
-    }
-}
-
-void GGrid::_Present(uint32_t token)
-{
     auto renderer = _session->GetRenderer();
     assert(renderer);
     auto guard = renderer->Lock();
@@ -238,16 +202,14 @@ void GGrid::_Present(uint32_t token)
     _MoveLabels(token);
 
     // Create and place new labels
-    int last_row = _CreateLabelsInterrupted(0);
-    if (-1 == last_row)
-    {
-        // The process of label creation wasn't interrupted, we can do
-        // the sanity check. Count the active textures.
-        _CheckConsistency();
-    }
+    _CreateLabels();
+
+    // Sanity check. Count the active textures.
+    _CheckConsistency();
 
     _cursor->Move();
     _grid.set_cursor_from_name(renderer->IsBusy() ? "progress" : "default");
+    _CheckSize(width, height);
 }
 
 void GGrid::Clear()
@@ -525,7 +487,7 @@ std::string XmlEscape(std::string s)
 
 } //namespace
 
-int GGrid::_CreateLabels(int start_row)
+void GGrid::_CreateLabels()
 {
     auto start_time = ClockT::now();
 
@@ -534,21 +496,9 @@ int GGrid::_CreateLabels(int start_row)
 
     // Create the newly appearing labels
     auto renderer = _session->GetRenderer();
-    for (int row = start_row, rowN = renderer->GetGridLines().size();
+    for (int row = 0, rowN = renderer->GetGridLines().size();
          row < rowN; ++row)
     {
-        // If creating new labels takes too much time (consider :digraphs, next page),
-        // interrupt earlier. The rest of the labels will be created asynchronously
-        // in _CreateLabelsInterrupted().
-        // TODO: Make the number a configuration parameter.
-        auto cur_time = ClockT::now();
-        if (cur_time - start_time > std::chrono::milliseconds(100))
-        {
-            auto duration = ToMs(cur_time - start_time).count();
-            Logger().debug("GGrid::_CreateLabels interrupted labels_created={} in {} ms", labels_created, duration);
-            return row;
-        }
-
         const auto &line = renderer->GetGridLines()[row];
         for (const auto &texture : line)
         {
@@ -590,28 +540,6 @@ int GGrid::_CreateLabels(int start_row)
     auto finish_time = ClockT::now();
     auto duration = ToMs(finish_time - start_time).count();
     Logger().debug("GGrid::_CreateLabels labels_created={} in {} ms", labels_created, duration);
-    return -1;
-}
-
-int GGrid::_CreateLabelsInterrupted(int start_row)
-{
-    int last_row = _CreateLabels(start_row);
-    if (last_row != -1)
-    {
-        // Haven't finished all the labels, reschedule continuation.
-        _tasks.push_front([=, this] {
-            auto renderer = _session->GetRenderer();
-            if (!renderer)
-                return;
-            auto guard = renderer->Lock();
-
-            _CreateLabelsInterrupted(last_row);
-
-            _cursor->Move();
-            _grid.set_cursor_from_name(renderer->IsBusy() ? "progress" : "default");
-        });
-    }
-    return last_row;
 }
 
 void GGrid::_CheckConsistency()
