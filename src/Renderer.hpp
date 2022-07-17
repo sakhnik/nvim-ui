@@ -7,7 +7,6 @@
 #include "Utils.hpp"
 
 #include <vector>
-#include <unordered_map>
 #include <string_view>
 #include <string>
 #include <mutex>
@@ -45,8 +44,7 @@ public:
     void SetGuiFont(std::string_view);
 
     // The snapshot of last consistent grid state
-    using GridChunkT = GridLine::ChunkWrapper<&BaseTexture::SetVisible>;
-    using GridLineT = std::vector<GridChunkT>;
+    using GridLineT = GridLine::ChunkWrapper<&BaseTexture::SetVisible>;
     using GridLinesT = std::vector<GridLineT>;
     const GridLinesT& GetGridLines() const { return _grid_lines; }
 
@@ -55,8 +53,7 @@ public:
         return std::lock_guard<std::mutex>{_mutex};
     }
 
-    using AttrMapT = std::unordered_map<unsigned, HlAttr>;
-    const AttrMapT& GetAttrMap() const { return _hl_attr; }
+    const HlAttr::MapT& GetAttrMap() const { return _hl_attr_map; }
     bool IsAttrMapModified() const { return _hl_attr_modified; }
     void MarkAttrMapProcessed() { _hl_attr_modified = false; }
     unsigned GetBg() const { return _def_attr.bg.value(); }
@@ -74,7 +71,7 @@ private:
     AsyncExec _async_exec;
     IWindow *_window = nullptr;
 
-    AttrMapT _hl_attr;
+    HlAttr::MapT _hl_attr_map;
     bool _hl_attr_modified = false;
     HlAttr _def_attr;
     int _cursor_row = 0;
@@ -86,8 +83,6 @@ private:
     {
         std::vector<std::string> text;
         std::vector<unsigned> hl_id;
-        // Remember the previously rendered chunks, high chance they're reusable.
-        class GridLine grid_line;
         // Is it necessary to redraw this line carefully or can just draw from the texture cache?
         bool dirty = true;
     };
@@ -107,10 +102,6 @@ private:
     // Rendering is done asyncrhonously and concurrently, make sure only clean
     // state after Flush() is displayed.
     bool _is_clean = true;
-    // The textures may be updated asynchronously and concurrently to the Flush.
-    // For example, when lines are scrolled. We'd like to make sure the textures
-    // are redrawn when the respective Flush is received.
-    uint32_t _redraw_token = 0;
 
     void _DoFlush();
     void _AnticipateFlush();

@@ -30,7 +30,7 @@ public:
 
     void UpdateStyle();
     void MeasureCell();
-    void Present(int width, int height, uint32_t token);
+    void Present(int width, int height);
     void Clear();
     void CheckSize(int width, int height);
 
@@ -58,6 +58,8 @@ private:
     Session::PtrT &_session;
     IWindowHandler *_window_handler;
     gir::Owned<Gtk::CssProvider> _css_provider;
+    std::unordered_map<unsigned, std::string> _pango_styles;
+    std::string _default_pango_style;
 
     double _cell_width{};
     int _cell_height{};
@@ -72,19 +74,9 @@ private:
 
     int _last_rows = 0, _last_cols = 0;
     void _CheckSize(int width, int height);
-
-    // Presentation may take significant amount of time
-    // So some of the tasks need to be split into pieces.
-    // Then we need to order them properly for interrupted execution.
-    using _TaskT = std::function<void(void)>;
-    std::deque<_TaskT> _tasks;
-
-    void _ExecuteTasks();
-    void _Present(uint32_t token);
     void _RemoveOutdated();
-    void _MoveLabels(uint32_t token);
-    // Return -1 if finished, or the row from which to continue the next time.
-    int _CreateLabels(int start_row);
-    int _CreateLabelsInterrupted(int start_row);
+    void _CreateLabels();
     void _CheckConsistency();
+    void _UpdatePangoStyles();
+    std::string _MakePangoStyle(const HlAttr &, const HlAttr &def_attr);
 };

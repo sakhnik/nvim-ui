@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Rendering underline, undercurl, strikethrough
-- Interruptive redrawing of the grid in `_Present()`
+- Simplified and improved rendering improving the responsiveness (mind :digraphs)
+    - Ligatures now stay intact when crossing different highlightings
 
 ### Fixed
 

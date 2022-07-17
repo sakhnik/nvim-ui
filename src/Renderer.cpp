@@ -78,7 +78,6 @@ void Renderer::_DoFlush()
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
         auto &line = _lines[row];
-        auto &grid_line = line.grid_line;
 
         // Check if it's possible to just copy the prepared textures first
         if (!line.dirty)
@@ -91,53 +90,46 @@ void Renderer::_DoFlush()
         // Split the cells into chunks by the same hl_id
         auto chunks = _SplitChunks(line);
 
-        auto texture_generator = [&](const GridLine::Chunk &/*chunk*/) {
-            if (!_window)
-                return BaseTexture::PtrT{};
-            return _window->CreateTexture();
+        auto isInvisibleSpace = [&](const GridLine::Word &word) -> bool {
+            if (!word.IsSpace())
+                return false;
+            const auto hlit = _hl_attr_map.find(word.hl_id);
+            unsigned def_bg = _def_attr.bg.value();
+
+            if (hlit == _hl_attr_map.end()                               // No highlighting
+                || (hlit->second.bg.value_or(def_bg) == def_bg           // Default background
+                    && 0 == (hlit->second.flags & HlAttr::F_REVERSE)))   // No reverse (foreground becomes background)
+            {
+                return true;
+            }
+            return false;
         };
 
+        // Create grid line chunks
+        GridLine::Chunk line_chunk(0, {});
+
+        // Group the words into one big word
+        for (size_t i = 1; i < chunks.size(); ++i)
         {
-            auto grid_line_scanner = grid_line.GetScanner(_redraw_token);
-
-            // Print and cache the chunks individually
-            for (size_t i = 1; i < chunks.size(); ++i)
-            {
-                int col = chunks[i - 1];
-                int end = chunks[i];
-                int hl_id = line.hl_id[col];
-                GridLine::Chunk chunk(col, end - col, hl_id, "");
-                while (col < end)
-                    chunk.text += line.text[col++];
-
-                const auto hlit = _hl_attr.find(hl_id);
-                unsigned def_bg = _def_attr.bg.value();
-
-                if (chunk.IsSpace()
-                    && (hlit == _hl_attr.end()                                   // No highlighting
-                        || (hlit->second.bg.value_or(def_bg) == def_bg           // Default background
-                            && 0 == (hlit->second.flags & HlAttr::F_REVERSE))))  // No reverse (foreground becomes background)
-                {
-                    // No need to create empty chunks coinciding with the background color
-                    continue;
-                }
-
-                // Test whether the chunk should be rendered again
-                if (grid_line_scanner.EnsureNext(std::move(chunk), texture_generator))
-                    oss << "+";
-                else
-                    oss << ".";
-            }
+            int begin = chunks[i - 1];
+            int end = chunks[i];
+            unsigned hl_id = line.hl_id[begin];
+            GridLine::Word word{hl_id, ""};
+            for (int i{begin}; i < end; ++i)
+                word.text += line.text[i];
+            // Instant optimization: ignore the tailing invisible space
+            if (i == chunks.size() - 1 && isInvisibleSpace(word))
+                break;
+            line_chunk.width = end;
+            line_chunk.words.push_back(std::move(word));
         }
 
-        grid_line.CopyTo(_grid_lines[row]);
+        line_chunk.texture = _window ? _window->CreateTexture() : BaseTexture::PtrT{};
+        _grid_lines[row] = line_chunk;
     }
 
     if (_window)
-        _window->Present(_redraw_token);
-    // This flush has been handled, advance the token to start accepting
-    // handling new changes.
-    ++_redraw_token;
+        _window->Present();
 
     auto end_time = ClockT::now();
     oss << " " << ToMs(end_time - _last_flush_time).count();
@@ -228,7 +220,6 @@ void Renderer::GridScroll(int top, int bot, int left, int right, int rows)
             line_to.text[col] = std::move(line_from.text[col]);
             line_to.hl_id[col] = std::move(line_from.hl_id[col]);
         }
-        line_to.grid_line.MoveFrom(line_from.grid_line, left, right, _redraw_token);
     };
 
     if (rows > 0)
@@ -255,7 +246,6 @@ void Renderer::GridClear()
     for (auto &line : _lines)
     {
         line.dirty = true;
-        line.grid_line.Clear();
         for (auto &t : line.text)
             t = ' ';
         for (auto &hl : line.hl_id)
@@ -266,7 +256,7 @@ void Renderer::GridClear()
 void Renderer::HlAttrDefine(unsigned hl_id, HlAttr attr)
 {
     Logger().debug("HlAttrDefine {}", hl_id);
-    _hl_attr[hl_id] = attr;
+    _hl_attr_map[hl_id] = attr;
     _hl_attr_modified = true;
 }
 
@@ -275,10 +265,7 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
     Logger().debug("DefaultColorSet fg={} bg={}", fg, bg);
 
     for (auto &line : _lines)
-    {
         line.dirty = true;
-        line.grid_line.Clear();
-    }
 
     _def_attr.fg = fg;
     _def_attr.bg = bg;
@@ -320,7 +307,7 @@ void Renderer::GridResize(int width, int height)
         line.text.resize(width, " ");
     }
 
-    _grid_lines.resize(height);
+    _grid_lines.resize(height, GridLine::Chunk{0, {}});
 }
 
 void Renderer::ModeChange(std::string_view mode)

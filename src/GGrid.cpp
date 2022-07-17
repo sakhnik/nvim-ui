@@ -12,6 +12,8 @@
 #include "Gtk/StyleContext.hpp"
 
 #include <sstream>
+#include <numeric>
+#include <boost/algorithm/string.hpp>
 
 #ifdef GIR_INLINE
 #include "Gtk/ApplicationWindow.ipp"
@@ -84,118 +86,104 @@ void GGrid::MeasureCell()
 void GGrid::UpdateStyle()
 {
     std::ostringstream oss;
-    auto mapAttr = [&](const HlAttr &attr, const HlAttr &def_attr) {
-        if ((attr.flags & HlAttr::F_REVERSE))
-        {
-            auto fg = attr.fg.value_or(def_attr.fg.value());
-            auto bg = attr.bg.value_or(def_attr.bg.value());
-            oss << fmt::format("background-color: #{:06x};\n", fg);
-            oss << fmt::format("color: #{:06x};\n", bg);
-        }
-        else
-        {
-            if (attr.bg.has_value())
-                oss << fmt::format("background-color: #{:06x};\n", attr.bg.value());
-            if (attr.fg.has_value())
-                oss << fmt::format("color: #{:06x};\n", attr.fg.value());
-        }
-        if ((attr.flags & HlAttr::F_ITALIC))
-            oss << "font-style: italic;\n";
-        if ((attr.flags & HlAttr::F_BOLD))
-            oss << "font-weight: bold;\n";
-
-        if ((attr.flags & HlAttr::F_TEXT_DECORATION))
-        {
-            oss << "text-decoration-line: underline;\n";
-            const char *style = "solid";
-            if ((attr.flags & HlAttr::F_UNDERUNDERLINE))
-                style = "double";
-            else if ((attr.flags & HlAttr::F_UNDERCURL))
-                style = "wavy";
-            //else if ((attr.flags & HlAttr::F_UNDERDASH))
-            //    style = "dashed";
-            //else if ((attr.flags & HlAttr::F_UNDERDOT))
-            //    style = "dotted";
-            oss << "text-decoration-style: " << style << ";\n";
-            if (attr.special.has_value())
-                oss << fmt::format("text-decoration-color: #{:06x};\n", attr.special.value());
-        }
-        else if ((attr.flags & HlAttr::F_STRIKETHROUGH))
-        {
-            oss << "text-decoration-line: line-through;\n";
-            oss << "text-decoration-style: " << "solid" << ";\n";
-        }
-    };
 
     auto renderer = _session->GetRenderer();
     assert(renderer);
+    const auto &attr = renderer->GetDefAttr();
 
     oss << "* {\n";
     oss << "font-family: " << _font.GetFamily() << ";\n";
     oss << "font-size: " << _font.GetSizePt() << "pt;\n";
-    mapAttr(renderer->GetDefAttr(), renderer->GetDefAttr());
+    if ((attr.flags & HlAttr::F_REVERSE))
+    {
+        if (attr.fg.has_value())
+            oss << fmt::format("background-color: #{:06x};\n", attr.fg.value());
+        if (attr.bg.has_value())
+            oss << fmt::format("color: #{:06x};\n", attr.bg.value());
+    }
+    else
+    {
+        if (attr.bg.has_value())
+            oss << fmt::format("background-color: #{:06x};\n", attr.bg.value());
+        if (attr.fg.has_value())
+            oss << fmt::format("color: #{:06x};\n", attr.fg.value());
+    }
     oss << "}\n";
 
     oss << "label.status {\n";
-    oss << "color: #cccccc;";
+    oss << "color: #cccccc;\n";
     oss << "}\n";
-
-    for (const auto &id_attr : renderer->GetAttrMap())
-    {
-        int id = id_attr.first;
-        const auto &attr = id_attr.second;
-
-        oss << "\n";
-        oss << "label.hl" << id << " {\n";
-        mapAttr(attr, renderer->GetDefAttr());
-        oss << "}\n";
-    }
 
     std::string style = oss.str();
     Logger().debug("Updated CSS Style:\n{}", style);
     _css_provider.load_from_data(style.data(), -1);
 
+    _UpdatePangoStyles();
+
     MeasureCell();
     _window_handler->CheckSizeAsync();
 }
 
-void GGrid::Present(int width, int height, uint32_t token)
+std::string GGrid::_MakePangoStyle(const HlAttr &attr, const HlAttr &def_attr)
 {
-    _tasks.push_back([=, this] { _Present(token); });
-    _tasks.push_back([=, this] {
-        auto renderer = _session->GetRenderer();
-        if (!renderer)
-            return;
-        auto guard = renderer->Lock();
-        _CheckSize(width, height);
-    });
+    std::ostringstream oss;
+    if ((attr.flags & HlAttr::F_REVERSE))
+    {
+        auto fg = attr.fg.value_or(def_attr.fg.value());
+        auto bg = attr.bg.value_or(def_attr.bg.value());
+        oss << fmt::format(" background=\"#{:06x}\"", fg);
+        oss << fmt::format(" color=\"#{:06x}\"", bg);
+    }
+    else
+    {
+        if (attr.bg.has_value())
+            oss << fmt::format(" background=\"#{:06x}\"", attr.bg.value());
+        if (attr.fg.has_value())
+            oss << fmt::format(" color=\"#{:06x}\"", attr.fg.value());
+    }
+    if ((attr.flags & HlAttr::F_ITALIC))
+        oss << " style=\"italic\"";
+    if ((attr.flags & HlAttr::F_BOLD))
+        oss << " weight=\"bold\"";
 
-    _ExecuteTasks();
+    if ((attr.flags & HlAttr::F_TEXT_DECORATION))
+    {
+        if ((attr.flags & HlAttr::F_UNDERUNDERLINE))
+            oss << " underline=\"single\"";
+        else if ((attr.flags & HlAttr::F_UNDERCURL))
+            oss << " underline=\"error\"";
+        //else if ((attr.flags & HlAttr::F_UNDERDASH))
+        //    style = "dashed";
+        //else if ((attr.flags & HlAttr::F_UNDERDOT))
+        //    style = "dotted";
+        if (attr.special.has_value())
+            oss << fmt::format(" underline_color=\"#{:06x}\"", attr.special.value());
+    }
+    else if ((attr.flags & HlAttr::F_STRIKETHROUGH))
+    {
+        oss << " strikethrough=\"true\"";
+    }
+    return oss.str();
 }
 
-void GGrid::_ExecuteTasks()
+void GGrid::_UpdatePangoStyles()
 {
-    // Take the task from the front of the queue.
-    if (_tasks.empty())
-        return;
-    _TaskT task = _tasks.front();
-    _tasks.pop_front();
+    auto renderer = _session->GetRenderer();
+    assert(renderer);
 
-    // Execute the task
-    task();
+    auto def_attr = renderer->GetDefAttr();
+    _default_pango_style = _MakePangoStyle(def_attr, def_attr);
 
-    // If there are more tasks, reschedule execution.
-    if (!_tasks.empty())
+    _pango_styles.clear();
+    for (const auto &id_attr : renderer->GetAttrMap())
     {
-        auto on_timeout = [](gpointer data) {
-            (reinterpret_cast<GGrid *>(data)->_ExecuteTasks)();
-            return FALSE;
-        };
-        g_timeout_add(1, on_timeout, this);
+        int id = id_attr.first;
+        const auto &attr = id_attr.second;
+        _pango_styles[id] = _MakePangoStyle(attr, def_attr);
     }
 }
 
-void GGrid::_Present(uint32_t token)
+void GGrid::Present(int width, int height)
 {
     auto renderer = _session->GetRenderer();
     assert(renderer);
@@ -210,20 +198,15 @@ void GGrid::_Present(uint32_t token)
     // First remove outdated textures
     _RemoveOutdated();
 
-    // Then move the surviving labels to their new positions
-    _MoveLabels(token);
-
     // Create and place new labels
-    int last_row = _CreateLabelsInterrupted(0);
-    if (-1 == last_row)
-    {
-        // The process of label creation wasn't interrupted, we can do
-        // the sanity check. Count the active textures.
-        _CheckConsistency();
-    }
+    _CreateLabels();
+
+    // Sanity check. Count the active textures.
+    _CheckConsistency();
 
     _cursor->Move();
     _grid.set_cursor_from_name(renderer->IsBusy() ? "progress" : "default");
+    _CheckSize(width, height);
 }
 
 void GGrid::Clear()
@@ -417,37 +400,6 @@ void GGrid::_RemoveOutdated()
             labels_removed, textures_deleted, duration);
 }
 
-void GGrid::_MoveLabels(uint32_t token)
-{
-    auto start_time = ClockT::now();
-
-    // Count how many textures are going to be moved
-    int labels_moved{};
-
-    auto renderer = _session->GetRenderer();
-    // Move the existing labels to their locations
-    for (int row = 0, rowN = renderer->GetGridLines().size();
-         row < rowN; ++row)
-    {
-        const auto &line = renderer->GetGridLines()[row];
-        for (const auto &texture : line)
-        {
-            Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
-            int x = std::round(CalcX(texture.col));
-            int y = row * _cell_height;
-
-            if (t->TakeRedrawToken(token) && t->IsVisible())
-            {
-                _grid.move(t->label, x, y);
-                ++labels_moved;
-            }
-        }
-    }
-
-    auto finish_time = ClockT::now();
-    auto duration = ToMs(finish_time - start_time).count();
-    Logger().debug("GGrid::_MoveLabels labels_moved={} in {} ms", labels_moved, duration);
-}
 
 namespace {
 
@@ -488,9 +440,20 @@ private:
     std::unordered_map<int, double> _times;
 };
 
+std::string XmlEscape(std::string s)
+{
+    using boost::algorithm::replace_all;
+    replace_all(s, "&",  "&amp;");
+    replace_all(s, "\"", "&quot;");
+    replace_all(s, "\'", "&apos;");
+    replace_all(s, "<",  "&lt;");
+    replace_all(s, ">",  "&gt;");
+    return s;
+}
+
 } //namespace
 
-int GGrid::_CreateLabels(int start_row)
+void GGrid::_CreateLabels()
 {
     auto start_time = ClockT::now();
 
@@ -499,73 +462,43 @@ int GGrid::_CreateLabels(int start_row)
 
     // Create the newly appearing labels
     auto renderer = _session->GetRenderer();
-    for (int row = start_row, rowN = renderer->GetGridLines().size();
+    for (int row = 0, rowN = renderer->GetGridLines().size();
          row < rowN; ++row)
     {
-        // If creating new labels takes too much time (consider :digraphs, next page),
-        // interrupt earlier. The rest of the labels will be created asynchronously
-        // in _CreateLabelsInterrupted().
-        // TODO: Make the number a configuration parameter.
-        auto cur_time = ClockT::now();
-        if (cur_time - start_time > std::chrono::milliseconds(100))
+        const auto &texture = renderer->GetGridLines()[row];
+        Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
+        int y = row * _cell_height;
+        if (!t->label)
         {
-            auto duration = ToMs(cur_time - start_time).count();
-            Logger().debug("GGrid::_CreateLabels interrupted labels_created={} in {} ms", labels_created, duration);
-            return row;
-        }
+            std::string text = std::accumulate(texture.words.begin(), texture.words.end(),
+                    std::string{},
+                    [&](const auto &a, const auto &b) {
+                    auto it = _pango_styles.find(b.hl_id);
+                    const std::string &pango_style = it == _pango_styles.end()
+                    ? _default_pango_style
+                    : it->second;
+                    return a + "<span" + pango_style + ">" + XmlEscape(b.text) + "</span>";
+                    });
+            t->label = Gtk::Label::new_("").g_obj();
+            t->label.set_markup(text.c_str());
+            t->label.set_sensitive(false);
+            t->label.set_can_focus(false);
+            t->label.set_focus_on_click(false);
+            // Specify the width of the widget manually to make sure it occupies
+            // the whole extent and isn't dependent on the font micro typing features.
+            t->label.set_size_request(std::round(CalcX(texture.width)), 0);
 
-        const auto &line = renderer->GetGridLines()[row];
-        for (const auto &texture : line)
-        {
-            Texture *t = reinterpret_cast<Texture *>(texture.texture.get());
-            int x = std::round(CalcX(texture.col));
-            int y = row * _cell_height;
-            if (!t->label)
-            {
-                t->label = Gtk::Label::new_(texture.text.c_str()).g_obj();
-                t->label.set_sensitive(false);
-                t->label.set_can_focus(false);
-                t->label.set_focus_on_click(false);
-                // Specify the width of the widget manually to make sure it occupies
-                // the whole extent and isn't dependent on the font micro typing features.
-                t->label.set_size_request(std::round(CalcX(texture.width)), 0);
+            t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-                t->label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-                std::string class_name = fmt::format("hl{}", texture.hl_id);
-                t->label.add_css_class(class_name.data());
-
-                _grid.put(t->label, x, y);
-                _textures.push_back(texture.texture);
-                ++labels_created;
-            }
+            _grid.put(t->label, 0, y);
+            _textures.push_back(texture.texture);
+            ++labels_created;
         }
     }
 
     auto finish_time = ClockT::now();
     auto duration = ToMs(finish_time - start_time).count();
     Logger().debug("GGrid::_CreateLabels labels_created={} in {} ms", labels_created, duration);
-    return -1;
-}
-
-int GGrid::_CreateLabelsInterrupted(int start_row)
-{
-    int last_row = _CreateLabels(start_row);
-    if (last_row != -1)
-    {
-        // Haven't finished all the labels, reschedule continuation.
-        _tasks.push_front([=, this] {
-            auto renderer = _session->GetRenderer();
-            if (!renderer)
-                return;
-            auto guard = renderer->Lock();
-
-            _CreateLabelsInterrupted(last_row);
-
-            _cursor->Move();
-            _grid.set_cursor_from_name(renderer->IsBusy() ? "progress" : "default");
-        });
-    }
-    return last_row;
 }
 
 void GGrid::_CheckConsistency()
@@ -574,10 +507,7 @@ void GGrid::_CheckConsistency()
     auto renderer = _session->GetRenderer();
     for (int row = 0, rowN = renderer->GetGridLines().size();
          row < rowN; ++row)
-    {
-        const auto &line = renderer->GetGridLines()[row];
-        texture_count += line.size();
-    }
+        ++texture_count;
     auto visible_texture_count = std::count_if(_textures.begin(), _textures.end(), [](auto &t) { return t->IsVisible(); });
     assert(texture_count == visible_texture_count && "Texture count consistency");
 }
