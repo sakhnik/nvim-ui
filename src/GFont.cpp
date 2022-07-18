@@ -24,6 +24,7 @@ void GFont::SetGuiFont(const std::string &value)
         using FCD = Gtk::FontChooserDialog;
         FCD dlg = FCD::new_("Choose the font", _parent).g_obj();
         dlg.set_font(fmt::format("{} {}", _family, _size_pt).c_str());
+        dlg.set_level(GTK_FONT_CHOOSER_LEVEL_FAMILY);
         dlg.set_filter_func([](const PangoFontFamily *family, const PangoFontFace *, gpointer) -> gboolean {
                 return pango_font_family_is_monospace(const_cast<PangoFontFamily *>(family));
             },

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Crash when failing to start a TCP session
 - List prerequisites in README.md
+- List only font families when selecting the font on `set guifont=*`
 
 ## [0.0.3] - 2022-05-08
 
