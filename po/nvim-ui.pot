@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-10 10:46+0300\n"
+"POT-Creation-Date: 2022-07-19 08:42+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,6 +35,14 @@ msgstr ""
 
 #: res/menus.ui:17
 msgid "_Quit"
+msgstr ""
+
+#: res/menus.ui:23
+msgid "_Help"
+msgstr ""
+
+#: res/menus.ui:25
+msgid "_Inspector"
 msgstr ""
 
 #: res/connect-dlg.ui:6

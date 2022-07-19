@@ -19,5 +19,12 @@
         <attribute name='accel'>&lt;ctrl&gt;q</attribute>
       </item>
     </submenu>
+    <submenu>
+      <attribute name='label' translatable='yes'>_Help</attribute>
+      <item>
+        <attribute name='label' translatable='yes'>_Inspector</attribute>
+        <attribute name='action'>win.inspect</attribute>
+      </item>
+    </submenu>
   </menu>
 </interface>

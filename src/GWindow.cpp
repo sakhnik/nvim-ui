@@ -99,6 +99,7 @@ void GWindow::_SetupWindow()
         { "spawn", MakeCallback<&GWindow::_OnSpawnAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "connect", MakeCallback<&GWindow::_OnConnectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "quit", MakeCallback<&GWindow::_OnQuitAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "inspect", MakeCallback<&GWindow::_OnInspectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
     };
     g_action_map_add_action_entries(G_ACTION_MAP(_window.g_obj()), actions, G_N_ELEMENTS(actions), this);
 
@@ -276,6 +277,11 @@ void GWindow::_OnQuitAction(GSimpleAction *, GVariant *)
     auto app = _window.get_application();
     _window.destroy();
     app.quit();
+}
+
+void GWindow::_OnInspectAction(GSimpleAction *, GVariant *)
+{
+    gtk_window_set_interactive_debugging(true);
 }
 
 void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)

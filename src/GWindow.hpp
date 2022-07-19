@@ -69,6 +69,7 @@ private:
     void _UpdateActions();
     void _EnableAction(const char *name, bool enable);
     void _OnQuitAction(GSimpleAction *, GVariant *);
+    void _OnInspectAction(GSimpleAction *, GVariant *);
     void _OnSpawnAction(GSimpleAction *, GVariant *);
     void _OnConnectAction(GSimpleAction *, GVariant *);
     void _OnConnectDlgResponse(Gtk::Dialog &, gint response, Gtk::Builder &);
