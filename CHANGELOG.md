@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplified and improved rendering improving the responsiveness (mind :digraphs)
     - Ligatures now stay intact when crossing different highlightings
 - Allow launching Gtk inspector from the application menu
+- Help->About dialog
 
 ### Fixed
 

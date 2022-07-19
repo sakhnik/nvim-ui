@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-19 08:42+0300\n"
+"POT-Creation-Date: 2022-07-19 22:37+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,8 +17,20 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/GWindow.cpp:233
+#: src/GWindow.cpp:234
 msgid "Press ALT to reach the menu"
+msgstr ""
+
+#: src/GWindow.cpp:291
+msgid "Anatolii Sakhnik https://sakhnik.com"
+msgstr ""
+
+#: src/GWindow.cpp:297
+msgid "About nvim-ui"
+msgstr ""
+
+#: src/GWindow.cpp:302
+msgid "GitHub: sakhnik/nvim-ui"
 msgstr ""
 
 #: res/menus.ui:5
@@ -43,6 +55,10 @@ msgstr ""
 
 #: res/menus.ui:25
 msgid "_Inspector"
+msgstr ""
+
+#: res/menus.ui:29
+msgid "_About"
 msgstr ""
 
 #: res/connect-dlg.ui:6

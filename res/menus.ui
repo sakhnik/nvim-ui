@@ -25,6 +25,10 @@
         <attribute name='label' translatable='yes'>_Inspector</attribute>
         <attribute name='action'>win.inspect</attribute>
       </item>
+      <item>
+        <attribute name='label' translatable='yes'>_About</attribute>
+        <attribute name='action'>win.about</attribute>
+      </item>
     </submenu>
   </menu>
 </interface>

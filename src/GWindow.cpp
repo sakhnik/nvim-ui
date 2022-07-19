@@ -100,6 +100,7 @@ void GWindow::_SetupWindow()
         { "connect", MakeCallback<&GWindow::_OnConnectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "quit", MakeCallback<&GWindow::_OnQuitAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "inspect", MakeCallback<&GWindow::_OnInspectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "about", MakeCallback<&GWindow::_OnAboutAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
     };
     g_action_map_add_action_entries(G_ACTION_MAP(_window.g_obj()), actions, G_N_ELEMENTS(actions), this);
 
@@ -282,6 +283,25 @@ void GWindow::_OnQuitAction(GSimpleAction *, GVariant *)
 void GWindow::_OnInspectAction(GSimpleAction *, GVariant *)
 {
     Gtk::Window::set_interactive_debugging(true);
+}
+
+void GWindow::_OnAboutAction(GSimpleAction *, GVariant *)
+{
+    const char *authors[] = {
+        _("Anatolii Sakhnik https://sakhnik.com"),
+        nullptr
+    };
+
+    gtk_show_about_dialog(nullptr,
+            "program-name", "nvim-ui",
+            "title", _("About nvim-ui"),
+            "logo-icon-name", "nvim-ui",
+            "authors", authors,
+            "license-type", GTK_LICENSE_MIT_X11,
+            "website", "https://github.com/sakhnik/nvim-ui",
+            "website-label", _("GitHub: sakhnik/nvim-ui"),
+            "version", VERSION,
+            NULL);
 }
 
 void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
