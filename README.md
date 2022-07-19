@@ -13,6 +13,7 @@ I had to rule out almost every single one. The criteria were:
 - No Electron (show stopper)
 - Ability to run in [KVM](https://www.linux-kvm.org/page/Main_Page)
 - Proper text rendering, for instance, with combining characters: на́голос
+- Simple code to be a playground for ideas
 
 Turns out, it's quite easy to code after experiments with [SpyUI](https://github.com/sakhnik/nvim-gdb/blob/master/test/spy_ui.py).
 
