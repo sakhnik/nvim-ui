@@ -47,7 +47,7 @@ GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
     , _session{session}
     , _builder{Gtk::Builder::new_from_resource("/org/nvim-ui/gtk/main.ui")}
 {
-    Gtk::IconTheme icon_theme{gtk_icon_theme_get_for_display(gdk_display_get_default())};
+    Gtk::IconTheme icon_theme{Gtk::IconTheme::get_for_display(gdk_display_get_default())};
     icon_theme.add_resource_path("/org/nvim-ui/icons");
 
     _SetupWindow();
@@ -281,7 +281,7 @@ void GWindow::_OnQuitAction(GSimpleAction *, GVariant *)
 
 void GWindow::_OnInspectAction(GSimpleAction *, GVariant *)
 {
-    gtk_window_set_interactive_debugging(true);
+    Gtk::Window::set_interactive_debugging(true);
 }
 
 void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
