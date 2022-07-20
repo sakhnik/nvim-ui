@@ -1,0 +1,13 @@
+<schemalist>
+  <schema id="com.sakhnik.nvim-ui" path="/com/sakhnik/nvim-ui/" gettext-domain="nvim-ui">
+
+    <key name="font-family" type="s">
+      <default>"Monospace"</default>
+      <summary>Font family</summary>
+      <description>
+        Monospace font family used for text rendering
+      </description>
+    </key>
+
+  </schema>
+</schemalist>

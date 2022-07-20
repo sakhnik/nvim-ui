@@ -41,6 +41,8 @@ nvim_ui_lib_dep = declare_dependency(
 
 nvim_ui_sources = [
   'GCallbackAdaptor.hpp',
+  'GConfig.hpp',
+  'GConfig.cpp',
   'GCursor.cpp',
   'GCursor.hpp',
   'GFont.cpp',

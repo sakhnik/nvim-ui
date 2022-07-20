@@ -1,18 +1,19 @@
 #include "config.hpp"
 #include "GWindow.hpp"
+#include "GConfig.hpp"
 #include "SessionSpawn.hpp"
 #include "Logger.hpp"
-#include "gir/Owned.hpp"
+#include <gir/Owned.hpp>
 
-#include "Gtk/Application.hpp"
-#include "Gtk/Window.hpp"
+#include <Gtk/Application.hpp>
+#include <Gtk/Window.hpp>
 
 #include <filesystem>
 #include <spdlog/cfg/env.h>
 #include <uv.h>
 
 #ifdef GIR_INLINE
-#include "Gtk/Application.ipp"
+#include <Gtk/Application.ipp>
 #endif
 
 namespace Gtk = gir::Gtk;
@@ -40,7 +41,30 @@ std::string GetLocalePath(const char *exe)
         return po_dir.string();
 
     // Fallback to the system directory otherwise.
+    // TODO: get the actual prefix from the build system
     return "/usr/share/locale";
+}
+
+std::string GetSettingsDir(const char *exe)
+{
+    // If running from the build directory, use local settings schema.
+    namespace fs = std::filesystem;
+    auto root_dir = fs::weakly_canonical(fs::path(exe)).parent_path().parent_path();
+    if (fs::exists(root_dir / "build.ninja"))
+    {
+        auto res_dir = root_dir / "res";
+        if (fs::exists(res_dir) && fs::is_directory(res_dir))
+            return res_dir.string();
+    }
+
+    // Reach the settings schema relative to the binary for Windows.
+    auto res_dir = root_dir / "share" / "glib-2.0" / "schemas";
+    if (fs::exists(res_dir) && fs::is_directory(res_dir))
+        return res_dir.string();
+
+    // Fallback to the system directory otherwise.
+    // TODO: get the actual prefix from the build system
+    return "/usr/share/glib-2.0/schemas";
 }
 
 } //namespace;
@@ -63,6 +87,8 @@ int main(int argc, char* argv[])
     bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str());
     textdomain(GETTEXT_PACKAGE);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+
+    GConfig::Init(GetSettingsDir(argv[0]));
 
     try
     {

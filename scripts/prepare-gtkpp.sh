@@ -27,7 +27,7 @@ fi
 cd src/gtkpp
 
 if [[ ! -d gir2cpp ]]; then
-  git clone https://github.com/sakhnik/gir2cpp -b v0.0.2
+  git clone https://github.com/sakhnik/gir2cpp -b v0.0.3
 fi
 
 pip install -r gir2cpp/requirements.txt
@@ -47,6 +47,8 @@ config.include = re.compile(r"""^(
         |
         Gio::Application.*
         |
+        Gio::Settings.*
+        |
         Gdk::
         |
         Gdk::ModifierType.*
@@ -59,6 +61,8 @@ config.ignore = re.compile(r"""^(
         Gtk::PageSetupUnixDialog
         |
         GObject::Object::compat_control
+        |
+        Gio::SettingsBackend.*
         )$""", re.VERBOSE)
 config.out_dir = '$out_dir'
 config.gir_dir = '$gir_dir'
