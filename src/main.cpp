@@ -41,8 +41,7 @@ std::string GetLocalePath(const char *exe)
         return po_dir.string();
 
     // Fallback to the system directory otherwise.
-    // TODO: get the actual prefix from the build system
-    return "/usr/share/locale";
+    return (fs::path{PREFIX} / DATADIR / "locale").string();
 }
 
 std::string GetSettingsDir(const char *exe)
@@ -63,8 +62,7 @@ std::string GetSettingsDir(const char *exe)
         return res_dir.string();
 
     // Fallback to the system directory otherwise.
-    // TODO: get the actual prefix from the build system
-    return "/usr/share/glib-2.0/schemas";
+    return (fs::path{PREFIX} / DATADIR / "glib-2.0" / "schemas").string();
 }
 
 } //namespace;
@@ -88,7 +86,9 @@ int main(int argc, char* argv[])
     textdomain(GETTEXT_PACKAGE);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 
-    GConfig::Init(GetSettingsDir(argv[0]));
+    auto settings_dir = GetSettingsDir(argv[0]);
+    Logger().info("Using settings directory {}", settings_dir);
+    GConfig::Init(settings_dir);
 
     try
     {
