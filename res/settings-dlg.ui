@@ -5,21 +5,12 @@
   <object class="GtkDialog" id="settings_dlg">
     <property name="title" translatable="yes">nvim-ui settings</property>
     <property name="modal">True</property>
-    <property name="default-width">640</property>
-    <property name="default-height">480</property>
     <child internal-child="content_area">
       <object class="GtkBox">
         <property name="orientation">vertical</property>
-        <property name="spacing">20</property>
+        <property name="spacing">2</property>
         <child internal-child="action_area">
-          <object class="GtkBox">
-            <child type="action">
-              <object class="GtkButton" id="button_close">
-                <property name="label" translatable="yes">_Close</property>
-                <property name="use-underline">True</property>
-              </object>
-            </child>
-          </object>
+          <placeholder/>
         </child>
         <child>
           <!-- n-columns=3 n-rows=2 -->
@@ -58,9 +49,5 @@
         </child>
       </object>
     </child>
-
-    <action-widgets>
-      <action-widget response="close" default="true">button_close</action-widget>
-    </action-widgets>
   </object>
 </interface>

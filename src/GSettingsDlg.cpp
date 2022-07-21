@@ -42,11 +42,8 @@ GSettingsDlg::GSettingsDlg(gir::Gtk::Window window, GFont &font)
     });
 
     dlg.set_transient_for(window);
-    dlg.on_response(dlg, [builder, font_sub_id, &font](Gtk::Dialog dlg, gint /*response*/) {
-        dlg.destroy();
+    dlg.on_destroy(dlg, [builder, font_sub_id, &font](Gtk::Dialog) {
         font.Unsubscribe(font_sub_id);
-    });
-    dlg.on_destroy(dlg, [builder](Gtk::Dialog) {
         Gtk::Builder b{builder};
         b.unref();
     });
