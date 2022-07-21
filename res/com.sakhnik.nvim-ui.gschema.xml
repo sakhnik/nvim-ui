@@ -8,6 +8,13 @@
         Monospace font family used for text rendering
       </description>
     </key>
+    <key name="font-size" type="d">
+      <default>14</default>
+      <summary>Font size</summary>
+      <description>
+        Font size (pt) used for text rendering
+      </description>
+    </key>
 
   </schema>
 </schemalist>

@@ -9,6 +9,10 @@ public:
     static void Init(const std::string &settings_dir);
 
     static gir::Gio::Settings& GetSettings() { return _settings; }
+    static std::string GetFontFamily();
+    static void SetFontFamily(const std::string &);
+    static double GetFontSize();
+    static void SetFontSize(double pt);
 
 private:
     using _SettingsT = gir::Owned<gir::Gio::Settings>;

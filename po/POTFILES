@@ -2,3 +2,4 @@ src/GConfig.cpp
 src/GWindow.cpp
 res/menus.ui
 res/connect-dlg.ui
+res/com.sakhnik.nvim-ui.gschema.xml

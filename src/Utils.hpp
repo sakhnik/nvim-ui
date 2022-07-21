@@ -29,6 +29,12 @@ private:
     FuncT _f;
 };
 
+template <typename T, typename D>
+std::unique_ptr<T, D> mk_uniq(T *t, D &&d)
+{
+    return std::unique_ptr<T, D>(t, std::forward<D>(d));
+}
+
 // The clock for profiling
 using ClockT = std::chrono::high_resolution_clock;
 

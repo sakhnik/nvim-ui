@@ -8,20 +8,14 @@
 
 #ifdef GIR_INLINE
 #include <Gtk/FontChooserDialog.ipp>
-#include <Gio/Settings.ipp>
 #endif
-
-
-const char *const FONT_FAMILY_KEY = "font-family";
 
 
 GFont::GFont(Gtk::Window parent)
     : _parent{parent}
 {
-    // TODO: Make the wrapper return an auto-managed gchar*
-    gchar *font_family = GConfig::GetSettings().get_string(FONT_FAMILY_KEY);
-    _family = font_family;
-    free(font_family);
+    _family = GConfig::GetFontFamily();
+    _size_pt = GConfig::GetFontSize();
 }
 
 void GFont::SetGuiFont(const std::string &value)
@@ -45,7 +39,8 @@ void GFont::SetGuiFont(const std::string &value)
                 _family = pango_font_family_get_name(d.get_font_family());
                 _size_pt = 1. * d.get_font_size() / PANGO_SCALE;
                 Logger().info("Font: {}:{}", _family, _size_pt);
-                GConfig::GetSettings().set_string(FONT_FAMILY_KEY, _family.c_str());
+                GConfig::SetFontFamily(_family);
+                GConfig::SetFontSize(_size_pt);
                 if (_on_changed)
                     _on_changed();
             }
@@ -57,7 +52,13 @@ void GFont::SetGuiFont(const std::string &value)
     auto idx = value.find_first_of(":,");
     _family = value.substr(0, idx);
     Logger().info("Set guifont {}", _family);
-    GConfig::GetSettings().set_string(FONT_FAMILY_KEY, _family.c_str());
+    GConfig::SetFontFamily(_family);
     if (_on_changed)
         _on_changed();
+}
+
+void GFont::SetSizePt(double size_pt)
+{
+    _size_pt = size_pt;
+    GConfig::SetFontSize(size_pt);
 }

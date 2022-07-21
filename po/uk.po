@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-20 23:15+0300\n"
+"POT-Creation-Date: 2022-07-21 10:42+0300\n"
 "PO-Revision-Date: 2022-05-01 18:33+0300\n"
 "Last-Translator: Anatolii Sakhnik <sakhnik@gmail.com>\n"
 "Language-Team: Ukrainian\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Plural-Forms: nplurals=3;     plural=n%10==1 && n%100!=11 ? 0 :            "
 "n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
-#: src/GConfig.cpp:24
+#: src/GConfig.cpp:25
 msgid "Cannot get GSettings schema"
 msgstr "Неможливо дістати схему GSettings"
 
@@ -81,3 +81,19 @@ msgstr "_Скасувати"
 #: res/connect-dlg.ui:47
 msgid "C_onnect"
 msgstr "З’єднатися"
+
+#: res/com.sakhnik.nvim-ui.gschema.xml:6
+msgid "Font family"
+msgstr "Сімейство шрифтів"
+
+#: res/com.sakhnik.nvim-ui.gschema.xml:7
+msgid "Monospace font family used for text rendering"
+msgstr "Сімейство моноширинних шрифтів для відображення тексту"
+
+#: res/com.sakhnik.nvim-ui.gschema.xml:13
+msgid "Font size"
+msgstr "Розмір шрифту"
+
+#: res/com.sakhnik.nvim-ui.gschema.xml:14
+msgid "Font size (pt) used for text rendering"
+msgstr "Розмір шрифту (п.) для відображення тексту"

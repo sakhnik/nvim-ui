@@ -14,7 +14,7 @@ public:
 
     const std::string& GetFamily() const { return _family; }
     double GetSizePt() const { return _size_pt; }
-    void SetSizePt(double size_pt) { _size_pt = size_pt; }
+    void SetSizePt(double size_pt);
     void SetGuiFont(const std::string &);
 
     using OnFontChanged = std::function<void()>;

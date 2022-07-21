@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-20 23:15+0300\n"
+"POT-Creation-Date: 2022-07-21 10:42+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/GConfig.cpp:24
+#: src/GConfig.cpp:25
 msgid "Cannot get GSettings schema"
 msgstr ""
 
@@ -79,4 +79,20 @@ msgstr ""
 
 #: res/connect-dlg.ui:47
 msgid "C_onnect"
+msgstr ""
+
+#: res/com.sakhnik.nvim-ui.gschema.xml:6
+msgid "Font family"
+msgstr ""
+
+#: res/com.sakhnik.nvim-ui.gschema.xml:7
+msgid "Monospace font family used for text rendering"
+msgstr ""
+
+#: res/com.sakhnik.nvim-ui.gschema.xml:13
+msgid "Font size"
+msgstr ""
+
+#: res/com.sakhnik.nvim-ui.gschema.xml:14
+msgid "Font size (pt) used for text rendering"
 msgstr ""
