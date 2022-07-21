@@ -45,10 +45,10 @@
 GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
     : _app{app}
     , _session{session}
-    , _builder{Gtk::Builder::new_from_resource("/org/nvim-ui/gtk/main.ui")}
+    , _builder{Gtk::Builder::new_from_resource("/org/sakhnik/nvim-ui/gtk/main.ui")}
 {
     Gtk::IconTheme icon_theme{Gtk::IconTheme::get_for_display(gdk_display_get_default())};
-    icon_theme.add_resource_path("/org/nvim-ui/icons");
+    icon_theme.add_resource_path("/org/sakhnik/nvim-ui/icons");
 
     _SetupWindow();
 
@@ -324,7 +324,7 @@ void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
 
 void GWindow::_OnConnectAction(GSimpleAction *, GVariant *)
 {
-    auto builder = Gtk::Builder::new_from_resource("/org/nvim-ui/gtk/connect-dlg.ui");
+    auto builder = Gtk::Builder::new_from_resource("/org/sakhnik/nvim-ui/gtk/connect-dlg.ui");
     Gtk::Dialog dlg{builder.get_object("connect_dlg").g_obj()};
     dlg.set_transient_for(_window);
 

@@ -1,5 +1,5 @@
 <schemalist>
-  <schema id="com.sakhnik.nvim-ui" path="/com/sakhnik/nvim-ui/" gettext-domain="nvim-ui">
+  <schema id="org.sakhnik.nvim-ui" path="/org/sakhnik/nvim-ui/" gettext-domain="nvim-ui">
 
     <key name="font-family" type="s">
       <default>"Monospace"</default>

@@ -92,8 +92,8 @@ int main(int argc, char* argv[])
 
     try
     {
-        auto app = gir::MakeOwned(Gtk::Application::new_("org.nvim-ui", G_APPLICATION_FLAGS_NONE));
-        app.set_resource_base_path("/org/nvim-ui");
+        auto app = gir::MakeOwned(Gtk::Application::new_("org.sakhnik.nvim-ui", G_APPLICATION_FLAGS_NONE));
+        app.set_resource_base_path("/org/sakhnik/nvim-ui");
 
         auto on_activate = [](Gtk::Application app) {
             std::string error;

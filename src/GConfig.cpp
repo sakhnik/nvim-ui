@@ -20,7 +20,7 @@ void GConfig::Init(const std::string &settings_dir)
     auto schema_source = gir::MakeOwned(
             Gio::SettingsSchemaSource::new_from_directory(settings_dir.c_str(),
                 Gio::SettingsSchemaSource::get_default(), false));
-    auto schema = schema_source.lookup("com.sakhnik.nvim-ui", false);
+    auto schema = schema_source.lookup("org.sakhnik.nvim-ui", false);
     if (!schema.g_obj())
         throw std::runtime_error(_("Cannot get GSettings schema"));
     _settings = gir::MakeOwned(Gio::Settings::new_full(schema, nullptr, nullptr));

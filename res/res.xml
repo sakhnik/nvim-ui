@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-  <gresource prefix="/org/nvim-ui/icons/scalable/apps">
+  <gresource prefix="/org/sakhnik/nvim-ui/icons/scalable/apps">
     <file>nvim-ui.svg</file>
   </gresource>
-  <gresource prefix="/org/nvim-ui/gtk">
+  <gresource prefix="/org/sakhnik/nvim-ui/gtk">
     <file>main.ui</file>
     <file>menus.ui</file>
     <file>connect-dlg.ui</file>
