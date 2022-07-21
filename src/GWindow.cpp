@@ -330,16 +330,16 @@ void GWindow::_OnConnectAction(GSimpleAction *, GVariant *)
     Gtk::Dialog dlg{builder.get_object("connect_dlg").g_obj()};
     dlg.set_transient_for(_window);
 
-    // TODO: Simplify capturing the builder
     dlg.on_response(dlg, [this, builder](Gtk::Dialog dlg, gint response) {
-        Gtk::Builder b{builder.g_obj()};
-        _OnConnectDlgResponse(dlg, response, b);
-        b.unref();
+        _OnConnectDlgResponse(dlg, response, builder);
+    });
+    dlg.on_destroy(dlg, [builder](Gtk::Dialog) {
+        builder.unref();
     });
     dlg.show();
 }
 
-void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builder &builder)
+void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builder builder)
 {
     dlg.destroy();
     if (Gtk::ResponseType::ok != response)

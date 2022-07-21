@@ -73,7 +73,7 @@ private:
     void _OnAboutAction(GSimpleAction *, GVariant *);
     void _OnSpawnAction(GSimpleAction *, GVariant *);
     void _OnConnectAction(GSimpleAction *, GVariant *);
-    void _OnConnectDlgResponse(Gtk::Dialog &, gint response, Gtk::Builder &);
+    void _OnConnectDlgResponse(Gtk::Dialog &, gint response, Gtk::Builder);
     void _OnSettingsAction(GSimpleAction *, GVariant *);
 
 

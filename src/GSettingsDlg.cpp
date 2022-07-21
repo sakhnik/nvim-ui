@@ -24,10 +24,9 @@ GSettingsDlg::GSettingsDlg(gir::Gtk::Window window, GFont &font)
     Gtk::Label current_font_lbl{builder.get_object("current_font_lbl").g_obj()};
 
     auto update_current_font = [&font, current_font_lbl]() {
-        Gtk::Label l{current_font_lbl};
         std::string markup = fmt::format("<span font_desc=\"{0} {1:.1f}\">{0} {1:.1f}</span>",
                 font.GetFamily(), font.GetSizePt());
-        l.set_markup(markup.c_str());
+        current_font_lbl.set_markup(markup.c_str());
     };
     update_current_font();
 
@@ -37,15 +36,13 @@ GSettingsDlg::GSettingsDlg(gir::Gtk::Window window, GFont &font)
 
     Gtk::Button font_btn{builder.get_object("choose_font").g_obj()};
     font_btn.on_clicked(font_btn, [&font, dlg](Gtk::Button) {
-        Gtk::Dialog d{dlg};
-        font.SetGuiFont("*", d);
+        font.SetGuiFont("*", dlg);
     });
 
     dlg.set_transient_for(window);
     dlg.on_destroy(dlg, [builder, font_sub_id, &font](Gtk::Dialog) {
         font.Unsubscribe(font_sub_id);
-        Gtk::Builder b{builder};
-        b.unref();
+        builder.unref();
     });
     dlg.show();
 }
