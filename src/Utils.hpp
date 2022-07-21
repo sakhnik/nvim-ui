@@ -30,7 +30,7 @@ private:
 };
 
 template <typename T, typename D>
-std::unique_ptr<T, D> mk_uniq(T *t, D &&d)
+std::unique_ptr<T, D> mk_unique_ptr(T *t, D &&d)
 {
     return std::unique_ptr<T, D>(t, std::forward<D>(d));
 }

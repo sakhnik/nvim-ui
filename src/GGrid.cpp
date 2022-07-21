@@ -214,7 +214,6 @@ void GGrid::Clear()
     for (auto &t : _textures)
     {
         Texture *texture = static_cast<Texture *>(t.get());
-        // TODO: Implement relation operators
         if (texture->label)
             _grid.remove(texture->label);
     }

@@ -36,7 +36,7 @@ const char *const FONT_SIZE_KEY = "font-size";
 std::string GConfig::GetFontFamily()
 {
     // TODO: Make the wrapper return an auto-managed gchar*
-    auto font_family = mk_uniq(GConfig::GetSettings().get_string(FONT_FAMILY_KEY), free);
+    auto font_family = mk_unique_ptr(GConfig::GetSettings().get_string(FONT_FAMILY_KEY), free);
     std::string ret = font_family.get();
     return ret;
 }
