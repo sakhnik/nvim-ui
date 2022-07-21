@@ -27,7 +27,7 @@ fi
 cd src/gtkpp
 
 if [[ ! -d gir2cpp ]]; then
-  git clone https://github.com/sakhnik/gir2cpp -b v0.0.3
+  git clone https://github.com/sakhnik/gir2cpp -b v0.0.4
 fi
 
 pip install -r gir2cpp/requirements.txt

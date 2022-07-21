@@ -7,5 +7,6 @@
     <file>main.ui</file>
     <file>menus.ui</file>
     <file>connect-dlg.ui</file>
+    <file>settings-dlg.ui</file>
   </gresource>
 </gresources>

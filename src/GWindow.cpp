@@ -5,6 +5,7 @@
 #include "Renderer.hpp"
 #include "SessionSpawn.hpp"
 #include "SessionTcp.hpp"
+#include "GSettingsDlg.hpp"
 
 #include "Gtk/ApplicationWindow.hpp"
 #include "Gtk/Dialog.hpp"
@@ -98,6 +99,7 @@ void GWindow::_SetupWindow()
     const GActionEntry actions[] = {
         { "spawn", MakeCallback<&GWindow::_OnSpawnAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "connect", MakeCallback<&GWindow::_OnConnectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "settings", MakeCallback<&GWindow::_OnSettingsAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "quit", MakeCallback<&GWindow::_OnQuitAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "inspect", MakeCallback<&GWindow::_OnInspectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "about", MakeCallback<&GWindow::_OnAboutAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
@@ -362,6 +364,11 @@ void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builde
         SetError(ex.what());
     }
     _UpdateActions();
+}
+
+void GWindow::_OnSettingsAction(GSimpleAction *, GVariant *)
+{
+    GSettingsDlg dlg{_window, *_font.get()};
 }
 
 void GWindow::SetGuiFont(const std::string &value)

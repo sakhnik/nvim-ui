@@ -9,9 +9,13 @@
         <attribute name='accel'>&lt;ctrl&gt;n</attribute>
       </item>
       <item>
-        <attribute name='label' translatable='yes'>_Connect TCP...</attribute>
+        <attribute name='label' translatable='yes'>_Connect TCP…</attribute>
         <attribute name='action'>win.connect</attribute>
         <attribute name='accel'>&lt;ctrl&gt;t</attribute>
+      </item>
+      <item>
+        <attribute name='label' translatable='yes'>_Preferences…</attribute>
+        <attribute name='action'>win.settings</attribute>
       </item>
       <item>
         <attribute name='label' translatable='yes'>_Quit</attribute>

@@ -4,6 +4,7 @@
 
 #include <string>
 #include <functional>
+#include <unordered_map>
 
 namespace Gtk = gir::Gtk;
 
@@ -16,16 +17,29 @@ public:
     double GetSizePt() const { return _size_pt; }
     void SetSizePt(double size_pt);
     void SetGuiFont(const std::string &);
+    void SetGuiFont(const std::string &, Gtk::Window parent);
 
     using OnFontChanged = std::function<void()>;
-    void Subscribe(OnFontChanged on_changed)
+
+    int Subscribe(OnFontChanged on_changed)
     {
-        _on_changed = on_changed;
+        while (_subs.contains(_sub_id))
+            ++_sub_id;
+        _subs[_sub_id] = on_changed;
+        return _sub_id;
+    }
+
+    void Unsubscribe(int sub_id)
+    {
+        _subs.erase(sub_id);
     }
 
 private:
     Gtk::Window _parent;
     std::string _family = "Monospace";
     double _size_pt = 14;
-    OnFontChanged _on_changed;
+    std::unordered_map<int, OnFontChanged> _subs;
+    int _sub_id{};
+
+    void _OnChanged();
 };

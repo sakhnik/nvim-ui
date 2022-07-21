@@ -20,14 +20,19 @@ GFont::GFont(Gtk::Window parent)
 
 void GFont::SetGuiFont(const std::string &value)
 {
+    SetGuiFont(value, _parent);
+}
+
+void GFont::SetGuiFont(const std::string &value, Gtk::Window parent)
+{
     if (value.empty())
         return;
     if (value[0] == '*')
     {
         using FCD = Gtk::FontChooserDialog;
-        FCD dlg = FCD::new_("Choose the font", _parent).g_obj();
+        FCD dlg = FCD::new_("Choose the font", parent).g_obj();
         dlg.set_font(fmt::format("{} {}", _family, _size_pt).c_str());
-        dlg.set_level(Gtk::FontChooserLevel::family);
+        dlg.set_level(Gtk::FontChooserLevel::family | Gtk::FontChooserLevel::size);
         dlg.set_filter_func([](const PangoFontFamily *family, const PangoFontFace *, gpointer) -> gboolean {
                 return pango_font_family_is_monospace(const_cast<PangoFontFamily *>(family));
             },
@@ -41,8 +46,7 @@ void GFont::SetGuiFont(const std::string &value)
                 Logger().info("Font: {}:{}", _family, _size_pt);
                 GConfig::SetFontFamily(_family);
                 GConfig::SetFontSize(_size_pt);
-                if (_on_changed)
-                    _on_changed();
+                _OnChanged();
             }
             d.destroy();
         });
@@ -53,8 +57,13 @@ void GFont::SetGuiFont(const std::string &value)
     _family = value.substr(0, idx);
     Logger().info("Set guifont {}", _family);
     GConfig::SetFontFamily(_family);
-    if (_on_changed)
-        _on_changed();
+    _OnChanged();
+}
+
+void GFont::_OnChanged()
+{
+    for (auto &[_, sub] : _subs)
+        sub();
 }
 
 void GFont::SetSizePt(double size_pt)

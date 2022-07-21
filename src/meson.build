@@ -49,6 +49,8 @@ nvim_ui_sources = [
   'GFont.hpp',
   'GGrid.cpp',
   'GGrid.hpp',
+  'GSettingsDlg.hpp',
+  'GSettingsDlg.cpp',
   'GWindow.cpp',
   'GWindow.hpp',
   'IWindowHandler.hpp',
