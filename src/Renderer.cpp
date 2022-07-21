@@ -269,6 +269,7 @@ void Renderer::DefaultColorSet(unsigned fg, unsigned bg)
 
     _def_attr.fg = fg;
     _def_attr.bg = bg;
+    _hl_attr_modified = true;
 }
 
 void Renderer::OnResized(int rows, int cols)
