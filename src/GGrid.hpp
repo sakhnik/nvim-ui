@@ -63,7 +63,7 @@ private:
         // Chunk -> non-owned label
         Gtk::Label label;
     };
-    std::unordered_map<GridLine::Chunk::PtrT, Texture> _textures;
+    std::unordered_map<Renderer::ChunkT, Texture> _textures;
 
     std::unique_ptr<GCursor> _cursor;
 
