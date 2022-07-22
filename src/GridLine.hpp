@@ -35,5 +35,7 @@ public:
             , words{std::forward<WordsT>(words)}
         {
         }
+
+        auto operator<=>(const Chunk &) const = default;
     };
 };

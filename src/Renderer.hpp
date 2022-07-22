@@ -43,7 +43,8 @@ public:
     void SetGuiFont(std::string_view);
 
     // The snapshot of last consistent grid state
-    using GridLinesT = std::vector<GridLine::Chunk::PtrT>;
+    using ChunkT = GridLine::Chunk::PtrT;
+    using GridLinesT = std::vector<ChunkT>;
     const GridLinesT& GetGridLines() const { return _grid_lines; }
 
     std::lock_guard<std::mutex> Lock()
