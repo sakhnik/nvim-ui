@@ -75,14 +75,6 @@ void Renderer::_DoFlush()
     oss << "";
     _last_flush_time = ClockT::now();
 
-    auto chunk_comp = [](const ChunkT &a, const ChunkT &b) -> bool {
-        if (!a) return true;
-        if (!b) return false;
-        return *a.get() < *b.get();
-    };
-    std::set<ChunkT, decltype(chunk_comp)>
-        prev_chunks(_grid_lines.begin(), _grid_lines.end(), chunk_comp);
-
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
         auto &line = _lines[row];
@@ -114,7 +106,7 @@ void Renderer::_DoFlush()
         };
 
         // Create grid line chunks
-        ChunkT line_chunk(new GridLine::Chunk{0, {}});
+        GridLine::Chunk::PtrT line_chunk(new GridLine::Chunk{0, {}});
 
         // Group the words into one big word
         for (size_t i = 1; i < chunks.size(); ++i)
@@ -132,17 +124,7 @@ void Renderer::_DoFlush()
             line_chunk->words.push_back(std::move(word));
         }
 
-        // Try reusing one of the previous chunks if possible.
-        // This will result in just movement of the previous label instead of rerendering.
-        // This will enable implementing smooth scrolling.
-        auto it = prev_chunks.find(line_chunk);
-        if (it != prev_chunks.end())
-        {
-            _grid_lines[row] = *it;
-            prev_chunks.erase(it);
-        }
-        else
-            _grid_lines[row] = line_chunk;
+        _grid_lines[row] = line_chunk;
     }
 
     if (_window)
