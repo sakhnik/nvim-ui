@@ -1,5 +1,6 @@
 #include "SessionTcp.hpp"
 #include "Logger.hpp"
+#include "IWindow.hpp"
 #ifdef _WIN32
 # include <ws2def.h>
 #else //_WIN32

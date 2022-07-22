@@ -1,14 +1,11 @@
 #pragma once
 
 #include "HlAttr.hpp"
-#include "BaseTexture.hpp"
-#include <string_view>
+#include <string>
 
 struct IWindow
 {
     virtual ~IWindow() = default;
-
-    virtual BaseTexture::PtrT CreateTexture() = 0;
 
     virtual void Present() = 0;
     virtual void SessionEnd() = 0;

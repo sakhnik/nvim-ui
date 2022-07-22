@@ -168,12 +168,6 @@ void GWindow::_CheckSize()
     _grid->CheckSize(width, height);
 }
 
-BaseTexture::PtrT
-GWindow::CreateTexture()
-{
-    return BaseTexture::PtrT(new GGrid::Texture);
-}
-
 void GWindow::Present()
 {
     _GtkTimer(1, [this]() { _Present(); });

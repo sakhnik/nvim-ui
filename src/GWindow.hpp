@@ -33,7 +33,6 @@ public:
     GWindow(const Gtk::Application &, Session::PtrT &session);
     ~GWindow();
 
-    BaseTexture::PtrT CreateTexture() override;
     void Present() override;
     void DrawCursor(cairo_t *, int row, int col, unsigned fg, std::string_view mode);
     void SessionEnd() override;

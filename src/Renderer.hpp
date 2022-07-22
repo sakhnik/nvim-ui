@@ -10,7 +10,6 @@
 #include <string_view>
 #include <string>
 #include <mutex>
-#include <chrono>
 
 class MsgPackRpc;
 struct IWindow;
@@ -44,8 +43,7 @@ public:
     void SetGuiFont(std::string_view);
 
     // The snapshot of last consistent grid state
-    using GridLineT = GridLine::ChunkWrapper<&BaseTexture::SetVisible>;
-    using GridLinesT = std::vector<GridLineT>;
+    using GridLinesT = std::vector<GridLine::Chunk::PtrT>;
     const GridLinesT& GetGridLines() const { return _grid_lines; }
 
     std::lock_guard<std::mutex> Lock()

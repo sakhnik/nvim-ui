@@ -106,7 +106,7 @@ void Renderer::_DoFlush()
         };
 
         // Create grid line chunks
-        GridLine::Chunk line_chunk(0, {});
+        GridLine::Chunk::PtrT line_chunk(new GridLine::Chunk{0, {}});
 
         // Group the words into one big word
         for (size_t i = 1; i < chunks.size(); ++i)
@@ -120,11 +120,10 @@ void Renderer::_DoFlush()
             // Instant optimization: ignore the tailing invisible space
             if (i == chunks.size() - 1 && isInvisibleSpace(word))
                 break;
-            line_chunk.width = end;
-            line_chunk.words.push_back(std::move(word));
+            line_chunk->width = end;
+            line_chunk->words.push_back(std::move(word));
         }
 
-        line_chunk.texture = _window ? _window->CreateTexture() : BaseTexture::PtrT{};
         _grid_lines[row] = line_chunk;
     }
 
@@ -308,7 +307,7 @@ void Renderer::GridResize(int width, int height)
         line.text.resize(width, " ");
     }
 
-    _grid_lines.resize(height, GridLine::Chunk{0, {}});
+    _grid_lines.resize(height);
 }
 
 void Renderer::ModeChange(std::string_view mode)

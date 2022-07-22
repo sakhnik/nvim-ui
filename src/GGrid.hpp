@@ -10,8 +10,7 @@
 #include "Gtk/Fixed.hpp"
 #include "Gtk/Label.hpp"
 
-#include <vector>
-#include <functional>
+#include <unordered_map>
 
 namespace Gtk = gir::Gtk;
 struct IWindowHandler;
@@ -33,12 +32,6 @@ public:
     void Present(int width, int height);
     void Clear();
     void CheckSize(int width, int height);
-
-    struct Texture : BaseTexture
-    {
-        // Non-owning
-        Gtk::Label label;
-    };
 
     double CalcX(int col) const
     {
@@ -63,7 +56,14 @@ private:
 
     double _cell_width{};
     int _cell_height{};
-    std::vector<BaseTexture::PtrT> _textures;
+
+    struct Texture
+    {
+        int row{};
+        // Chunk -> non-owned label
+        Gtk::Label label;
+    };
+    std::unordered_map<GridLine::Chunk::PtrT, Texture> _textures;
 
     std::unique_ptr<GCursor> _cursor;
 
@@ -74,9 +74,7 @@ private:
 
     int _last_rows = 0, _last_cols = 0;
     void _CheckSize(int width, int height);
-    void _RemoveOutdated();
-    void _CreateLabels();
-    void _CheckConsistency();
+    void _UpdateLabels();
     void _UpdatePangoStyles();
     std::string _MakePangoStyle(const HlAttr &, const HlAttr &def_attr);
 };
