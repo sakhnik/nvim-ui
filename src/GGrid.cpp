@@ -471,7 +471,8 @@ void GGrid::_UpdateLabels()
 
 void GGrid::_MoveLabel(Gtk::Label label, int new_y)
 {
-    if (!GConfig::GetSmoothScroll())
+    int delay = GConfig::GetSmoothScrollDelay();
+    if (!delay)
     {
         if (new_y != -1)
             _grid.move(label, 0, new_y);
@@ -487,7 +488,7 @@ void GGrid::_MoveLabel(Gtk::Label label, int new_y)
     _labels_positions[label.g_obj()] = new_y;
     // Make sure the migration is happening in the background.
     if (-1u == _scroll_timer_id)
-        _scroll_timer_id = _GtkTimer0<&GGrid::_OnMoveLabels>(100);
+        _scroll_timer_id = _GtkTimer0<&GGrid::_OnMoveLabels>(delay);
 }
 
 void GGrid::_OnMoveLabels()
@@ -513,5 +514,5 @@ void GGrid::_OnMoveLabels()
     // If necessary, rearm the timer.
     _scroll_timer_id = _labels_positions.empty()
         ? -1u
-        : _GtkTimer0<&GGrid::_OnMoveLabels>(10);
+        : _GtkTimer0<&GGrid::_OnMoveLabels>(GConfig::GetSmoothScrollDelay());
 }

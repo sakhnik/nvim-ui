@@ -2,19 +2,24 @@
 #include "GSettingsDlg.hpp"
 #include "GFont.hpp"
 #include "GConfig.hpp"
+#include "Logger.hpp"
 
 #include <Gtk/Builder.hpp>
 #include <Gtk/Dialog.hpp>
 #include <Gtk/Button.hpp>
 #include <Gtk/Label.hpp>
 #include <Gtk/ToggleButton.hpp>
+#include <Gtk/Scale.hpp>
+#include <Gio/SettingsSchemaKey.hpp>
 
 #ifdef GIR_INLINE
 #include "Gtk/Dialog.ipp"
 #include "Gtk/Builder.ipp"
 #include <Gtk/Button.ipp>
 #include <Gtk/Label.ipp>
-#include <Gtk/ToggleButton.ipp>
+#include <Gtk/Scale.ipp>
+#include <Gio/SettingsSchema.ipp>
+#include <Gio/SettingsSchemaKey.ipp>
 #endif //GIR_INLINE
 
 #include <fmt/format.h>
@@ -50,18 +55,16 @@ void HandleFont(Gtk::Builder builder, Gtk::Dialog dlg, GFont &font)
 
 void HandleSmoothScroll(Gtk::Builder builder)
 {
-    Gtk::ToggleButton btn{builder.get_object("smooth_scroll_btn").g_obj()};
-    auto updateLabel = [btn](bool is_active) {
-        btn.set_label(is_active ? _("Disable") : _("Enable"));
-    };
-    bool is_active = GConfig::GetSmoothScroll();
-    updateLabel(is_active);
-    btn.set_label(is_active ? _("Disable") : _("Enable"));
-    btn.set_active(is_active);
-    btn.on_toggled(btn, [updateLabel](Gtk::ToggleButton btn) {
-        bool is_active = btn.get_active();
-        GConfig::SetSmoothScroll(is_active);
-        updateLabel(is_active);
+    Gtk::Scale scale{builder.get_object("smooth_scroll_scale").g_obj()};
+    auto key = GConfig::GetSettingsSchema().get_key(GConfig::SMOOTH_SCROLL_DELAY_KEY);
+    GVariant *range = g_variant_get_child_value(key.get_range(), 1);
+    range = g_variant_get_child_value(range, 0);
+    int low = g_variant_get_int32(g_variant_get_child_value(range, 0));
+    int high = g_variant_get_int32(g_variant_get_child_value(range, 1));
+    scale.set_range(low, high);
+    scale.set_value(GConfig::GetSmoothScrollDelay());
+    scale.on_value_changed(scale, [=](Gtk::Scale scale) {
+        GConfig::SetSmoothScrollDelay(scale.get_value());
     });
 }
 
