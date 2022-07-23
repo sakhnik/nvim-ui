@@ -3,6 +3,7 @@
 #include "Renderer.hpp"
 #include "IWindowHandler.hpp"
 #include "GFont.hpp"
+#include "GConfig.hpp"
 
 #include "Gtk/DrawingArea.hpp"
 #include "Gtk/EventController.hpp"
@@ -470,6 +471,12 @@ void GGrid::_UpdateLabels()
 
 void GGrid::_MoveLabel(Gtk::Label label, int new_y)
 {
+    if (!GConfig::GetSmoothScroll())
+    {
+        if (new_y != -1)
+            _grid.move(label, 0, new_y);
+        return;
+    }
     // Check if the label is to be taken out first, no more movement.
     if (-1 == new_y)
     {

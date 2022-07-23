@@ -13,6 +13,8 @@ public:
     static void SetFontFamily(const std::string &);
     static double GetFontSize();
     static void SetFontSize(double pt);
+    static bool GetSmoothScroll();
+    static void SetSmoothScroll(bool);
 
 private:
     using _SettingsT = gir::Owned<gir::Gio::Settings>;

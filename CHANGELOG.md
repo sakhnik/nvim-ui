@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Help->About dialog
 - Persistent configuration of guifont via GSettings
 - GUI dialog to configure settings
-- Smooth scrolling
+- Configurable smooth scrolling
 
 ### Fixed
 

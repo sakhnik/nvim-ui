@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-21 14:18+0300\n"
+"POT-Creation-Date: 2022-07-23 09:55+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,24 +17,44 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/GConfig.cpp:25
-msgid "Cannot get GSettings schema"
+#: res/com.sakhnik.nvim-ui.gschema.xml:6
+msgid "Font family"
 msgstr ""
 
-#: src/GWindow.cpp:236
-msgid "Press ALT to reach the menu"
+#: res/com.sakhnik.nvim-ui.gschema.xml:7
+msgid "Monospace font family used for text rendering"
 msgstr ""
 
-#: src/GWindow.cpp:293
-msgid "Anatolii Sakhnik https://sakhnik.com"
+#: res/com.sakhnik.nvim-ui.gschema.xml:13
+msgid "Font size"
 msgstr ""
 
-#: src/GWindow.cpp:299
-msgid "About nvim-ui"
+#: res/com.sakhnik.nvim-ui.gschema.xml:14
+msgid "Font size (pt) used for text rendering"
 msgstr ""
 
-#: src/GWindow.cpp:304
-msgid "GitHub: sakhnik/nvim-ui"
+#: res/com.sakhnik.nvim-ui.gschema.xml:20
+msgid "Enable smooth scrolling"
+msgstr ""
+
+#: res/com.sakhnik.nvim-ui.gschema.xml:21
+msgid "When enabled, the text will be moving smoothly on the grid"
+msgstr ""
+
+#: res/connect-dlg.ui:6
+msgid "Connect via TCP"
+msgstr ""
+
+#: res/connect-dlg.ui:14
+msgid "Address"
+msgstr ""
+
+#: res/connect-dlg.ui:41
+msgid "_Cancel"
+msgstr ""
+
+#: res/connect-dlg.ui:47
+msgid "C_onnect"
 msgstr ""
 
 #: res/menus.ui:5
@@ -69,34 +89,46 @@ msgstr ""
 msgid "_About"
 msgstr ""
 
-#: res/connect-dlg.ui:6
-msgid "Connect via TCP"
+#: res/settings-dlg.ui:6
+msgid "nvim-ui settings"
 msgstr ""
 
-#: res/connect-dlg.ui:14
-msgid "Address"
+#: res/settings-dlg.ui:23
+msgid "Font"
 msgstr ""
 
-#: res/connect-dlg.ui:41
-msgid "_Cancel"
+#: res/settings-dlg.ui:42
+msgid "Choose…"
 msgstr ""
 
-#: res/connect-dlg.ui:47
-msgid "C_onnect"
+#: res/settings-dlg.ui:52
+msgid "Smooth scrolling"
 msgstr ""
 
-#: res/com.sakhnik.nvim-ui.gschema.xml:6
-msgid "Font family"
+#: src/GConfig.cpp:25
+msgid "Cannot get GSettings schema"
 msgstr ""
 
-#: res/com.sakhnik.nvim-ui.gschema.xml:7
-msgid "Monospace font family used for text rendering"
+#: src/GSettingsDlg.cpp:55 src/GSettingsDlg.cpp:59
+msgid "Disable"
 msgstr ""
 
-#: res/com.sakhnik.nvim-ui.gschema.xml:13
-msgid "Font size"
+#: src/GSettingsDlg.cpp:55 src/GSettingsDlg.cpp:59
+msgid "Enable"
 msgstr ""
 
-#: res/com.sakhnik.nvim-ui.gschema.xml:14
-msgid "Font size (pt) used for text rendering"
+#: src/GWindow.cpp:230
+msgid "Press ALT to reach the menu"
+msgstr ""
+
+#: src/GWindow.cpp:287
+msgid "Anatolii Sakhnik https://sakhnik.com"
+msgstr ""
+
+#: src/GWindow.cpp:293
+msgid "About nvim-ui"
+msgstr ""
+
+#: src/GWindow.cpp:298
+msgid "GitHub: sakhnik/nvim-ui"
 msgstr ""

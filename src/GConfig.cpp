@@ -30,6 +30,7 @@ namespace {
 
 const char *const FONT_FAMILY_KEY = "font-family";
 const char *const FONT_SIZE_KEY = "font-size";
+const char *const SMOOTH_SCROLL_KEY = "smooth-scroll";
 
 } //namespace;
 
@@ -54,4 +55,14 @@ double GConfig::GetFontSize()
 void GConfig::SetFontSize(double pt)
 {
     _settings.set_double(FONT_SIZE_KEY, pt);
+}
+
+bool GConfig::GetSmoothScroll()
+{
+    return _settings.get_boolean(SMOOTH_SCROLL_KEY);
+}
+
+void GConfig::SetSmoothScroll(bool enable)
+{
+    _settings.set_boolean(SMOOTH_SCROLL_KEY, enable);
 }
