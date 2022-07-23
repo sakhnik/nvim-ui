@@ -10,7 +10,7 @@
 #include "Gtk/Dialog.ipp"
 #include "Gtk/Builder.ipp"
 #include <Gtk/Button.ipp>
-#include <Gtk/Label.hpp>
+#include <Gtk/Label.ipp>
 #endif //GIR_INLINE
 
 #include <fmt/format.h>
