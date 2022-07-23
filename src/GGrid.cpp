@@ -207,6 +207,7 @@ void GGrid::Clear()
 {
     for (auto &[_, texture]: _textures)
     {
+        _MoveLabel(texture.label, -1);
         _grid.remove(texture.label);
     }
     _textures.clear();
@@ -447,7 +448,7 @@ void GGrid::_UpdateLabels()
         {
             if (it->second.row != row)
             {
-                _grid.move(it->second.label, 0, y);
+                _MoveLabel(it->second.label, y);
             }
             new_textures[chunk] = it->second;
             _textures.erase(it);
@@ -456,6 +457,7 @@ void GGrid::_UpdateLabels()
 
     for (auto &[_, texture]: _textures)
     {
+        _MoveLabel(texture.label, -1);
         _grid.remove(texture.label);
     }
 
@@ -464,4 +466,45 @@ void GGrid::_UpdateLabels()
     auto finish_time = ClockT::now();
     auto duration = ToMs(finish_time - start_time).count();
     Logger().debug("GGrid::_UpdateLabels labels_created={} in {} ms", labels_created, duration);
+}
+
+void GGrid::_MoveLabel(Gtk::Label label, int new_y)
+{
+    // Check if the label is to be taken out first, no more movement.
+    if (-1 == new_y)
+    {
+        _labels_positions.erase(label.g_obj());
+        return;
+    }
+    // Add the label to the migration horde.
+    _labels_positions[label.g_obj()] = new_y;
+    // Make sure the migration is happening in the background.
+    if (-1u == _scroll_timer_id)
+        _scroll_timer_id = _GtkTimer0<&GGrid::_OnMoveLabels>(100);
+}
+
+void GGrid::_OnMoveLabels()
+{
+    // Move the labels towards their intended positions.
+    for (auto it = _labels_positions.begin(); it != _labels_positions.end(); )
+    {
+        Gtk::Label label{it->first};
+        int new_y = it->second;
+        double x{}, y{};
+        _grid.get_child_position(label, &x, &y);
+        // Either half the distance to the target or the final step whole.
+        int dy = new_y - y;
+        if (dy < -3 || dy > 3)
+            dy /= 2; 
+        _grid.move(label, x, y + dy);
+        if (new_y == y + dy)
+            it = _labels_positions.erase(it);
+        else
+            ++it;
+    }
+
+    // If necessary, rearm the timer.
+    _scroll_timer_id = _labels_positions.empty()
+        ? -1u
+        : _GtkTimer0<&GGrid::_OnMoveLabels>(10);
 }

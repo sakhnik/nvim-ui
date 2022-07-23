@@ -77,4 +77,23 @@ private:
     void _UpdateLabels();
     void _UpdatePangoStyles();
     std::string _MakePangoStyle(const HlAttr &, const HlAttr &def_attr);
+
+
+    // Smooth scrolling
+    std::unordered_map<::GObject*, int> _labels_positions;
+    guint _scroll_timer_id = -1u;
+
+    void _MoveLabel(Gtk::Label, int new_y);
+    void _OnMoveLabels();
+
+    // A generic async pass to the Gtk thread.
+    template <void (GGrid::*func)()>
+    guint _GtkTimer0(int ms)
+    {
+        auto on_timeout = [](gpointer data) -> gboolean {
+            (reinterpret_cast<GGrid *>(data)->*func)();
+            return FALSE;
+        };
+        return g_timeout_add(ms, on_timeout, this);
+    }
 };
