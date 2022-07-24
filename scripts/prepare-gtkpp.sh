@@ -52,6 +52,10 @@ config.include = re.compile(r"""^(
         Gdk::
         |
         Gdk::ModifierType.*
+        |
+        GLib::
+        |
+        GLib::Variant(|::.*)
         )$""", re.VERBOSE)
 config.ignore = re.compile(r"""^(
         Gtk::Print.*

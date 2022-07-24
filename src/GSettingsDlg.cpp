@@ -20,6 +20,7 @@
 #include <Gtk/Scale.ipp>
 #include <Gio/SettingsSchema.ipp>
 #include <Gio/SettingsSchemaKey.ipp>
+#include <GLib/Variant.ipp>
 #endif //GIR_INLINE
 
 #include <fmt/format.h>
@@ -57,10 +58,10 @@ void HandleSmoothScroll(Gtk::Builder builder)
 {
     Gtk::Scale scale{builder.get_object("smooth_scroll_scale").g_obj()};
     auto key = GConfig::GetSettingsSchema().get_key(GConfig::SMOOTH_SCROLL_DELAY_KEY);
-    GVariant *range = g_variant_get_child_value(key.get_range(), 1);
-    range = g_variant_get_child_value(range, 0);
-    int low = g_variant_get_int32(g_variant_get_child_value(range, 0));
-    int high = g_variant_get_int32(g_variant_get_child_value(range, 1));
+    auto range = key.get_range().get_child_value(1);
+    range = range.get_child_value(0);
+    int low = range.get_child_value(0).get_int32();
+    int high = range.get_child_value(1).get_int32();
     scale.set_range(low, high);
     scale.set_value(GConfig::GetSmoothScrollDelay());
     scale.on_value_changed(scale, [=](Gtk::Scale scale) {
