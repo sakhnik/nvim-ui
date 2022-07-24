@@ -171,10 +171,16 @@ void Renderer::_DoFlush()
                 [row](const PrevChunk &a, const PrevChunk &b) {
                     return std::abs(a.row - row) < std::abs(b.row - row);
                 });
-            _grid_lines[row] = it_min->chunk;
-            chunks.erase(it_min);
-            if (chunks.empty())
-                prev_lines.erase(it);
+            // Only reuse the chunk if it was close enough to avoid jerkiness.
+            if (std::abs(it_min->row - row) < 2)
+            {
+                _grid_lines[row] = it_min->chunk;
+                chunks.erase(it_min);
+                if (chunks.empty())
+                    prev_lines.erase(it);
+            }
+            else
+                _grid_lines[row] = line_chunk;
         }
         else
             _grid_lines[row] = line_chunk;
