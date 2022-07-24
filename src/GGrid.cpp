@@ -406,14 +406,14 @@ void GGrid::_UpdateLabels()
 
     // Create the newly appearing labels
     auto renderer = _session->GetRenderer();
+    auto &grid_lines = renderer->GetGridLines();
 
     decltype(_textures) new_textures;
-    new_textures.reserve(renderer->GetGridLines().size());
+    new_textures.reserve(grid_lines.size());
 
-    for (int row = 0, rowN = renderer->GetGridLines().size();
-         row < rowN; ++row)
+    for (int row = 0, rowN = grid_lines.size(); row < rowN; ++row)
     {
-        const auto &chunk = renderer->GetGridLines()[row];
+        const auto &chunk = grid_lines[row];
         if (!chunk)
             continue;
 
@@ -450,6 +450,7 @@ void GGrid::_UpdateLabels()
             if (it->second.row != row)
             {
                 _MoveLabel(it->second.label, y);
+                it->second.row = row;
             }
             new_textures[chunk] = it->second;
             _textures.erase(it);
