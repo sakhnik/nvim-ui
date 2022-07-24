@@ -75,6 +75,9 @@ void Renderer::_DoFlush()
     oss << "";
     _last_flush_time = ClockT::now();
 
+    // Consider the _lines, which contain individual cells (text,hl_id).
+    // Compute _grid_lines from this reusing the chunks as much as possible.
+
     // Some of the previous chunks can be reused if they just moved up and down.
     // We need to recognize the repeated chunks.
     auto chunk_comp = [](const ChunkT &a, const ChunkT &b) -> bool {
@@ -85,14 +88,20 @@ void Renderer::_DoFlush()
 
     // Let's collect everything that's going to vanish into a map:
     //  <literal chunk> -> [pointers to it]
-    std::map<ChunkT, std::list<ChunkT>, decltype(chunk_comp)> prev_lines(chunk_comp);
+    struct PrevChunk
+    {
+        ChunkT chunk;
+        int row{};
+    };
+
+    std::map<ChunkT, std::list<PrevChunk>, decltype(chunk_comp)> prev_lines(chunk_comp);
     for (int row = 0, rowN = _grid_lines.size(); row < rowN; ++row)
     {
         // Skip through the surviving lines
         if (!_lines[row].dirty)
             continue;
         auto chunk = _grid_lines[row];
-        prev_lines[chunk].push_back(chunk);
+        prev_lines[chunk].push_back({chunk, row});
     }
 
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
@@ -156,9 +165,15 @@ void Renderer::_DoFlush()
         auto it = prev_lines.find(line_chunk);
         if (it != prev_lines.end())
         {
-            _grid_lines[row] = it->second.front();
-            it->second.pop_front();
-            if (it->second.empty())
+            auto &chunks = it->second;
+            // Pick up the closest previous chunk.
+            auto it_min = std::min_element(chunks.begin(), chunks.end(),
+                [row](const PrevChunk &a, const PrevChunk &b) {
+                    return std::abs(a.row - row) < std::abs(b.row - row);
+                });
+            _grid_lines[row] = it_min->chunk;
+            chunks.erase(it_min);
+            if (chunks.empty())
                 prev_lines.erase(it);
         }
         else
