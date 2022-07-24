@@ -96,6 +96,9 @@ int main(int argc, char* argv[])
         app.set_resource_base_path("/org/sakhnik/nvim-ui");
 
         auto on_activate = [](Gtk::Application app) {
+            // Only activate once. If a subsequent launch happens, nothing to do in this process.
+            if (session)
+                return;
             std::string error;
             try
             {
