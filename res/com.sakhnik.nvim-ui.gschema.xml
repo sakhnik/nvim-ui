@@ -15,6 +15,14 @@
         Font size (pt) used for text rendering
       </description>
     </key>
+    <key name="smooth-scroll-delay" type="i">
+      <default>20</default>
+      <summary>Smooth scrolling delay (ms), 0 to disable</summary>
+      <description>
+        The delay in milliseconds between scrolling steps. If set to 0, the smooth scrolling is disabled.
+      </description>
+      <range min="0" max="100"/>
+    </key>
 
   </schema>
 </schemalist>

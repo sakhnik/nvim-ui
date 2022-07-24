@@ -3,6 +3,7 @@
 #include "Renderer.hpp"
 #include "IWindowHandler.hpp"
 #include "GFont.hpp"
+#include "GConfig.hpp"
 
 #include "Gtk/DrawingArea.hpp"
 #include "Gtk/EventController.hpp"
@@ -207,6 +208,7 @@ void GGrid::Clear()
 {
     for (auto &[_, texture]: _textures)
     {
+        _MoveLabel(texture.label, -1);
         _grid.remove(texture.label);
     }
     _textures.clear();
@@ -404,14 +406,14 @@ void GGrid::_UpdateLabels()
 
     // Create the newly appearing labels
     auto renderer = _session->GetRenderer();
+    auto &grid_lines = renderer->GetGridLines();
 
     decltype(_textures) new_textures;
-    new_textures.reserve(renderer->GetGridLines().size());
+    new_textures.reserve(grid_lines.size());
 
-    for (int row = 0, rowN = renderer->GetGridLines().size();
-         row < rowN; ++row)
+    for (int row = 0, rowN = grid_lines.size(); row < rowN; ++row)
     {
-        const auto &chunk = renderer->GetGridLines()[row];
+        const auto &chunk = grid_lines[row];
         if (!chunk)
             continue;
 
@@ -447,7 +449,8 @@ void GGrid::_UpdateLabels()
         {
             if (it->second.row != row)
             {
-                _grid.move(it->second.label, 0, y);
+                _MoveLabel(it->second.label, y);
+                it->second.row = row;
             }
             new_textures[chunk] = it->second;
             _textures.erase(it);
@@ -456,6 +459,7 @@ void GGrid::_UpdateLabels()
 
     for (auto &[_, texture]: _textures)
     {
+        _MoveLabel(texture.label, -1);
         _grid.remove(texture.label);
     }
 
@@ -464,4 +468,52 @@ void GGrid::_UpdateLabels()
     auto finish_time = ClockT::now();
     auto duration = ToMs(finish_time - start_time).count();
     Logger().debug("GGrid::_UpdateLabels labels_created={} in {} ms", labels_created, duration);
+}
+
+void GGrid::_MoveLabel(Gtk::Label label, int new_y)
+{
+    int delay = GConfig::GetSmoothScrollDelay();
+    if (!delay)
+    {
+        if (new_y != -1)
+            _grid.move(label, 0, new_y);
+        return;
+    }
+    // Check if the label is to be taken out first, no more movement.
+    if (-1 == new_y)
+    {
+        _labels_positions.erase(label.g_obj());
+        return;
+    }
+    // Add the label to the migration horde.
+    _labels_positions[label.g_obj()] = new_y;
+    // Make sure the migration is happening in the background.
+    if (-1u == _scroll_timer_id)
+        _scroll_timer_id = _GtkTimer0<&GGrid::_OnMoveLabels>(delay);
+}
+
+void GGrid::_OnMoveLabels()
+{
+    // Move the labels towards their intended positions.
+    for (auto it = _labels_positions.begin(); it != _labels_positions.end(); )
+    {
+        Gtk::Label label{it->first};
+        int new_y = it->second;
+        double x{}, y{};
+        _grid.get_child_position(label, &x, &y);
+        // Either half the distance to the target or the final step whole.
+        int dy = new_y - y;
+        if (dy < -3 || dy > 3)
+            dy /= 2; 
+        _grid.move(label, x, y + dy);
+        if (new_y == y + dy)
+            it = _labels_positions.erase(it);
+        else
+            ++it;
+    }
+
+    // If necessary, rearm the timer.
+    _scroll_timer_id = _labels_positions.empty()
+        ? -1u
+        : _GtkTimer0<&GGrid::_OnMoveLabels>(GConfig::GetSmoothScrollDelay());
 }

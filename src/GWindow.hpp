@@ -80,7 +80,7 @@ private:
     template <void (GWindow::*func)()>
     void _GtkTimer0(int ms)
     {
-        auto on_timeout = [](gpointer data) {
+        auto on_timeout = [](gpointer data) -> gboolean {
             (reinterpret_cast<GWindow *>(data)->*func)();
             return FALSE;
         };

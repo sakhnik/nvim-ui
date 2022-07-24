@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-21 14:18+0300\n"
+"POT-Creation-Date: 2022-07-23 23:19+0300\n"
 "PO-Revision-Date: 2022-05-01 18:33+0300\n"
 "Last-Translator: Anatolii Sakhnik <sakhnik@gmail.com>\n"
 "Language-Team: Ukrainian\n"
@@ -18,25 +18,49 @@ msgstr ""
 "Plural-Forms: nplurals=3;     plural=n%10==1 && n%100!=11 ? 0 :            "
 "n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
-#: src/GConfig.cpp:25
-msgid "Cannot get GSettings schema"
-msgstr "Неможливо дістати схему GSettings"
+#: res/com.sakhnik.nvim-ui.gschema.xml:6
+msgid "Font family"
+msgstr "Сімейство шрифтів"
 
-#: src/GWindow.cpp:236
-msgid "Press ALT to reach the menu"
-msgstr "Натисніть ALT щоб добратися до меню"
+#: res/com.sakhnik.nvim-ui.gschema.xml:7
+msgid "Monospace font family used for text rendering"
+msgstr "Сімейство моноширинних шрифтів для відображення тексту"
 
-#: src/GWindow.cpp:293
-msgid "Anatolii Sakhnik https://sakhnik.com"
-msgstr "Анатолій Сахнік https://sakhnik.com/index.uk.html"
+#: res/com.sakhnik.nvim-ui.gschema.xml:13
+msgid "Font size"
+msgstr "Розмір шрифту"
 
-#: src/GWindow.cpp:299
-msgid "About nvim-ui"
-msgstr "Про nvim-ui"
+#: res/com.sakhnik.nvim-ui.gschema.xml:14
+msgid "Font size (pt) used for text rendering"
+msgstr "Розмір шрифту (п.) для відображення тексту"
 
-#: src/GWindow.cpp:304
-msgid "GitHub: sakhnik/nvim-ui"
-msgstr "GitHub: sakhnik/nvim-ui"
+#: res/com.sakhnik.nvim-ui.gschema.xml:20
+msgid "Smooth scrolling delay (ms), 0 to disable"
+msgstr "Затримка плавного прокручування (мс), 0 щоб вимкнути"
+
+#: res/com.sakhnik.nvim-ui.gschema.xml:21
+msgid ""
+"The delay in milliseconds between scrolling steps. If set to 0, the smooth "
+"scrolling is disabled."
+msgstr ""
+"Затримка у мілісекндах між кроками прокручування. Якщо встановлено 0, плавне "
+"прокручування вимкнено."
+
+#: res/connect-dlg.ui:6
+msgid "Connect via TCP"
+msgstr "З’єднатися з TCP"
+
+#: res/connect-dlg.ui:14
+msgid "Address"
+msgstr "Адреса"
+
+#: res/connect-dlg.ui:41
+msgid "_Cancel"
+msgstr "_Скасувати"
+
+#: res/connect-dlg.ui:47
+msgid "C_onnect"
+msgstr "З’єднатися"
 
 #: res/menus.ui:5
 msgid "_Neovim"
@@ -70,34 +94,50 @@ msgstr "Інспектор"
 msgid "_About"
 msgstr "Про"
 
-#: res/connect-dlg.ui:6
-msgid "Connect via TCP"
-msgstr "З’єднатися з TCP"
+#: res/settings-dlg.ui:6
+msgid "nvim-ui settings"
+msgstr "Налаштування nvim-ui"
 
-#: res/connect-dlg.ui:14
-msgid "Address"
-msgstr "Адреса"
+#: res/settings-dlg.ui:23
+msgid "Font"
+msgstr "Шрифт"
 
-#: res/connect-dlg.ui:41
-msgid "_Cancel"
-msgstr "_Скасувати"
+#: res/settings-dlg.ui:42
+msgid "Choose…"
+msgstr "Вибрати…"
 
-#: res/connect-dlg.ui:47
-msgid "C_onnect"
-msgstr "З’єднатися"
+#: res/settings-dlg.ui:52
+msgid "Smooth scrolling delay (ms)"
+msgstr "Затримка плавного прокручування (мс)"
 
-#: res/com.sakhnik.nvim-ui.gschema.xml:6
-msgid "Font family"
-msgstr "Сімейство шрифтів"
+#: src/GConfig.cpp:25
+msgid "Cannot get GSettings schema"
+msgstr "Неможливо дістати схему GSettings"
 
-#: res/com.sakhnik.nvim-ui.gschema.xml:7
-msgid "Monospace font family used for text rendering"
-msgstr "Сімейство моноширинних шрифтів для відображення тексту"
+#: src/GWindow.cpp:230
+msgid "Press ALT to reach the menu"
+msgstr "Натисніть ALT щоб добратися до меню"
 
-#: res/com.sakhnik.nvim-ui.gschema.xml:13
-msgid "Font size"
-msgstr "Розмір шрифту"
+#: src/GWindow.cpp:287
+msgid "Anatolii Sakhnik https://sakhnik.com"
+msgstr "Анатолій Сахнік https://sakhnik.com/index.uk.html"
 
-#: res/com.sakhnik.nvim-ui.gschema.xml:14
-msgid "Font size (pt) used for text rendering"
-msgstr "Розмір шрифту (п.) для відображення тексту"
+#: src/GWindow.cpp:293
+msgid "About nvim-ui"
+msgstr "Про nvim-ui"
+
+#: src/GWindow.cpp:298
+msgid "GitHub: sakhnik/nvim-ui"
+msgstr "GitHub: sakhnik/nvim-ui"
+
+#~ msgid "Enable smooth scrolling"
+#~ msgstr "Увімкнути плавне прокручування"
+
+#~ msgid "When enabled, the text will be moving smoothly on the grid"
+#~ msgstr "Коли увімкнено, текст буде переміщуватися плавно на сітці"
+
+#~ msgid "Disable"
+#~ msgstr "Вимкнути"
+
+#~ msgid "Enable"
+#~ msgstr "Увімкнути"

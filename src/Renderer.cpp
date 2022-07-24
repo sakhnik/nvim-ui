@@ -75,6 +75,35 @@ void Renderer::_DoFlush()
     oss << "";
     _last_flush_time = ClockT::now();
 
+    // Consider the _lines, which contain individual cells (text,hl_id).
+    // Compute _grid_lines from this reusing the chunks as much as possible.
+
+    // Some of the previous chunks can be reused if they just moved up and down.
+    // We need to recognize the repeated chunks.
+    auto chunk_comp = [](const ChunkT &a, const ChunkT &b) -> bool {
+        if (!a) return true;
+        if (!b) return false;
+        return *a.get() < *b.get();
+    };
+
+    // Let's collect everything that's going to vanish into a map:
+    //  <literal chunk> -> [pointers to it]
+    struct PrevChunk
+    {
+        ChunkT chunk;
+        int row{};
+    };
+
+    std::map<ChunkT, std::list<PrevChunk>, decltype(chunk_comp)> prev_lines(chunk_comp);
+    for (int row = 0, rowN = _grid_lines.size(); row < rowN; ++row)
+    {
+        // Skip through the surviving lines
+        if (!_lines[row].dirty)
+            continue;
+        auto chunk = _grid_lines[row];
+        prev_lines[chunk].push_back({chunk, row});
+    }
+
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
         auto &line = _lines[row];
@@ -106,7 +135,7 @@ void Renderer::_DoFlush()
         };
 
         // Create grid line chunks
-        GridLine::Chunk::PtrT line_chunk(new GridLine::Chunk{0, {}});
+        ChunkT line_chunk(new GridLine::Chunk{0, {}});
 
         // Group the words into one big word
         for (size_t i = 1; i < chunks.size(); ++i)
@@ -124,7 +153,31 @@ void Renderer::_DoFlush()
             line_chunk->words.push_back(std::move(word));
         }
 
-        _grid_lines[row] = line_chunk;
+        if (!line_chunk->width)
+        {
+            _grid_lines[row].reset();
+            continue;
+        }
+
+        // Try reusing one of the previous chunks if possible.
+        // This will result in just movement of the previous label instead of rerendering.
+        // This will enable implementing smooth scrolling.
+        auto it = prev_lines.find(line_chunk);
+        if (it != prev_lines.end())
+        {
+            auto &chunks = it->second;
+            // Pick up the closest previous chunk.
+            auto it_min = std::min_element(chunks.begin(), chunks.end(),
+                [row](const PrevChunk &a, const PrevChunk &b) {
+                    return std::abs(a.row - row) < std::abs(b.row - row);
+                });
+            _grid_lines[row] = it_min->chunk;
+            chunks.erase(it_min);
+            if (chunks.empty())
+                prev_lines.erase(it);
+        }
+        else
+            _grid_lines[row] = line_chunk;
     }
 
     if (_window)

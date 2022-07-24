@@ -8,12 +8,14 @@
 
 #ifdef GIR_INLINE
 #include <Gio/Settings.ipp>
+#include <Gio/SettingsSchema.ipp>
 #include <Gio/SettingsSchemaSource.ipp>
 #endif
 
 namespace Gio = gir::Gio;
 
 GConfig::_SettingsT GConfig::_settings{nullptr};
+GConfig::_SettingsSchemaT GConfig::_settings_schema{nullptr};
 
 void GConfig::Init(const std::string &settings_dir)
 {
@@ -23,15 +25,9 @@ void GConfig::Init(const std::string &settings_dir)
     auto schema = schema_source.lookup("org.sakhnik.nvim-ui", false);
     if (!schema.g_obj())
         throw std::runtime_error(_("Cannot get GSettings schema"));
+    _settings_schema = MakeOwned(schema.ref());
     _settings = gir::MakeOwned(Gio::Settings::new_full(schema, nullptr, nullptr));
 }
-
-namespace {
-
-const char *const FONT_FAMILY_KEY = "font-family";
-const char *const FONT_SIZE_KEY = "font-size";
-
-} //namespace;
 
 std::string GConfig::GetFontFamily()
 {
@@ -54,4 +50,14 @@ double GConfig::GetFontSize()
 void GConfig::SetFontSize(double pt)
 {
     _settings.set_double(FONT_SIZE_KEY, pt);
+}
+
+int GConfig::GetSmoothScrollDelay()
+{
+    return _settings.get_int(SMOOTH_SCROLL_DELAY_KEY);
+}
+
+void GConfig::SetSmoothScrollDelay(int ms)
+{
+    _settings.set_int(SMOOTH_SCROLL_DELAY_KEY, ms);
 }

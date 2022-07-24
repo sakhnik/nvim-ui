@@ -21,19 +21,59 @@
             <child>
               <object class="GtkLabel">
                 <property name="label" translatable="yes">Font</property>
+                <layout>
+                  <property name="column">0</property>
+                  <property name="row">0</property>
+                </layout>
               </object>
             </child>
             <child>
               <object class="GtkLabel" id="current_font_lbl">
                 <property name="visible">True</property>
                 <property name="label" translatable="no">Monospace 14</property>
+                <layout>
+                  <property name="column">1</property>
+                  <property name="row">0</property>
+                </layout>
               </object>
             </child>
             <child>
-              <object class="GtkButton" id="choose_font">
+              <object class="GtkButton" id="choose_font_btn">
                 <property name="label" translatable="yes">Choose…</property>
                 <property name="visible">True</property>
-                <property name="receives-default">True</property>
+                <layout>
+                  <property name="column">2</property>
+                  <property name="row">0</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="label" translatable="yes">Smooth scrolling delay (ms)</property>
+                <layout>
+                  <property name="column">0</property>
+                  <property name="row">1</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkScale" id="smooth_scroll_scale">
+                <property name="visible">True</property>
+                <property name="draw-value">True</property>
+                <property name="digits">0</property>
+                <marks>
+                  <mark value="0" position="GTK_POS_BOTTOM"/>
+                  <mark value="20" position="GTK_POS_BOTTOM"/>
+                  <mark value="40" position="GTK_POS_BOTTOM"/>
+                  <mark value="60" position="GTK_POS_BOTTOM"/>
+                  <mark value="80" position="GTK_POS_BOTTOM"/>
+                  <mark value="100" position="GTK_POS_BOTTOM"/>
+                </marks>
+                <layout>
+                  <property name="column">1</property>
+                  <property name="row">1</property>
+                  <property name="column-span">2</property>
+                </layout>
               </object>
             </child>
             <child>

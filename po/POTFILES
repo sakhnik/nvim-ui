@@ -1,5 +1,7 @@
-src/GConfig.cpp
-src/GWindow.cpp
-res/menus.ui
-res/connect-dlg.ui
 res/com.sakhnik.nvim-ui.gschema.xml
+res/connect-dlg.ui
+res/menus.ui
+res/settings-dlg.ui
+src/GConfig.cpp
+src/GSettingsDlg.cpp
+src/GWindow.cpp
