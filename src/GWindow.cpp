@@ -346,6 +346,7 @@ void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
         SetError(ex.what());
     }
     _UpdateActions();
+    _window.set_focus(_grid->GetFixed());
 }
 
 void GWindow::_OnConnectAction(GSimpleAction *, GVariant *)
@@ -388,6 +389,7 @@ void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builde
         SetError(ex.what());
     }
     _UpdateActions();
+    _window.set_focus(_grid->GetFixed());
 }
 
 void GWindow::_OnSettingsAction(GSimpleAction *, GVariant *)
