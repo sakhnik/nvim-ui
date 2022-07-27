@@ -45,6 +45,8 @@ public:
 
     Gtk::Fixed GetFixed() const { return _grid; }
 
+    std::string DumpMarkup();
+
 private:
     Gtk::Fixed _grid;
     GFont &_font;

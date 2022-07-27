@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-23 23:19+0300\n"
+"POT-Creation-Date: 2022-07-27 15:52+0300\n"
 "PO-Revision-Date: 2022-05-01 18:33+0300\n"
 "Last-Translator: Anatolii Sakhnik <sakhnik@gmail.com>\n"
 "Language-Team: Ukrainian\n"
@@ -87,10 +87,14 @@ msgid "_Help"
 msgstr "Допомога"
 
 #: res/menus.ui:29
-msgid "_Inspector"
-msgstr "Інспектор"
+msgid "_Inspector…"
+msgstr "Інспектор…"
 
 #: res/menus.ui:33
+msgid "_Show markup…"
+msgstr "Показати розмітку…"
+
+#: res/menus.ui:37
 msgid "_About"
 msgstr "Про"
 
@@ -110,23 +114,23 @@ msgstr "Вибрати…"
 msgid "Smooth scrolling delay (ms)"
 msgstr "Затримка плавного прокручування (мс)"
 
-#: src/GConfig.cpp:25
+#: src/GConfig.cpp:27
 msgid "Cannot get GSettings schema"
 msgstr "Неможливо дістати схему GSettings"
 
-#: src/GWindow.cpp:230
+#: src/GWindow.cpp:231
 msgid "Press ALT to reach the menu"
 msgstr "Натисніть ALT щоб добратися до меню"
 
-#: src/GWindow.cpp:287
+#: src/GWindow.cpp:288
 msgid "Anatolii Sakhnik https://sakhnik.com"
 msgstr "Анатолій Сахнік https://sakhnik.com/index.uk.html"
 
-#: src/GWindow.cpp:293
+#: src/GWindow.cpp:294
 msgid "About nvim-ui"
 msgstr "Про nvim-ui"
 
-#: src/GWindow.cpp:298
+#: src/GWindow.cpp:299
 msgid "GitHub: sakhnik/nvim-ui"
 msgstr "GitHub: sakhnik/nvim-ui"
 

@@ -520,3 +520,31 @@ void GGrid::_OnMoveLabels()
         ? -1u
         : _GtkTimer0<&GGrid::_OnMoveLabels>(GConfig::GetSmoothScrollDelay());
 }
+
+std::string GGrid::DumpMarkup()
+{
+    std::ostringstream oss;
+
+    auto renderer = _session->GetRenderer();
+    auto &grid_lines = renderer->GetGridLines();
+
+    for (int row = 0, rowN = grid_lines.size(); row < rowN; ++row)
+    {
+        const auto &chunk = grid_lines[row];
+        if (!chunk)
+        {
+            oss << "\n";
+            continue;
+        }
+
+        auto it = _textures.find(chunk);
+        if (it == _textures.end())
+            oss << "???\n";
+        else
+        {
+            oss << it->second.label.get_label() << "\n";
+        }
+    }
+
+    return oss.str();
+}

@@ -103,6 +103,7 @@ void GWindow::_SetupWindow()
         { "quit", MakeCallback<&GWindow::_OnQuitAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "inspect", MakeCallback<&GWindow::_OnInspectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "about", MakeCallback<&GWindow::_OnAboutAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "show-markup", MakeCallback<&GWindow::_OnShowMarkupAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
     };
     g_action_map_add_action_entries(G_ACTION_MAP(_window.g_obj()), actions, G_N_ELEMENTS(actions), this);
 
@@ -298,6 +299,35 @@ void GWindow::_OnAboutAction(GSimpleAction *, GVariant *)
             "website-label", _("GitHub: sakhnik/nvim-ui"),
             "version", VERSION,
             NULL);
+}
+
+namespace {
+
+void _SetLabelsSelectable(GtkWidget *dialog)
+{
+    GtkWidget *area = gtk_message_dialog_get_message_area(GTK_MESSAGE_DIALOG(dialog));
+    GtkWidget *widget = gtk_widget_get_first_child(area);
+    if (GTK_IS_LABEL(widget))
+        gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
+}
+
+} //namespace;
+
+void GWindow::_OnShowMarkupAction(GSimpleAction *, GVariant *)
+{
+    auto markup = _grid->DumpMarkup();
+
+    GtkDialogFlags flags = static_cast<GtkDialogFlags>(GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL);
+    auto dialog = gtk_message_dialog_new(GTK_WINDOW(_window.g_obj()),
+            flags,
+            GTK_MESSAGE_INFO,
+            GTK_BUTTONS_CLOSE,
+            "%s",
+            markup.c_str());
+    _SetLabelsSelectable(dialog);
+
+    g_signal_connect(dialog, "response", G_CALLBACK(gtk_window_destroy), NULL);
+    gtk_widget_show(dialog);
 }
 
 void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)

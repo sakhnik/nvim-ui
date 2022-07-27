@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplified and improved rendering improving the responsiveness (mind :digraphs)
     - Ligatures now stay intact when crossing different highlightings
 - Allow launching Gtk inspector from the application menu
+- Show pango markup of the grid
 - Help->About dialog
 - Persistent configuration of guifont via GSettings
 - GUI dialog to configure settings

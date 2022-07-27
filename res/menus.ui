@@ -26,8 +26,12 @@
     <submenu>
       <attribute name='label' translatable='yes'>_Help</attribute>
       <item>
-        <attribute name='label' translatable='yes'>_Inspector</attribute>
+        <attribute name='label' translatable='yes'>_Inspector…</attribute>
         <attribute name='action'>win.inspect</attribute>
+      </item>
+      <item>
+        <attribute name='label' translatable='yes'>_Show markup…</attribute>
+        <attribute name='action'>win.show-markup</attribute>
       </item>
       <item>
         <attribute name='label' translatable='yes'>_About</attribute>
