@@ -13,6 +13,6 @@ public:
 
 private:
     std::string _description;
-    uv_pipe_t _stdin_pipe, _stdout_pipe;
-    uv_process_t _child_req;
+    std::unique_ptr<uv_pipe_t> _stdin_pipe, _stdout_pipe;
+    std::unique_ptr<uv_process_t> _child_req;
 };

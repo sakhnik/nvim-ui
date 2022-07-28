@@ -1,16 +1,19 @@
 #include "AsyncExec.hpp"
 
 AsyncExec::AsyncExec(uv_loop_t *loop)
+    : _async{new uv_async_t}
 {
-    if (int err = uv_async_init(loop, &_async, _Execute))
+    if (int err = uv_async_init(loop, _async.get(), _Execute))
         throw std::runtime_error(fmt::format("Failed to init async: {}", uv_strerror(err)));
-    _async.data = this;
+    _async->data = this;
 }
 
 AsyncExec::~AsyncExec()
 {
-    auto nop = [](uv_handle_t *) { };
-    uv_close(reinterpret_cast<uv_handle_t *>(&_async), nop);
+    auto nop = [](uv_handle_t *h) {
+        delete h;
+    };
+    uv_close(reinterpret_cast<uv_handle_t *>(_async.release()), nop);
 }
 
 void AsyncExec::_Execute(uv_async_t *a)

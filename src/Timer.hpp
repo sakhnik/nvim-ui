@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <uv.h>
+#include <memory>
 
 class Timer
 {
@@ -14,6 +15,6 @@ public:
     void Stop();
 
 private:
-    uv_timer_t _timer;
+    std::unique_ptr<uv_timer_t> _timer;
     ActionT _action;
 };

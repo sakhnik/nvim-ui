@@ -2,6 +2,9 @@
 #include "Logger.hpp"
 
 SessionSpawn::SessionSpawn(int argc, char *argv[])
+    : _stdin_pipe{new uv_pipe_t}
+    , _stdout_pipe{new uv_pipe_t}
+    , _child_req{new uv_process_t}
 {
     std::string nvim("nvim");
     std::string embed("--embed");
@@ -42,34 +45,36 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
     options.flags = UV_PROCESS_WINDOWS_HIDE | UV_PROCESS_WINDOWS_HIDE_CONSOLE;
 #endif //_WIN32
 
-    if (int err = uv_pipe_init(&_loop, &_stdin_pipe, 0))
+    if (int err = uv_pipe_init(&_loop, _stdin_pipe.get(), 0))
         throw std::runtime_error(fmt::format("Failed to init pipe: {}", uv_strerror(err)));
-    if (int err = uv_pipe_init(&_loop, &_stdout_pipe, 0))
+    if (int err = uv_pipe_init(&_loop, _stdout_pipe.get(), 0))
         throw std::runtime_error(fmt::format("Failed to init pipe: {}", uv_strerror(err)));
 
     uv_stdio_container_t child_stdio[3];
     child_stdio[0].flags = static_cast<uv_stdio_flags>(UV_CREATE_PIPE | UV_READABLE_PIPE);
-    child_stdio[0].data.stream = reinterpret_cast<uv_stream_t*>(&_stdin_pipe);
+    child_stdio[0].data.stream = reinterpret_cast<uv_stream_t*>(_stdin_pipe.get());
     child_stdio[1].flags = static_cast<uv_stdio_flags>(UV_CREATE_PIPE | UV_WRITABLE_PIPE);
-    child_stdio[1].data.stream = reinterpret_cast<uv_stream_t*>(&_stdout_pipe);
+    child_stdio[1].data.stream = reinterpret_cast<uv_stream_t*>(_stdout_pipe.get());
     child_stdio[2].flags = UV_INHERIT_FD;
     child_stdio[2].data.fd = 2;
     options.stdio_count = 3;
     options.stdio = child_stdio;
 
-    _child_req.data = this;
-    if (int err = ::uv_spawn(&_loop, &_child_req, &options))
+    _child_req->data = this;
+    if (int err = ::uv_spawn(&_loop, _child_req.get(), &options))
         throw std::runtime_error(fmt::format("Failed to spawn: {}", uv_strerror(err)));
 
-    _Init(reinterpret_cast<uv_stream_t*>(&_stdin_pipe), reinterpret_cast<uv_stream_t*>(&_stdout_pipe));
+    _Init(reinterpret_cast<uv_stream_t*>(_stdin_pipe.get()), reinterpret_cast<uv_stream_t*>(_stdout_pipe.get()));
 }
 
 SessionSpawn::~SessionSpawn()
 {
-    auto nop = [](uv_handle_t *) { };
-    uv_close(reinterpret_cast<uv_handle_t*>(&_stdin_pipe), nop);
-    uv_close(reinterpret_cast<uv_handle_t*>(&_stdout_pipe), nop);
-    uv_close(reinterpret_cast<uv_handle_t*>(&_child_req), nop);
+    auto nop = [](uv_handle_t *h) {
+        delete h;
+    };
+    uv_close(reinterpret_cast<uv_handle_t*>(_stdin_pipe.release()), nop);
+    uv_close(reinterpret_cast<uv_handle_t*>(_stdout_pipe.release()), nop);
+    uv_close(reinterpret_cast<uv_handle_t*>(_child_req.release()), nop);
 }
 
 const std::string& SessionSpawn::GetDescription() const

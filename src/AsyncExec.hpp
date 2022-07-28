@@ -21,12 +21,12 @@ public:
             std::lock_guard<std::mutex> guard{_mut};
             _tasks.push_back(std::forward<T>(task));
         }
-        if (int err = uv_async_send(&_async))
+        if (int err = uv_async_send(_async.get()))
             throw std::runtime_error(fmt::format("Failed to send async: {}", uv_strerror(err)));
     }
 
 private:
-    uv_async_t _async;
+    std::unique_ptr<uv_async_t> _async;
     std::vector<TaskT> _tasks;
     std::mutex _mut;
 
