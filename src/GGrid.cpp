@@ -422,18 +422,18 @@ void GGrid::_UpdateLabels()
         auto it = _textures.find(chunk);
         if (it == _textures.end())
         {
-            std::string text{"<tt>"};
+            // Wrong font may be selected for the spaces if a substitution font is picked
+            // for some characters.
+            std::string text = "<tt><span font=\"" + _font.GetFamily() + "\">";
             for (const auto &word : chunk->words)
             {
                 auto it = _pango_styles.find(word.hl_id);
                 const std::string &pango_style = it == _pango_styles.end()
                     ? _default_pango_style
                     : it->second;
-                // Wrong font may be selected for the spaces if a substitution font is picked
-                // for some characters.
-                text += "<span" + pango_style + " font=\"" + _font.GetFamily() + "\">" + XmlEscape(word.text) + "</span>";
+                text += "<span" + pango_style + ">" + XmlEscape(word.text) + "</span>";
             }
-            text += "</tt>";
+            text += "</span></tt>";
             Texture t{row, Gtk::Label::new_("").g_obj()};
             t.label.set_markup(text.c_str());
             t.label.set_sensitive(false);
