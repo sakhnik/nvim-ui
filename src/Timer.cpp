@@ -14,7 +14,7 @@ Timer::~Timer()
     if (int err = uv_timer_stop(_timer.get()))
         Logger().warn("~Timer: failed to stop timer: {}", uv_strerror(err));
     auto nop = [](uv_handle_t *h) {
-        delete h;
+        delete reinterpret_cast<uv_timer_t*>(h);
     };
     uv_close(reinterpret_cast<uv_handle_t *>(_timer.release()), nop);
 }

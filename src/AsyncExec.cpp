@@ -11,7 +11,7 @@ AsyncExec::AsyncExec(uv_loop_t *loop)
 AsyncExec::~AsyncExec()
 {
     auto nop = [](uv_handle_t *h) {
-        delete h;
+        delete reinterpret_cast<uv_async_t*>(h);
     };
     uv_close(reinterpret_cast<uv_handle_t *>(_async.release()), nop);
 }

@@ -69,12 +69,15 @@ SessionSpawn::SessionSpawn(int argc, char *argv[])
 
 SessionSpawn::~SessionSpawn()
 {
-    auto nop = [](uv_handle_t *h) {
-        delete h;
-    };
-    uv_close(reinterpret_cast<uv_handle_t*>(_stdin_pipe.release()), nop);
-    uv_close(reinterpret_cast<uv_handle_t*>(_stdout_pipe.release()), nop);
-    uv_close(reinterpret_cast<uv_handle_t*>(_child_req.release()), nop);
+    uv_close(reinterpret_cast<uv_handle_t*>(_stdin_pipe.release()), [](uv_handle_t *h) {
+        delete reinterpret_cast<uv_pipe_t*>(h);
+    });
+    uv_close(reinterpret_cast<uv_handle_t*>(_stdout_pipe.release()), [](uv_handle_t *h) {
+        delete reinterpret_cast<uv_pipe_t*>(h);
+    });
+    uv_close(reinterpret_cast<uv_handle_t*>(_child_req.release()), [](uv_handle_t *h) {
+        delete reinterpret_cast<uv_process_t*>(h);
+    });
 }
 
 const std::string& SessionSpawn::GetDescription() const
