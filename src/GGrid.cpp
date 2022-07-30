@@ -431,6 +431,7 @@ void GGrid::_UpdateLabels()
                     : it->second;
                 // Wrong font may be selected for the spaces if a substitution font is picked
                 // for some characters.
+                // The font should be specified in every span, I tried this already a couple of times.
                 text += "<span" + pango_style + " font=\"" + _font.GetFamily() + "\">" + XmlEscape(word.text) + "</span>";
             }
             text += "</tt>";
