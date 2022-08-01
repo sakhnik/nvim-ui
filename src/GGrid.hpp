@@ -20,14 +20,14 @@ class GFont;
 class GGrid
 {
 public:
-    GGrid(Gtk::Fixed grid, GFont &font, Session::PtrT &session, IWindowHandler *);
+    GGrid(Gtk::Fixed grid, GFont &font, Session::AtomicPtrT &session, IWindowHandler *);
 
     Gtk::StyleProvider& GetStyle()
     {
         return _css_provider.get();
     }
 
-    void UpdateStyle();
+    void UpdateStyle(Session *);
     void MeasureCell();
     void Present(int width, int height);
     void Clear();
@@ -50,7 +50,7 @@ public:
 private:
     Gtk::Fixed _grid;
     GFont &_font;
-    Session::PtrT &_session;
+    Session::AtomicPtrT &_session;
     IWindowHandler *_window_handler;
     gir::Owned<Gtk::CssProvider> _css_provider;
     std::unordered_map<unsigned, std::string> _pango_styles;
@@ -75,9 +75,9 @@ private:
     bool _alt_pending = false;
 
     int _last_rows = 0, _last_cols = 0;
-    void _CheckSize(int width, int height);
-    void _UpdateLabels();
-    void _UpdatePangoStyles();
+    void _CheckSize(int width, int height, Session *);
+    void _UpdateLabels(Session *);
+    void _UpdatePangoStyles(Session *);
     std::string _MakePangoStyle(const HlAttr &, const HlAttr &def_attr);
 
 

@@ -29,7 +29,7 @@
 
 namespace Gdk = gir::Gdk;
 
-GGrid::GGrid(Gtk::Fixed grid, GFont &font, Session::PtrT &session, IWindowHandler *window_handler)
+GGrid::GGrid(Gtk::Fixed grid, GFont &font, Session::AtomicPtrT &session, IWindowHandler *window_handler)
     : _grid{grid}
     , _font{font}
     , _session{session}
@@ -84,11 +84,13 @@ void GGrid::MeasureCell()
     _cursor->UpdateSize();
 }
 
-void GGrid::UpdateStyle()
+void GGrid::UpdateStyle(Session *session)
 {
+    assert(session);
+
     std::ostringstream oss;
 
-    auto renderer = _session->GetRenderer();
+    auto renderer = session->GetRenderer();
     assert(renderer);
     const auto &attr = renderer->GetDefAttr();
 
@@ -119,7 +121,7 @@ void GGrid::UpdateStyle()
     Logger().debug("Updated CSS Style:\n{}", style);
     _css_provider.load_from_data(style.data(), -1);
 
-    _UpdatePangoStyles();
+    _UpdatePangoStyles(session);
 
     MeasureCell();
     _window_handler->CheckSizeAsync();
@@ -167,9 +169,9 @@ std::string GGrid::_MakePangoStyle(const HlAttr &attr, const HlAttr &def_attr)
     return oss.str();
 }
 
-void GGrid::_UpdatePangoStyles()
+void GGrid::_UpdatePangoStyles(Session *session)
 {
-    auto renderer = _session->GetRenderer();
+    auto renderer = session->GetRenderer();
     assert(renderer);
 
     auto def_attr = renderer->GetDefAttr();
@@ -186,22 +188,25 @@ void GGrid::_UpdatePangoStyles()
 
 void GGrid::Present(int width, int height)
 {
-    auto renderer = _session->GetRenderer();
+    auto session = _session.load();
+    if (!session)
+        return;
+    auto renderer = session->GetRenderer();
     assert(renderer);
     auto guard = renderer->Lock();
 
     if (renderer->IsAttrMapModified())
     {
         renderer->MarkAttrMapProcessed();
-        UpdateStyle();
+        UpdateStyle(session.get());
     }
 
     // Create and place new labels
-    _UpdateLabels();
+    _UpdateLabels(session.get());
 
     _cursor->Move();
     _grid.set_cursor_from_name(renderer->IsBusy() ? "progress" : "default");
-    _CheckSize(width, height);
+    _CheckSize(width, height, session.get());
 }
 
 void GGrid::Clear()
@@ -228,9 +233,10 @@ gboolean GGrid::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType s
     _alt_pending = false;
     _window_handler->MenuBarHide();
 
-    if (!_session)
+    auto session = _session.load();
+    if (!session)
         return true;
-    auto renderer = _session->GetRenderer();
+    auto renderer = session->GetRenderer();
     if (!renderer)
         return false;
 
@@ -247,7 +253,7 @@ gboolean GGrid::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType s
         {
             auto guard = renderer->Lock();
             _font.SetSizePt(font_size_pt);
-            UpdateStyle();
+            UpdateStyle(session.get());
             return true;
         }
     }
@@ -300,7 +306,7 @@ gboolean GGrid::_OnKeyPressed(guint keyval, guint /*keycode*/, GdkModifierType s
         g_string_printf(input.get(), "<%s>", raw.c_str());
     }
 
-    _session->GetInput()->Accept(input->str);
+    session->GetInput()->Accept(input->str);
     return true;
 }
 
@@ -312,9 +318,9 @@ void GGrid::_OnKeyReleased(guint keyval, guint /*keycode*/, GdkModifierType /*st
     }
 }
 
-void GGrid::_CheckSize(int width, int height)
+void GGrid::_CheckSize(int width, int height, Session *session)
 {
-    if (!_session)
+    if (!session)
         return;
 
     int cols = std::max(1, static_cast<int>(width / CalcX(1)));
@@ -324,7 +330,7 @@ void GGrid::_CheckSize(int width, int height)
         return;
     _last_cols = cols;
     _last_rows = rows;
-    auto renderer = _session->GetRenderer();
+    auto renderer = session->GetRenderer();
     if (renderer && (cols != renderer->GetWidth() || rows != renderer->GetHeight()))
     {
         Logger().info("Grid size change detected rows={} cols={}", rows, cols);
@@ -334,15 +340,16 @@ void GGrid::_CheckSize(int width, int height)
 
 void GGrid::CheckSize(int width, int height)
 {
-    if (!_session)
+    auto session = _session.load();
+    if (!session)
         return;
 
-    auto renderer = _session->GetRenderer();
+    auto renderer = session->GetRenderer();
     if (!renderer)
         return;
 
     auto guard = renderer->Lock();
-    _CheckSize(width, height);
+    _CheckSize(width, height, session.get());
 }
 
 namespace {
@@ -397,7 +404,7 @@ std::string XmlEscape(std::string s)
 
 } //namespace
 
-void GGrid::_UpdateLabels()
+void GGrid::_UpdateLabels(Session *session)
 {
     auto start_time = ClockT::now();
 
@@ -405,7 +412,7 @@ void GGrid::_UpdateLabels()
     int labels_created{};
 
     // Create the newly appearing labels
-    auto renderer = _session->GetRenderer();
+    auto renderer = session->GetRenderer();
     auto &grid_lines = renderer->GetGridLines();
 
     decltype(_textures) new_textures;
@@ -527,7 +534,11 @@ std::string GGrid::DumpMarkup()
 {
     std::ostringstream oss;
 
-    auto renderer = _session->GetRenderer();
+    auto session = _session.load();
+    if (!session)
+        return "??";
+
+    auto renderer = session->GetRenderer();
     auto &grid_lines = renderer->GetGridLines();
 
     for (int row = 0, rowN = grid_lines.size(); row < rowN; ++row)

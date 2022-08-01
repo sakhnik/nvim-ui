@@ -10,7 +10,7 @@ class GGrid;
 class GCursor
 {
 public:
-    GCursor(Gtk::DrawingArea cursor, GGrid *, Session::PtrT &);
+    GCursor(Gtk::DrawingArea cursor, GGrid *, Session::AtomicPtrT &);
 
     void Move();
     void Hide();
@@ -19,7 +19,7 @@ public:
 private:
     Gtk::DrawingArea _cursor;
     GGrid *_grid;
-    Session::PtrT &_session;
+    Session::AtomicPtrT &_session;
 
     void _DrawCursor(GtkDrawingArea *, cairo_t *cr, int /*width*/, int /*height*/);
 };

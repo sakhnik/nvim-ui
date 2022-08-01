@@ -43,7 +43,7 @@
 #endif
 
 
-GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
+GWindow::GWindow(const Gtk::Application &app, Session::AtomicPtrT &session)
     : _app{app}
     , _session{session}
     , _builder{Gtk::Builder::new_from_resource("/org/sakhnik/nvim-ui/gtk/main.ui")}
@@ -57,8 +57,11 @@ GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
     _font.reset(new GFont{_window});
     _font->Subscribe([this] {
         // Update the style
-        auto guard = _session->GetRenderer()->Lock();
-        _grid->UpdateStyle();
+        auto session = _session.load();
+        if (!session)
+            return;
+        auto guard = session->GetRenderer()->Lock();
+        _grid->UpdateStyle(session.get());
     });
 
     // Grid
@@ -75,11 +78,12 @@ GWindow::GWindow(const Gtk::Application &app, Session::PtrT &session)
 
     _SetupWindowSignals();
 
-    if (_session && _session->GetRenderer())
+    auto sess = _session.load();
+    if (sess && sess->GetRenderer())
     {
         // Initial style setup
-        auto guard = _session->GetRenderer()->Lock();
-        _grid->UpdateStyle();
+        auto guard = sess->GetRenderer()->Lock();
+        _grid->UpdateStyle(sess.get());
     }
 
     // Adjust the grid size to the actual window size
@@ -140,8 +144,9 @@ void GWindow::_SetupWindowSignals()
 
     _window.on_close_request(_window, [this](auto) -> gboolean {
         Logger().info("GWindow close request");
-        if (_session)
-            _session->SetWindow(nullptr);
+        auto session = _session.load();
+        if (session)
+            session->SetWindow(nullptr);
         else
             _app.quit();
         _app.remove_window(_window);
@@ -192,12 +197,12 @@ void GWindow::_SessionEnd()
     _grid->Clear();
 
     Gtk::Label status_label{_builder.get_object("status").g_obj()};
-    if (_session && !_session->GetOutput().empty())
+    auto session = _session.exchange({});
+    if (session && !session->GetOutput().empty())
     {
-        status_label.set_text(_session->GetOutput().c_str());
+        status_label.set_text(session->GetOutput().c_str());
         status_label.set_visible(true);
     }
-    _session.reset();
 
     _UpdateActions();
 
@@ -207,9 +212,10 @@ void GWindow::_SessionEnd()
 void GWindow::SetError(const char *error)
 {
     _title = "nvim-ui";
-    if (_session)
+    auto session = _session.load();
+    if (session)
     {
-        _title += " " + _session->GetDescription();
+        _title += " " + session->GetDescription();
     }
     if (error)
     {
@@ -256,7 +262,8 @@ void GWindow::MenuBarHide()
 
 void GWindow::_UpdateActions()
 {
-    bool session_active = _session.get() != nullptr;
+    auto session = _session.load();
+    bool session_active = session.get() != nullptr;
     _EnableAction("spawn", !session_active);
     _EnableAction("connect", !session_active);
     _EnableAction("quit", !session_active);
@@ -335,10 +342,11 @@ void GWindow::_OnSpawnAction(GSimpleAction *, GVariant *)
     Logger().info("Spawn new");
     try
     {
-        _session.reset(new SessionSpawn(0, nullptr));
+        Session::PtrT session{new SessionSpawn(0, nullptr)};
+        _session.store(session);
         SetError(nullptr);
-        _session->SetWindow(this);
-        _session->RunAsync();
+        session->SetWindow(this);
+        session->RunAsync();
     }
     catch (std::exception &ex)
     {
@@ -378,10 +386,11 @@ void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builde
 
     try
     {
-        _session.reset(new SessionTcp(address, port));
+        Session::PtrT session{new SessionTcp(address, port)};
+        _session.store(session);
         SetError(nullptr);
-        _session->SetWindow(this);
-        _session->RunAsync();
+        session->SetWindow(this);
+        session->RunAsync();
     }
     catch (std::exception &ex)
     {

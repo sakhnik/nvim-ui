@@ -15,7 +15,9 @@ class Session
     : public UvLoop
 {
 public:
-    using PtrT = std::unique_ptr<Session>;
+    // The session management is going to be shared between the neovim and gtk threads
+    using PtrT = std::shared_ptr<Session>;
+    using AtomicPtrT = std::atomic<PtrT>;
 
     virtual ~Session() = default;
 

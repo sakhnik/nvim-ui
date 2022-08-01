@@ -7,7 +7,7 @@
 #endif
 
 
-GCursor::GCursor(Gtk::DrawingArea cursor, GGrid *grid, Session::PtrT &session)
+GCursor::GCursor(Gtk::DrawingArea cursor, GGrid *grid, Session::AtomicPtrT &session)
     : _cursor{cursor}
     , _grid{grid}
     , _session{session}
@@ -22,10 +22,11 @@ GCursor::GCursor(Gtk::DrawingArea cursor, GGrid *grid, Session::PtrT &session)
 
 void GCursor::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int /*width*/, int /*height*/)
 {
-    if (!_session)
+    auto session = _session.load();
+    if (!session)
         return;
 
-    auto renderer = _session->GetRenderer();
+    auto renderer = session->GetRenderer();
     auto lock = renderer->Lock();
     double cell_width = _grid->CalcX(1);
     double cell_height = _grid->CalcY(1);
@@ -57,7 +58,13 @@ void GCursor::_DrawCursor(GtkDrawingArea *, cairo_t *cr, int /*width*/, int /*he
 
 void GCursor::Move()
 {
-    auto renderer = _session->GetRenderer();
+    auto session = _session.load();
+    if (!session)
+    {
+        Hide();
+        return;
+    }
+    auto renderer = session->GetRenderer();
 
     Hide();
     if (!renderer->IsBusy())

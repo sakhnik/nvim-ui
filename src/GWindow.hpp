@@ -30,7 +30,7 @@ class GWindow
     , private GCallbackAdaptor<GWindow>
 {
 public:
-    GWindow(const Gtk::Application &, Session::PtrT &session);
+    GWindow(const Gtk::Application &, Session::AtomicPtrT &session);
     ~GWindow();
 
     void Present() override;
@@ -42,7 +42,7 @@ public:
 
 private:
     Gtk::Application _app;
-    Session::PtrT &_session;
+    Session::AtomicPtrT &_session;
 
     gir::Owned<Gtk::Builder> _builder;
     Gtk::Window _window;

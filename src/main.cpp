@@ -20,7 +20,7 @@ namespace Gtk = gir::Gtk;
 
 namespace {
 
-Session::PtrT session;
+Session::AtomicPtrT global_session;
 std::unique_ptr<GWindow> window;
 
 std::string GetLocalePath(const char *exe)
@@ -97,19 +97,22 @@ int main(int argc, char* argv[])
 
         auto on_activate = [](Gtk::Application app) {
             // Only activate once. If a subsequent launch happens, nothing to do in this process.
+            auto session = global_session.load();
             if (session)
                 return;
+
             std::string error;
             try
             {
                 // Start the app by spawning a local nvim
                 session.reset(new SessionSpawn(_argc, _argv));
+                global_session.store(session);
             }
             catch (std::exception &ex)
             {
                 error = ex.what();
             }
-            window.reset(new GWindow{app, session});
+            window.reset(new GWindow{app, global_session});
             if (session)
             {
                 window->SetError(nullptr);
@@ -124,10 +127,11 @@ int main(int argc, char* argv[])
         app.on_activate(app.get(), on_activate);
 
         auto on_window_removed = [](Gtk::Application app, Gtk::Window) {
+            auto session = global_session.load();
             if (session)
             {
-                // Resurrect the window if the session is still active
-                window.reset(new GWindow{app, session});
+                // Resurrect the window if the global_session is still active
+                window.reset(new GWindow{app, global_session});
                 session->SetWindow(window.get());
                 // TODO: give some hint to quit neovim properly
             }
