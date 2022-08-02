@@ -86,6 +86,7 @@ void Renderer::_DoFlush()
         int row{};
     };
 
+    // Potentially reused lines
     std::vector<ChunkT> prev_lines(_grid_lines.size());
     for (int row = 0, rowN = _grid_lines.size(); row < rowN; ++row)
     {
@@ -95,6 +96,10 @@ void Renderer::_DoFlush()
         auto chunk = _grid_lines[row];
         prev_lines[row].swap(_grid_lines[row]);
     }
+
+    // The discarded new lines if the prev lines are reused. This will indicate in what rows
+    // the lines are reused.
+    std::vector<ChunkT> next_lines(_grid_lines.size());
 
     // Search for a given chunk outwards in the previous lines.
     auto findPrevChunk = [&](int row, const ChunkT &chunk, int dr) -> ChunkT {
@@ -180,7 +185,33 @@ void Renderer::_DoFlush()
         // This will result in just movement of the previous label instead of rerendering.
         // This will enable implementing smooth scrolling.
         auto prev_chunk = findPrevChunk(row, line_chunk, 2);
-        _grid_lines[row] = prev_chunk ? std::move(prev_chunk) : line_chunk;
+        if (prev_chunk)
+        {
+            _grid_lines[row] = prev_chunk;
+            next_lines[row] = line_chunk;
+        }
+        else
+        {
+            _grid_lines[row] = line_chunk;
+        }
+    }
+
+    // Don't allow scrolling too few lines because of the bad visual perception.
+    for (int row = 0, rowN = _grid_lines.size(), reuse_count{0}; row != rowN; ++row)
+    {
+        if (next_lines[row])
+            ++reuse_count;
+        else
+        {
+            // If too few lines were chosen to be reused, discard them anyway.
+            // Most likely, it's a random coincidence, not a part of a scrolling region.
+            if (reuse_count < 4)
+            {
+                for (int i = 1; i <= reuse_count; ++i)
+                    _grid_lines[row - i] = next_lines[row - i];
+            }
+            reuse_count = 0;
+        }
     }
 
     if (_window)
