@@ -78,14 +78,6 @@ void Renderer::_DoFlush()
     // Consider the _lines, which contain individual cells (text,hl_id).
     // Compute _grid_lines from this reusing the chunks as much as possible.
 
-    // Some of the previous chunks can be reused if they just moved up and down.
-    // We need to recognize the repeated chunks.
-    auto chunk_comp = [](const ChunkT &a, const ChunkT &b) -> bool {
-        if (!a) return true;
-        if (!b) return false;
-        return *a.get() < *b.get();
-    };
-
     // Let's collect everything that's going to vanish into a map:
     //  <literal chunk> -> [pointers to it]
     struct PrevChunk
@@ -94,15 +86,40 @@ void Renderer::_DoFlush()
         int row{};
     };
 
-    std::map<ChunkT, std::list<PrevChunk>, decltype(chunk_comp)> prev_lines(chunk_comp);
+    std::vector<ChunkT> prev_lines(_grid_lines.size());
     for (int row = 0, rowN = _grid_lines.size(); row < rowN; ++row)
     {
         // Skip through the surviving lines
         if (!_lines[row].dirty)
             continue;
         auto chunk = _grid_lines[row];
-        prev_lines[chunk].push_back({chunk, row});
+        prev_lines[row].swap(_grid_lines[row]);
     }
+
+    // Search for a given chunk outwards in the previous lines.
+    auto findPrevChunk = [&](int row, const ChunkT &chunk, int dr) -> ChunkT {
+        auto checkLine = [&](int r) -> ChunkT {
+            if (r < 0 || r >= static_cast<int>(prev_lines.size()))
+                return {};
+            auto &prev_line = prev_lines[r];
+            if (prev_line && *chunk.get() == *prev_line.get())
+            {
+                // Make sure to move the line from the previous lines to ensure every chunk is used only once.
+                return std::move(prev_line);
+            }
+            return {};
+        };
+
+        ChunkT ret{};
+        for (int i = 0; i < dr; ++i)
+        {
+            if ((ret = checkLine(row - i)))
+                return ret;
+            if (i && (ret = checkLine(row + i)))
+                return ret;
+        }
+        return ChunkT{};
+    };
 
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
@@ -162,28 +179,8 @@ void Renderer::_DoFlush()
         // Try reusing one of the previous chunks if possible.
         // This will result in just movement of the previous label instead of rerendering.
         // This will enable implementing smooth scrolling.
-        auto it = prev_lines.find(line_chunk);
-        if (it != prev_lines.end())
-        {
-            auto &chunks = it->second;
-            // Pick up the closest previous chunk.
-            auto it_min = std::min_element(chunks.begin(), chunks.end(),
-                [row](const PrevChunk &a, const PrevChunk &b) {
-                    return std::abs(a.row - row) < std::abs(b.row - row);
-                });
-            // Only reuse the chunk if it was close enough to avoid jerkiness.
-            if (std::abs(it_min->row - row) < 2)
-            {
-                _grid_lines[row] = it_min->chunk;
-                chunks.erase(it_min);
-                if (chunks.empty())
-                    prev_lines.erase(it);
-            }
-            else
-                _grid_lines[row] = line_chunk;
-        }
-        else
-            _grid_lines[row] = line_chunk;
+        auto prev_chunk = findPrevChunk(row, line_chunk, 2);
+        _grid_lines[row] = prev_chunk ? std::move(prev_chunk) : line_chunk;
     }
 
     if (_window)
