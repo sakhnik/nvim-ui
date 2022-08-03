@@ -78,54 +78,22 @@ void Renderer::_DoFlush()
     // Consider the _lines, which contain individual cells (text,hl_id).
     // Compute _grid_lines from this reusing the chunks as much as possible.
 
-    // Let's collect everything that's going to vanish into a map:
-    //  <literal chunk> -> [pointers to it]
-    struct PrevChunk
-    {
-        ChunkT chunk;
-        int row{};
-    };
-
-    // Potentially reused lines
-    std::vector<ChunkT> prev_lines(_grid_lines.size());
+    // Remember the lines that are going to be changed.
+    // They may be reused if scrolling is detected.
+    // Note that we leave alone prev_lines.front() and prev_lines.back()
+    // to avoid checking for boundaries later.
+    std::vector<ChunkT> prev_lines(_grid_lines.size() + 2);
     for (int row = 0, rowN = _grid_lines.size(); row < rowN; ++row)
     {
         // Skip through the surviving lines
         if (!_lines[row].dirty)
             continue;
         auto chunk = _grid_lines[row];
-        prev_lines[row].swap(_grid_lines[row]);
+        prev_lines[row + 1].swap(_grid_lines[row]);
     }
 
-    // The discarded new lines if the prev lines are reused. This will indicate in what rows
-    // the lines are reused.
+    // Analyze the grid cells (text,hl_id) and create the actual lines for the changed rows.
     std::vector<ChunkT> next_lines(_grid_lines.size());
-
-    // Search for a given chunk outwards in the previous lines.
-    auto findPrevChunk = [&](int row, const ChunkT &chunk, int dr) -> ChunkT {
-        auto checkLine = [&](int r) -> ChunkT {
-            if (r < 0 || r >= static_cast<int>(prev_lines.size()))
-                return {};
-            auto &prev_line = prev_lines[r];
-            if (prev_line && *chunk.get() == *prev_line.get())
-            {
-                // Make sure to move the line from the previous lines to ensure every chunk is used only once.
-                return std::move(prev_line);
-            }
-            return {};
-        };
-
-        ChunkT ret{};
-        for (int i = 0; i < dr; ++i)
-        {
-            if ((ret = checkLine(row - i)))
-                return ret;
-            if (i && (ret = checkLine(row + i)))
-                return ret;
-        }
-        return ChunkT{};
-    };
-
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
         auto &line = _lines[row];
@@ -181,38 +149,60 @@ void Renderer::_DoFlush()
             continue;
         }
 
+        next_lines[row] = std::move(line_chunk);
+    }
+
+    // Detect the scroll direction. There likely be one direction in the whole screen
+    // because the user activity is very local.
+    // Counters for the matched lines in both directions.
+    int scroll_up{}, scroll_down{};
+    for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
+    {
+        auto &line_chunk = next_lines[row];
+
+        // Check if it's possible to just copy the prepared textures first
+        if (!next_lines[row])
+            continue;
+        if (prev_lines[row] && *prev_lines[row] == *line_chunk)
+            ++scroll_up;
+        if (prev_lines[row + 2] && *prev_lines[row + 2] == *line_chunk)
+            ++scroll_down;
+    }
+    int scroll_dir{};
+    if (scroll_up > 2 * scroll_down)
+        scroll_dir = -1;
+    else if (scroll_down > 2 * scroll_up)
+        scroll_dir = 1;
+    Logger().debug("Detected scroll direction is {}", scroll_dir);
+
+    // Copy the lines in the changed rows to _grid_lines: either from
+    // prev_lines if it's scrolling or from new_lines otherwise.
+    for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
+    {
+        auto &line_chunk = next_lines[row];
+
+        // Check if it's possible to just copy the prepared textures first
+        if (!next_lines[row])
+            continue;
+
+        if (!scroll_dir)
+        {
+            _grid_lines[row] = line_chunk;
+            continue;
+        }
+
         // Try reusing one of the previous chunks if possible.
         // This will result in just movement of the previous label instead of rerendering.
         // This will enable implementing smooth scrolling.
-        auto prev_chunk = findPrevChunk(row, line_chunk, 2);
-        if (prev_chunk)
-        {
-            _grid_lines[row] = prev_chunk;
-            next_lines[row] = line_chunk;
-        }
-        else
-        {
-            _grid_lines[row] = line_chunk;
-        }
+        auto prev_chunk = std::move(prev_lines[row + scroll_dir + 1]);
+        _grid_lines[row] = prev_chunk && *prev_chunk == *line_chunk
+            ? std::move(prev_chunk)
+            : line_chunk;
     }
 
-    // Don't allow scrolling too few lines because of the bad visual perception.
-    for (int row = 0, rowN = _grid_lines.size(), reuse_count{0}; row != rowN; ++row)
-    {
-        if (next_lines[row])
-            ++reuse_count;
-        else
-        {
-            // If too few lines were chosen to be reused, discard them anyway.
-            // Most likely, it's a random coincidence, not a part of a scrolling region.
-            if (reuse_count < 4)
-            {
-                for (int i = 1; i <= reuse_count; ++i)
-                    _grid_lines[row - i] = next_lines[row - i];
-            }
-            reuse_count = 0;
-        }
-    }
+    // If necessary, a bit more effort could be put to reuse lines evey further,
+    // but those rows will need to be marked for instance label movement as they
+    // aren't part of scrolling.
 
     if (_window)
         _window->Present();
