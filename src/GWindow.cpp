@@ -7,21 +7,22 @@
 #include "SessionTcp.hpp"
 #include "GSettingsDlg.hpp"
 
-#include "Gtk/ApplicationWindow.hpp"
-#include "Gtk/Dialog.hpp"
-#include "Gtk/Entry.hpp"
-#include "Gtk/Fixed.hpp"
-#include "Gtk/IconTheme.hpp"
-#include "Gtk/KeyvalTrigger.hpp"
-#include "Gtk/Label.hpp"
-#include "Gtk/NamedAction.hpp"
-#include "Gtk/ResponseType.hpp"
-#include "Gtk/Shortcut.hpp"
-#include "Gtk/ShortcutController.hpp"
-#include "Gtk/ShortcutScope.hpp"
-#include "Gtk/StyleContext.hpp"
-#include "Gtk/StyleProvider.hpp"
-#include "Gtk/Window.hpp"
+#include <Gtk/ApplicationWindow.hpp>
+#include <Gtk/Dialog.hpp>
+#include <Gtk/Entry.hpp>
+#include <Gtk/Fixed.hpp>
+#include <Gtk/IconTheme.hpp>
+#include <Gtk/KeyvalTrigger.hpp>
+#include <Gtk/Label.hpp>
+#include <Gtk/NamedAction.hpp>
+#include <Gtk/ResponseType.hpp>
+#include <Gtk/Shortcut.hpp>
+#include <Gtk/ShortcutController.hpp>
+#include <Gtk/ShortcutScope.hpp>
+#include <Gtk/StyleContext.hpp>
+#include <Gtk/StyleProvider.hpp>
+#include <Gtk/Window.hpp>
+#include <Gtk/MessageDialog.hpp>
 
 #include <iterator>
 #include <msgpack/v1/unpack.hpp>
@@ -29,17 +30,18 @@
 #include <fmt/format.h>
 
 #ifdef GIR_INLINE
-#include "Gtk/Application.ipp"
-#include "Gtk/ApplicationWindow.ipp"
-#include "Gtk/Builder.ipp"
-#include "Gtk/Entry.ipp"
-#include "Gtk/IconTheme.ipp"
-#include "Gtk/KeyvalTrigger.ipp"
-#include "Gtk/Label.ipp"
-#include "Gtk/NamedAction.ipp"
-#include "Gtk/Shortcut.ipp"
-#include "Gtk/ShortcutController.ipp"
-#include "Gtk/StyleContext.ipp"
+#include <Gtk/Application.ipp>
+#include <Gtk/ApplicationWindow.ipp>
+#include <Gtk/Builder.ipp>
+#include <Gtk/Entry.ipp>
+#include <Gtk/IconTheme.ipp>
+#include <Gtk/KeyvalTrigger.ipp>
+#include <Gtk/Label.ipp>
+#include <Gtk/NamedAction.ipp>
+#include <Gtk/Shortcut.ipp>
+#include <Gtk/ShortcutController.ipp>
+#include <Gtk/StyleContext.ipp>
+#include <Gtk/MessageDialog.ipp>
 #endif
 
 
@@ -103,6 +105,7 @@ void GWindow::_SetupWindow()
     const GActionEntry actions[] = {
         { "spawn", MakeCallback<&GWindow::_OnSpawnAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "connect", MakeCallback<&GWindow::_OnConnectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
+        { "disconnect", MakeCallback<&GWindow::_OnDisconnectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "settings", MakeCallback<&GWindow::_OnSettingsAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "quit", MakeCallback<&GWindow::_OnQuitAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
         { "inspect", MakeCallback<&GWindow::_OnInspectAction>(), nullptr, nullptr, nullptr, {0, 0, 0} },
@@ -267,6 +270,8 @@ void GWindow::_UpdateActions()
     _EnableAction("spawn", !session_active);
     _EnableAction("connect", !session_active);
     _EnableAction("quit", !session_active);
+    bool is_session_tcp = dynamic_cast<SessionTcp *>(session.get()) != nullptr;
+    _EnableAction("disconnect", is_session_tcp);
     _window.set_deletable(!session_active);
 }
 
@@ -399,6 +404,25 @@ void GWindow::_OnConnectDlgResponse(Gtk::Dialog &dlg, gint response, Gtk::Builde
     }
     _UpdateActions();
     _window.set_focus(_grid->GetFixed());
+}
+
+void GWindow::_OnDisconnectAction(GSimpleAction *, GVariant *)
+{
+    GtkDialogFlags flags = static_cast<GtkDialogFlags>(GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL);
+    Gtk::MessageDialog dialog =
+        G_OBJECT(gtk_message_dialog_new(GTK_WINDOW(_window.g_obj()),
+            flags,
+            GTK_MESSAGE_QUESTION,
+            GTK_BUTTONS_YES_NO,
+            _("Are you sure you want to disconnect?")));
+    dialog.on_response(dialog, [&](Gtk::Dialog dlg, gint response) {
+        dlg.destroy();
+        if (response == GTK_RESPONSE_YES)
+        {
+            _SessionEnd();
+        }
+    });
+    dialog.show();
 }
 
 void GWindow::_OnSettingsAction(GSimpleAction *, GVariant *)

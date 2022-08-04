@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Persistent configuration of guifont via GSettings
 - GUI dialog to configure settings
 - Configurable smooth scrolling
+- Disconnect from a TCP session [#48](https://github.com/sakhnik/nvim-ui/issues/48)
 
 ### Fixed
 
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pass focus to the grid when a new session is launched or connected
 - Occasional crash when closing a session [#46](https://github.com/sakhnik/nvim-ui/issues/46)
 - Data races around global session management
+- Hide inactive menu items completely
 
 ## [0.0.3] - 2022-05-08
 

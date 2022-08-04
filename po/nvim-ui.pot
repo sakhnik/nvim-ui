@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-27 15:52+0300\n"
+"POT-Creation-Date: 2022-08-04 11:34+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -67,31 +67,35 @@ msgstr ""
 msgid "_Spawn"
 msgstr ""
 
-#: res/menus.ui:12
+#: res/menus.ui:13
 msgid "_Connect TCP…"
 msgstr ""
 
-#: res/menus.ui:17
+#: res/menus.ui:19
+msgid "_Disconnect"
+msgstr ""
+
+#: res/menus.ui:24
 msgid "_Preferences…"
 msgstr ""
 
-#: res/menus.ui:21
+#: res/menus.ui:28
 msgid "_Quit"
 msgstr ""
 
-#: res/menus.ui:27
+#: res/menus.ui:35
 msgid "_Help"
 msgstr ""
 
-#: res/menus.ui:29
+#: res/menus.ui:37
 msgid "_Inspector…"
 msgstr ""
 
-#: res/menus.ui:33
+#: res/menus.ui:41
 msgid "_Show markup…"
 msgstr ""
 
-#: res/menus.ui:37
+#: res/menus.ui:45
 msgid "_About"
 msgstr ""
 
@@ -115,18 +119,22 @@ msgstr ""
 msgid "Cannot get GSettings schema"
 msgstr ""
 
-#: src/GWindow.cpp:231
+#: src/GWindow.cpp:240
 msgid "Press ALT to reach the menu"
 msgstr ""
 
-#: src/GWindow.cpp:288
+#: src/GWindow.cpp:300
 msgid "Anatolii Sakhnik https://sakhnik.com"
 msgstr ""
 
-#: src/GWindow.cpp:294
+#: src/GWindow.cpp:306
 msgid "About nvim-ui"
 msgstr ""
 
-#: src/GWindow.cpp:299
+#: src/GWindow.cpp:311
 msgid "GitHub: sakhnik/nvim-ui"
+msgstr ""
+
+#: src/GWindow.cpp:417
+msgid "Are you sure you want to disconnect?"
 msgstr ""

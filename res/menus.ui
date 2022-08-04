@@ -7,11 +7,18 @@
         <attribute name='label' translatable='yes'>_Spawn</attribute>
         <attribute name='action'>win.spawn</attribute>
         <attribute name='accel'>&lt;ctrl&gt;n</attribute>
+        <attribute name='hidden-when'>action-disabled</attribute>
       </item>
       <item>
         <attribute name='label' translatable='yes'>_Connect TCP…</attribute>
         <attribute name='action'>win.connect</attribute>
         <attribute name='accel'>&lt;ctrl&gt;t</attribute>
+        <attribute name='hidden-when'>action-disabled</attribute>
+      </item>
+      <item>
+        <attribute name='label' translatable='yes'>_Disconnect</attribute>
+        <attribute name='action'>win.disconnect</attribute>
+        <attribute name='hidden-when'>action-disabled</attribute>
       </item>
       <item>
         <attribute name='label' translatable='yes'>_Preferences…</attribute>
@@ -21,6 +28,7 @@
         <attribute name='label' translatable='yes'>_Quit</attribute>
         <attribute name='action'>win.quit</attribute>
         <attribute name='accel'>&lt;ctrl&gt;q</attribute>
+        <attribute name='hidden-when'>action-disabled</attribute>
       </item>
     </submenu>
     <submenu>
