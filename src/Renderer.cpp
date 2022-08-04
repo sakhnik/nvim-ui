@@ -94,6 +94,8 @@ void Renderer::_DoFlush()
 
     // Analyze the grid cells (text,hl_id) and create the actual lines for the changed rows.
     std::vector<ChunkT> next_lines(_grid_lines.size());
+    int next_lines_count{};
+
     for (int row = 0, rowN = _lines.size(); row < rowN; ++row)
     {
         auto &line = _lines[row];
@@ -150,6 +152,7 @@ void Renderer::_DoFlush()
         }
 
         next_lines[row] = std::move(line_chunk);
+        ++next_lines_count;
     }
 
     // Detect the scroll direction. There likely be one direction in the whole screen
@@ -169,9 +172,9 @@ void Renderer::_DoFlush()
             ++scroll_down;
     }
     int scroll_dir{};
-    if (scroll_up > 2 * scroll_down)
+    if (scroll_up > scroll_down && 2 * scroll_up > next_lines_count)
         scroll_dir = -1;
-    else if (scroll_down > 2 * scroll_up)
+    else if (scroll_down > scroll_up && 2 * scroll_down > next_lines_count)
         scroll_dir = 1;
     Logger().debug("Detected scroll direction is {}", scroll_dir);
 
