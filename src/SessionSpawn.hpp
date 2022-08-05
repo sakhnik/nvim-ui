@@ -7,7 +7,7 @@ class SessionSpawn : public Session
 {
 public:
     SessionSpawn(int argc, char *argv[]);
-    ~SessionSpawn();
+    ~SessionSpawn() override;
 
     const std::string& GetDescription() const override;
 
