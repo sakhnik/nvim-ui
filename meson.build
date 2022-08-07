@@ -28,3 +28,12 @@ subdir('res')
 subdir('src')
 subdir('tests')
 subdir('po')
+
+markdown = find_program('markdown_py')
+
+changelog = custom_target('changelog',
+  output : 'CHANGELOG.html',
+  input : 'CHANGELOG.md',
+  command : [markdown, '@INPUT@', '-f', '@OUTPUT@'],
+  install : true,
+  install_dir : join_paths(get_option('datadir'), 'doc/nvim-ui'))
