@@ -23,46 +23,38 @@ namespace {
 Session::AtomicPtrT global_session;
 std::unique_ptr<GWindow> window;
 
-std::string GetLocalePath(const char *exe)
-{
-    // If running from the build directory, use local translated messages.
-    namespace fs = std::filesystem;
-    auto root_dir = fs::weakly_canonical(fs::path(exe)).parent_path().parent_path();
-    if (fs::exists(root_dir / "build.ninja"))
-    {
-        auto po_dir = root_dir / "po";
-        if (fs::exists(po_dir) && fs::is_directory(po_dir))
-            return po_dir.string();
-    }
-
-    // Reach the locale files relative to the binary for Windows.
-    auto po_dir = root_dir / "share" / "locale";
-    if (fs::exists(po_dir) && fs::is_directory(po_dir))
-        return po_dir.string();
-
-    // Fallback to the system directory otherwise.
-    return (fs::path{PREFIX} / DATADIR / "locale").string();
-}
-
-std::string GetSettingsDir(const char *exe)
+std::string GetResourceDir(const char *exe,
+        std::filesystem::path build_path,
+        std::filesystem::path install_path)
 {
     // If running from the build directory, use local settings schema.
     namespace fs = std::filesystem;
     auto root_dir = fs::weakly_canonical(fs::path(exe)).parent_path().parent_path();
     if (fs::exists(root_dir / "build.ninja"))
     {
-        auto res_dir = root_dir / "res";
+        auto res_dir = root_dir / build_path;
         if (fs::exists(res_dir) && fs::is_directory(res_dir))
             return res_dir.string();
     }
 
     // Reach the settings schema relative to the binary for Windows.
-    auto res_dir = root_dir / "share" / "glib-2.0" / "schemas";
+    auto res_dir = root_dir / install_path;
     if (fs::exists(res_dir) && fs::is_directory(res_dir))
         return res_dir.string();
 
     // Fallback to the system directory otherwise.
-    return (fs::path{PREFIX} / DATADIR / "glib-2.0" / "schemas").string();
+    res_dir = PREFIX / install_path;
+    return res_dir.string();
+}
+
+std::string GetSettingsDir(const char *exe)
+{
+    return GetResourceDir(exe, "res", std::filesystem::path{DATADIR} / "glib-2.0" / "schemas");
+}
+
+std::string GetLocalePath(const char *exe)
+{
+    return GetResourceDir(exe, "po", std::filesystem::path{DATADIR} / "locale");
 }
 
 } //namespace;
