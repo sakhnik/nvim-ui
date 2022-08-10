@@ -23,6 +23,7 @@
 #include <Gtk/StyleProvider.hpp>
 #include <Gtk/Window.hpp>
 #include <Gtk/MessageDialog.hpp>
+#include <Gtk/AboutDialog.hpp>
 
 #include <iterator>
 #include <msgpack/v1/unpack.hpp>
@@ -42,6 +43,7 @@
 #include <Gtk/ShortcutController.ipp>
 #include <Gtk/StyleContext.ipp>
 #include <Gtk/MessageDialog.ipp>
+#include <Gtk/AboutDialog.ipp>
 #endif
 
 
@@ -301,16 +303,28 @@ void GWindow::_OnAboutAction(GSimpleAction *, GVariant *)
         nullptr
     };
 
-    gtk_show_about_dialog(nullptr,
-            "program-name", "nvim-ui",
-            "title", _("About nvim-ui"),
-            "logo-icon-name", "nvim-ui",
-            "authors", authors,
-            "license-type", GTK_LICENSE_MIT_X11,
-            "website", "https://github.com/sakhnik/nvim-ui",
-            "website-label", _("GitHub: sakhnik/nvim-ui"),
-            "version", VERSION,
-            NULL);
+    static Gtk::AboutDialog dlg;
+    if (!dlg.g_obj())
+    {
+        dlg = Gtk::AboutDialog::new_().g_obj();
+        dlg.set_program_name("nvim-ui");
+        dlg.set_title(_("About nvim-ui"));
+        dlg.set_logo_icon_name("nvim-ui");
+        dlg.set_authors(authors);
+        dlg.set_license_type(GTK_LICENSE_MIT_X11);
+        dlg.set_website("https://github.com/sakhnik/nvim-ui");
+        dlg.set_website_label(_("GitHub: sakhnik/nvim-ui"));
+        dlg.set_version(VERSION);
+        dlg.set_comments("<a href=\"https://neovim.io\">Neovim</a> UI\n<a href=\"url\">CHANGELOG</a>");
+        dlg.set_copyright("©2022 Anatolii Sakhnik");
+        dlg.set_hide_on_close(true);
+
+        // The markup isn't enabled for the comments by default, fix this.
+        Gtk::Label comments_label{dlg.get_template_child(GTK_TYPE_ABOUT_DIALOG, "comments_label").g_obj()};
+        comments_label.set_use_markup(true);
+    }
+
+    dlg.present();
 }
 
 namespace {
