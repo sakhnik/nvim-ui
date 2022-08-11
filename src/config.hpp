@@ -6,6 +6,13 @@
 
 #define _(x) gettext((x))
 
-std::string GetResourceDir(const char *exe,
-        std::filesystem::path build_path,
-        std::filesystem::path install_path);
+class ResourceDir
+{
+public:
+    static void Initialize(const char *exe);
+
+    static std::string Get(std::filesystem::path build_path, std::filesystem::path install_path);
+
+private:
+    static std::string _exe;
+};

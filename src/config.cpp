@@ -1,13 +1,18 @@
 #include "config.hpp"
 
 
-std::string GetResourceDir(const char *exe,
-        std::filesystem::path build_path,
-        std::filesystem::path install_path)
+std::string ResourceDir::_exe;
+
+void ResourceDir::Initialize(const char *exe)
+{
+    _exe = exe;
+}
+
+std::string ResourceDir::Get(std::filesystem::path build_path, std::filesystem::path install_path)
 {
     // If running from the build directory, use local settings schema.
     namespace fs = std::filesystem;
-    auto root_dir = fs::weakly_canonical(fs::path(exe)).parent_path().parent_path();
+    auto root_dir = fs::weakly_canonical(fs::path(_exe)).parent_path().parent_path();
     if (fs::exists(root_dir / "build.ninja"))
     {
         auto res_dir = root_dir / build_path;

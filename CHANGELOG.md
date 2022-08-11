@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GUI dialog to configure settings
 - Configurable smooth scrolling
 - Disconnect from a TCP session [#48](https://github.com/sakhnik/nvim-ui/issues/48)
-- Install CHANGELOG.html with the application
+- Install CHANGELOG.html with the application, show it in the about dialog
 
 ### Fixed
 

@@ -23,14 +23,14 @@ namespace {
 Session::AtomicPtrT global_session;
 std::unique_ptr<GWindow> window;
 
-std::string GetSettingsDir(const char *exe)
+std::string GetSettingsDir()
 {
-    return GetResourceDir(exe, "res", std::filesystem::path{DATADIR} / "glib-2.0" / "schemas");
+    return ResourceDir::Get("res", std::filesystem::path{DATADIR} / "glib-2.0" / "schemas");
 }
 
-std::string GetLocalePath(const char *exe)
+std::string GetLocalePath()
 {
-    return GetResourceDir(exe, "po", std::filesystem::path{DATADIR} / "locale");
+    return ResourceDir::Get("po", std::filesystem::path{DATADIR} / "locale");
 }
 
 } //namespace;
@@ -48,13 +48,15 @@ int main(int argc, char* argv[])
     spdlog::cfg::load_env_levels();
     Logger().info("nvim-ui v{}", VERSION);
 
-    auto locale_path = GetLocalePath(argv[0]);
+    ResourceDir::Initialize(argv[0]);
+
+    auto locale_path = GetLocalePath();
     Logger().info("Using locale path {}", locale_path);
     bindtextdomain(GETTEXT_PACKAGE, locale_path.c_str());
     textdomain(GETTEXT_PACKAGE);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 
-    auto settings_dir = GetSettingsDir(argv[0]);
+    auto settings_dir = GetSettingsDir();
     Logger().info("Using settings directory {}", settings_dir);
     GConfig::Init(settings_dir);
 
