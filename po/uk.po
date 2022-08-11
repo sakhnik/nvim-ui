@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-08-11 22:42+0300\n"
+"POT-Creation-Date: 2022-08-11 22:49+0300\n"
 "PO-Revision-Date: 2022-05-01 18:33+0300\n"
 "Last-Translator: Anatolii Sakhnik <sakhnik@gmail.com>\n"
 "Language-Team: Ukrainian\n"
@@ -142,6 +142,10 @@ msgstr "GitHub: sakhnik/nvim-ui"
 msgid "CHANGELOG"
 msgstr "Список змін"
 
-#: src/GWindow.cpp:440
+#: src/GWindow.cpp:324
+msgid "User interface for <a href=\"https://neovim.io\">Neovim</a>"
+msgstr "Користувацький інтерфейс до <a href=\"https://neovim.io\">Neovim</a>"
+
+#: src/GWindow.cpp:441
 msgid "Are you sure you want to disconnect?"
 msgstr "Справді хочере від’єднатися?"

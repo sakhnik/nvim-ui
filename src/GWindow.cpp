@@ -321,7 +321,8 @@ void GWindow::_OnAboutAction(GSimpleAction *, GVariant *)
         auto changelog_path = changelog_dir / "CHANGELOG.html";
         auto uri = mk_unique_ptr(g_filename_to_uri(changelog_path.c_str(), nullptr, nullptr), g_free);
         Logger().info("Changelog URI is {}", uri.get());
-        std::string comments = "<a href=\"https://neovim.io\">Neovim</a> UI\n<a href=\"";
+        std::string comments = _("User interface for <a href=\"https://neovim.io\">Neovim</a>");
+        comments += "\n<a href=\"";
         comments += uri.get();
         comments += "\">" + CHANGELOG + "</a>";
         dlg.set_comments(comments.c_str());

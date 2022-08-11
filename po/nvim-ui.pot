@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nvim-ui\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-08-11 22:42+0300\n"
+"POT-Creation-Date: 2022-08-11 22:49+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -139,6 +139,10 @@ msgstr ""
 msgid "CHANGELOG"
 msgstr ""
 
-#: src/GWindow.cpp:440
+#: src/GWindow.cpp:324
+msgid "User interface for <a href=\"https://neovim.io\">Neovim</a>"
+msgstr ""
+
+#: src/GWindow.cpp:441
 msgid "Are you sure you want to disconnect?"
 msgstr ""
