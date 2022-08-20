@@ -319,7 +319,7 @@ void GWindow::_OnAboutAction(GSimpleAction *, GVariant *)
         std::filesystem::path changelog_dir = ResourceDir::Get("",
                 std::filesystem::path{PREFIX} / DATADIR / "doc" / "nvim-ui");
         auto changelog_path = changelog_dir / "CHANGELOG.html";
-        auto uri = mk_unique_ptr(g_filename_to_uri(changelog_path.c_str(), nullptr, nullptr), g_free);
+        auto uri = mk_unique_ptr(g_filename_to_uri(changelog_path.generic_string().c_str(), nullptr, nullptr), g_free);
         Logger().info("Changelog URI is {}", uri.get());
         std::string comments = _("User interface for <a href=\"https://neovim.io\">Neovim</a>");
         comments += "\n<a href=\"";
