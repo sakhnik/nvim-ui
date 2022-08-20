@@ -25,12 +25,12 @@ std::unique_ptr<GWindow> window;
 
 std::string GetSettingsDir()
 {
-    return ResourceDir::Get("res", std::filesystem::path{DATADIR} / "glib-2.0" / "schemas");
+    return ResourceDir::Get("res", std::filesystem::path{DATA_DIR} / "glib-2.0" / "schemas");
 }
 
 std::string GetLocalePath()
 {
-    return ResourceDir::Get("po", std::filesystem::path{DATADIR} / "locale");
+    return ResourceDir::Get("po", std::filesystem::path{DATA_DIR} / "locale");
 }
 
 } //namespace;

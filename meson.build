@@ -9,7 +9,7 @@ project('nvim-ui', ['c', 'cpp'],
 add_project_arguments('-DGETTEXT_PACKAGE="nvim-ui"', language:'cpp')
 add_global_arguments('-DVERSION="' + meson.project_version() + '"', language: ['c', 'cpp'])
 add_global_arguments('-DPREFIX="' + get_option('prefix') + '"', language: ['c', 'cpp'])
-add_global_arguments('-DDATADIR="' + get_option('datadir') + '"', language: ['c', 'cpp'])
+add_global_arguments('-DDATA_DIR="' + get_option('datadir') + '"', language: ['c', 'cpp'])
 
 msgpack_dep = dependency('msgpack')
 libuv_dep = dependency('libuv')
