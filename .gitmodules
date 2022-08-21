@@ -1,6 +1,3 @@
-[submodule "subprojects/spdlog"]
-	path = subprojects/spdlog
-	url = https://github.com/gabime/spdlog
 [submodule "subprojects/ut"]
 	path = subprojects/ut
 	url = https://github.com/boost-ext/ut

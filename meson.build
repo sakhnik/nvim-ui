@@ -13,13 +13,11 @@ add_global_arguments('-DDATA_DIR="' + get_option('datadir') + '"', language: ['c
 
 msgpack_dep = dependency('msgpack')
 libuv_dep = dependency('libuv')
+spdlog_dep = dependency('spdlog')
 fmt_dep = dependency('fmt')
 gtk4_dep = dependency('gtk4')
 
 cmake = import('cmake')
-
-spdlog = cmake.subproject('spdlog')
-spdlog_dep = spdlog.dependency('spdlog')
 
 msgpack_cxx = cmake.subproject('msgpack-c')
 msgpack_cxx_dep = msgpack_cxx.dependency('msgpackc-cxx')
