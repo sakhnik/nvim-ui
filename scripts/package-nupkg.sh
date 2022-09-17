@@ -24,7 +24,7 @@ cp -R /mingw64/share/glib-2.0/schemas dist/share/glib-2.0/
 
 # Install the built application and whatever the build system creates
 # Do this after the dependencies installed to properly update gschemas
-DESTDIR=dist meson install --tags=runtime,i18n
+DESTDIR=dist meson install --tags=runtime,i18n,gschema
 mv dist/tools/msys64/* dist/
 
 # Prepare nuspec
