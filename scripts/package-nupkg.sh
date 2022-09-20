@@ -49,3 +49,7 @@ else
   sed -i "s|PACKAGE_SOURCE_URL|https://github.com/sakhnik/nvim-ui/tree/${GITHUB_SHA}/chocolatey|" $dist/*.nuspec
 fi
 sed -i "s|VERSION|${NVIM_UI_RELEASE}|" $dist/*.nuspec
+
+# Move everything up to the dist root
+mv $dist/* dist
+rmdir $dist
