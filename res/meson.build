@@ -22,7 +22,8 @@ schemas_dir = get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schem
 settings_schemas = [ 'com.sakhnik.nvim-ui.gschema.xml' ]
 
 install_data(settings_schemas, install_dir: schemas_dir, install_tag: 'gschema')
-meson.add_install_script('glib-compile-schemas.sh', schemas_dir)
+# MinGW build can't launch bash scripts properly because ninja uses Windows paths, hence Python
+meson.add_install_script('glib-compile-schemas.py', schemas_dir)
 
 # Compile the schemas in the current directory; this is only
 # useful for testing
