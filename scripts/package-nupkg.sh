@@ -43,15 +43,15 @@ DESTDIR=dist meson install
 # Compile the schemas manually until meson install script is fixed
 glib-compile-schemas $dist/share/glib-2.0/schemas
 
-# Prepare nuspec
-cp -r ../chocolatey/* $dist/
-if [[ "$NVIM_UI_RELEASE" == "$NVIM_UI_VERSION" ]]; then
-  sed -i "s|PACKAGE_SOURCE_URL|https://github.com/sakhnik/nvim-ui/tree/v${NVIM_UI_VERSION}/chocolatey|" $dist/*.nuspec
-else
-  sed -i "s|PACKAGE_SOURCE_URL|https://github.com/sakhnik/nvim-ui/tree/${GITHUB_SHA}/chocolatey|" $dist/*.nuspec
-fi
-sed -i "s|VERSION|${NVIM_UI_RELEASE}|" $dist/*.nuspec
-
 # Move everything up to the dist root
 mv $dist/* dist
 rmdir $dist
+
+# Prepare nuspec
+cp -r ../chocolatey/* dist/
+if [[ "$NVIM_UI_RELEASE" == "$NVIM_UI_VERSION" ]]; then
+  sed -i "s|PACKAGE_SOURCE_URL|https://github.com/sakhnik/nvim-ui/tree/v${NVIM_UI_VERSION}/chocolatey|" dist/*.nuspec
+else
+  sed -i "s|PACKAGE_SOURCE_URL|https://github.com/sakhnik/nvim-ui/tree/${GITHUB_SHA}/chocolatey|" dist/*.nuspec
+fi
+sed -i "s|VERSION|${NVIM_UI_RELEASE}|" dist/*.nuspec
