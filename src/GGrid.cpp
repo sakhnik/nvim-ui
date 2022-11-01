@@ -70,8 +70,9 @@ void GGrid::MeasureCell()
     // Measure cell width and height
     static const std::string RULER = GetRuler();
 
-    Gtk::Widget ruler{Gtk::Label::new_(RULER.c_str())};
+    Gtk::Label ruler{Gtk::Label::new_("").g_obj()};
     ruler.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    ruler.set_markup(RULER.c_str());
 
     int width, height;
     ruler.measure(Gtk::Orientation::horizontal, -1, &width, nullptr, nullptr, nullptr);
@@ -429,28 +430,21 @@ void GGrid::_UpdateLabels(Session *session)
         auto it = _textures.find(chunk);
         if (it == _textures.end())
         {
-            std::string text{"<tt>"};
+            std::string text{"<span font=\"" + _font.GetFamily() + "\">"};
             for (const auto &word : chunk->words)
             {
                 auto it = _pango_styles.find(word.hl_id);
                 const std::string &pango_style = it == _pango_styles.end()
                     ? _default_pango_style
                     : it->second;
-                // Wrong font may be selected for the spaces if a substitution font is picked
-                // for some characters.
-                // The font should be specified in every span, I tried this already a couple of times.
-                text += "<span" + pango_style + " font=\"" + _font.GetFamily() + "\">" + XmlEscape(word.text) + "</span>";
+                text += "<span" + pango_style + ">" + XmlEscape(word.text) + "</span>";
             }
-            text += "</tt>";
+            text += "</span>";
             Texture t{row, Gtk::Label::new_("").g_obj()};
             t.label.set_markup(text.c_str());
             t.label.set_sensitive(false);
             t.label.set_can_focus(false);
             t.label.set_focus_on_click(false);
-            // Specify the width of the widget manually to make sure it occupies
-            // the whole extent and isn't dependent on the font micro typing features.
-            t.label.set_size_request(std::round(CalcX(chunk->width)), 0);
-
             t.label.get_style_context().add_provider(_css_provider.get(), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
             _grid.put(t.label, 0, y);
