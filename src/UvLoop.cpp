@@ -1,6 +1,5 @@
 #include "UvLoop.hpp"
 #include "Logger.hpp"
-#include "AsyncExec.hpp"
 
 UvLoop::UvLoop()
 {
@@ -10,12 +9,7 @@ UvLoop::UvLoop()
 
 UvLoop::~UvLoop()
 {
-    uv_stop(&_loop);
-    {
-        // Make sure to cause some io for the loop to quit
-        AsyncExec async{&_loop};
-        async.Post([]{});
-    }
+    _StopTheLoop();
     if (_thread && _thread->joinable())
         _thread->join();
     switch (int err = uv_loop_close(&_loop))
@@ -37,6 +31,23 @@ UvLoop::~UvLoop()
     default:
         Logger().warn("Failed to close loop: {}", uv_strerror(err));
     }
+}
+
+void UvLoop::_StopTheLoop()
+{
+    // Make sure to cause some io for the loop to quit
+    std::unique_ptr<uv_async_t> async{new uv_async_t};
+    auto on_async = [](uv_async_t *async) {
+        uv_loop_t *loop = reinterpret_cast<uv_loop_t *>(async->data);
+        uv_stop(loop);
+        auto nop = [](uv_handle_t *h) {
+            delete reinterpret_cast<uv_async_t*>(h);
+        };
+        uv_close(reinterpret_cast<uv_handle_t *>(async), nop);
+    };
+    uv_async_init(&_loop, async.get(), on_async);
+    async->data = &_loop;
+    uv_async_send(async.release());
 }
 
 void UvLoop::RunAsync()

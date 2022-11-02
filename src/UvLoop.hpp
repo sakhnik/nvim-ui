@@ -14,4 +14,6 @@ public:
 protected:
     uv_loop_t _loop;
     std::unique_ptr<std::thread> _thread;
+
+    void _StopTheLoop();
 };
