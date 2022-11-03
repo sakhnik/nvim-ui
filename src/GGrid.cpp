@@ -430,7 +430,7 @@ void GGrid::_UpdateLabels(Session *session)
         auto it = _textures.find(chunk);
         if (it == _textures.end())
         {
-            std::string text{"<span font=\"" + _font.GetFamily() + "\">"};
+            std::string text;
             for (const auto &word : chunk->words)
             {
                 auto it = _pango_styles.find(word.hl_id);
@@ -439,7 +439,6 @@ void GGrid::_UpdateLabels(Session *session)
                     : it->second;
                 text += "<span" + pango_style + ">" + XmlEscape(word.text) + "</span>";
             }
-            text += "</span>";
             Texture t{row, Gtk::Label::new_("").g_obj()};
             t.label.set_markup(text.c_str());
             t.label.set_sensitive(false);
