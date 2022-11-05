@@ -437,7 +437,24 @@ void GGrid::_UpdateLabels(Session *session)
                 const std::string &pango_style = it == _pango_styles.end()
                     ? _default_pango_style
                     : it->second;
-                text += "<span" + pango_style + ">" + XmlEscape(word.text) + "</span>";
+                text += "<span" + pango_style + ">";
+                // If a chunk starts with spaces and the first non-space character is
+                // has a wide glyph, spaces may be rendered too narrow.
+                // To cope with that, we could span spaces with explicit font.
+                auto spaces = word.text.find_first_not_of(" ");
+                if (spaces)
+                {
+                    text += "<span font=\"" + _font.GetFamily() + "\">";
+                    text += word.text.substr(0, spaces);
+                    text += "</span>";
+                    if (spaces != std::string::npos)
+                        text += XmlEscape(word.text.substr(spaces));
+                }
+                else
+                {
+                    text += XmlEscape(word.text);
+                }
+                text += "</span>";
             }
             Texture t{row, Gtk::Label::new_("").g_obj()};
             t.label.set_markup(text.c_str());
