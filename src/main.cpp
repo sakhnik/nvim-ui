@@ -7,6 +7,7 @@
 
 #include <Gtk/Application.hpp>
 #include <Gtk/Window.hpp>
+#include <Gio/ApplicationFlags.hpp>
 
 #include <filesystem>
 #include <spdlog/cfg/env.h>
@@ -17,6 +18,7 @@
 #endif
 
 namespace Gtk = gir::Gtk;
+namespace Gio = gir::Gio;
 
 namespace {
 
@@ -62,7 +64,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        auto app = gir::MakeOwned(Gtk::Application::new_("org.sakhnik.nvim-ui", G_APPLICATION_FLAGS_NONE));
+        auto app = gir::MakeOwned(Gtk::Application::new_("org.sakhnik.nvim-ui", Gio::ApplicationFlags::default_flags));
         app.set_resource_base_path("/org/sakhnik/nvim-ui");
 
         auto on_activate = [](Gtk::Application app) {
