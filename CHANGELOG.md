@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2022-11-03
+## [0.1.0] - 2022-11-17
 
 ### Added
 
@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GUI dialog to configure settings
 - Configurable smooth scrolling
 - Disconnect from a TCP session [#48](https://github.com/sakhnik/nvim-ui/issues/48)
+- Connect to a TCP session by the hostname
 - Install CHANGELOG.html with the application, show it in the about dialog
 
 ### Fixed

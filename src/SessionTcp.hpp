@@ -15,6 +15,10 @@ public:
 
 private:
     std::string _description;
+    addrinfo _hints;
+    uv_getaddrinfo_t _resolver;
     std::unique_ptr<uv_tcp_t> _socket;
     uv_connect_t _connect;
+
+    void _Connect(const sockaddr *);
 };

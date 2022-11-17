@@ -17,10 +17,45 @@ SessionTcp::SessionTcp(const char *addr, int port)
     if (int err = uv_tcp_nodelay(_socket.get(), 1))
         Logger().warn(fmt::format("Failed to set tcp nodelay: {}", uv_strerror(err)));
 
-    sockaddr_in req_addr;
-    if (int err = uv_ip4_addr(addr, port, &req_addr))
-        throw std::runtime_error(fmt::format("Failed to parse the IP address: {}", uv_strerror(err)));
+    _hints.ai_family = PF_INET;
+    _hints.ai_socktype = SOCK_STREAM;
+    _hints.ai_protocol = IPPROTO_TCP;
+    _hints.ai_flags = 0;
 
+    sockaddr_in req_addr;
+    int err = uv_ip4_addr(addr, port, &req_addr);
+    if (!err)
+    {
+        _Connect(reinterpret_cast<const sockaddr*>(&req_addr));
+        return;
+    }
+    _resolver.data = this;
+
+    auto on_resolved = [](uv_getaddrinfo_t *resolver, int status, struct addrinfo *res) {
+        SessionTcp *session = reinterpret_cast<SessionTcp*>(resolver->data);
+        if (status < 0) {
+            session->_window->SetError(uv_strerror(status));
+            session->_window->SessionEnd();
+            Logger().error(fmt::format("Failed to resolve the address: {}", uv_strerror(status)));
+            return;
+        }
+
+        char addr[17] = {'\0'};
+        uv_ip4_name(reinterpret_cast<const sockaddr_in*>(res->ai_addr), addr, 16);
+        Logger().debug(fmt::format("Resolved to {}", addr));
+
+        session->_Connect(res->ai_addr);
+
+        uv_freeaddrinfo(res);
+    }; 
+
+    err = uv_getaddrinfo(&_loop, &_resolver, on_resolved, addr, std::to_string(port).c_str(), &_hints);
+    if (err)
+        throw std::runtime_error(fmt::format("Failed to resolve the address: {}", uv_strerror(err)));
+}
+
+void SessionTcp::_Connect(const sockaddr *addr)
+{
     auto on_connect = [](uv_connect_t *req, int status) {
         SessionTcp *session = reinterpret_cast<SessionTcp*>(req->data);
         if (status < 0) {
@@ -35,7 +70,7 @@ SessionTcp::SessionTcp(const char *addr, int port)
     };
 
     _connect.data = this;
-    if (int err = uv_tcp_connect(&_connect, _socket.get(), reinterpret_cast<const sockaddr*>(&req_addr), on_connect))
+    if (int err = uv_tcp_connect(&_connect, _socket.get(), addr, on_connect))
         throw std::runtime_error(fmt::format("Failed to connect: {}", uv_strerror(err)));
 }
 
