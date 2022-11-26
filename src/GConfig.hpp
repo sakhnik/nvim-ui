@@ -15,11 +15,14 @@ public:
     static constexpr const char *FONT_FAMILY_KEY = "font-family";
     static constexpr const char *FONT_SIZE_KEY = "font-size";
     static constexpr const char *SMOOTH_SCROLL_DELAY_KEY = "smooth-scroll-delay";
+    static constexpr const char *CELL_HEIGHT_ADJUSTMENT_KEY = "cell-height-adjustment";
 
     static std::string GetFontFamily();
     static void SetFontFamily(const std::string &);
     static double GetFontSize();
     static void SetFontSize(double pt);
+    static double GetCellHeightAdjustment();
+    static void SetCellHeightAdjustment(double v);
 
     // Milliseconds between scroll steps; if 0, no smooth scroll
     static int GetSmoothScrollDelay();

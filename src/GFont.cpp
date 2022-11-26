@@ -46,7 +46,7 @@ void GFont::SetGuiFont(const std::string &value, Gtk::Window parent)
                 Logger().info("Font: {}:{}", _family, _size_pt);
                 GConfig::SetFontFamily(_family);
                 GConfig::SetFontSize(_size_pt);
-                _OnChanged();
+                OnChanged();
             }
             d.destroy();
         });
@@ -57,10 +57,10 @@ void GFont::SetGuiFont(const std::string &value, Gtk::Window parent)
     _family = value.substr(0, idx);
     Logger().info("Set guifont {}", _family);
     GConfig::SetFontFamily(_family);
-    _OnChanged();
+    OnChanged();
 }
 
-void GFont::_OnChanged()
+void GFont::OnChanged()
 {
     for (auto &[_, sub] : _subs)
         sub();

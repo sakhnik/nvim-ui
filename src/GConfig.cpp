@@ -61,3 +61,13 @@ void GConfig::SetSmoothScrollDelay(int ms)
 {
     _settings.set_int(SMOOTH_SCROLL_DELAY_KEY, ms);
 }
+
+double GConfig::GetCellHeightAdjustment()
+{
+    return _settings.get_double(CELL_HEIGHT_ADJUSTMENT_KEY);
+}
+
+void GConfig::SetCellHeightAdjustment(double v)
+{
+    _settings.set_double(CELL_HEIGHT_ADJUSTMENT_KEY, v);
+}

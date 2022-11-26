@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Persistent configuration of guifont via GSettings
 - GUI dialog to configure settings
 - Configurable smooth scrolling
+- Configurable cell height adjustment
 - Disconnect from a TCP session [#48](https://github.com/sakhnik/nvim-ui/issues/48)
 - Connect to a TCP session by the hostname
 - Install CHANGELOG.html with the application, show it in the about dialog

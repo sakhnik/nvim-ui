@@ -23,6 +23,15 @@
       </description>
       <range min="0" max="100"/>
     </key>
+    <key name="cell-height-adjustment" type="d">
+      <default>0.0</default>
+      <summary>Grid cell height adjustment (pixels)</summary>
+      <description>
+        Grid cell dimensions are estimated by rendering a sample string. If some fonts produce ragged rendering,
+        one could adjust the height here.
+      </description>
+      <range min="-4.0" max="4.0"/>
+    </key>
 
   </schema>
 </schemalist>

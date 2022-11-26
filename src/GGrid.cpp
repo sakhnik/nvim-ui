@@ -78,7 +78,8 @@ void GGrid::MeasureCell()
     ruler.measure(Gtk::Orientation::horizontal, -1, &width, nullptr, nullptr, nullptr);
     ruler.measure(Gtk::Orientation::vertical, -1, &height, nullptr, nullptr, nullptr);
     _cell_width = 1.0 * width / RULER.size();
-    _cell_height = height;
+    // Adjust the cell height manually
+    _cell_height = height + GConfig::GetCellHeightAdjustment();
     Logger().info("Measured cell: width={} height={}", _cell_width, _cell_height);
     ruler.ref_sink();
 

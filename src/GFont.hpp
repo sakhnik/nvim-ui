@@ -34,12 +34,13 @@ public:
         _subs.erase(sub_id);
     }
 
+    // Notify the font watchers to update their metrics
+    void OnChanged();
+
 private:
     Gtk::Window _parent;
     std::string _family = "Monospace";
     double _size_pt = 14;
     std::unordered_map<int, OnFontChanged> _subs;
     int _sub_id{};
-
-    void _OnChanged();
 };

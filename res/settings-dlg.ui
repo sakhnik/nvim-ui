@@ -2,6 +2,13 @@
 <interface>
   <requires lib="gtk+" version="4.0"/>
 
+  <object class="GtkAdjustment" id="adjustment1">
+    <property name="lower">-4.0</property>
+    <property name="upper">4.0</property>
+    <property name="step_increment">0.1</property>
+    <property name="page_increment">1</property>
+  </object>
+
   <object class="GtkDialog" id="settings_dlg">
     <property name="title" translatable="yes">nvim-ui settings</property>
     <property name="modal">True</property>
@@ -49,10 +56,32 @@
             </child>
             <child>
               <object class="GtkLabel">
-                <property name="label" translatable="yes">Smooth scrolling delay (ms)</property>
+                <property name="label" translatable="yes">Grid cell vertical adjustment (px)</property>
                 <layout>
                   <property name="column">0</property>
                   <property name="row">1</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSpinButton" id="cell_height_adjustment">
+                <property name="adjustment">adjustment1</property>
+                <property name="climb_rate">1</property>
+                <property name="digits">1</property>
+                <property name="numeric">true</property>
+                <layout>
+                  <property name="column">1</property>
+                  <property name="row">1</property>
+                  <property name="column-span">2</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="label" translatable="yes">Smooth scrolling delay (ms)</property>
+                <layout>
+                  <property name="column">0</property>
+                  <property name="row">2</property>
                 </layout>
               </object>
             </child>
@@ -71,7 +100,7 @@
                 </marks>
                 <layout>
                   <property name="column">1</property>
-                  <property name="row">1</property>
+                  <property name="row">2</property>
                   <property name="column-span">2</property>
                 </layout>
               </object>
